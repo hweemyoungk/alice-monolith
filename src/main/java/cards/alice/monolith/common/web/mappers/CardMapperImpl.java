@@ -1,14 +1,16 @@
 package cards.alice.monolith.common.web.mappers;
 
+import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.CardDto;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
+@Component
 public class CardMapperImpl implements CardMapper {
-    private final DateMapper dateMapper;
+    private final EntityManager entityManager;
 
     @Override
     public Card toEntity(CardDto cardDto) {
@@ -21,17 +23,17 @@ public class CardMapperImpl implements CardMapper {
         card.id(cardDto.getId());
         card.version(cardDto.getVersion());
         card.displayName(cardDto.getDisplayName());
-        card.createdDate(dateMapper.asTimestamp(cardDto.getCreatedDate()));
-        card.lastModifiedDate(dateMapper.asTimestamp(cardDto.getLastModifiedDate()));
+        card.createdDate(cardDto.getCreatedDate());
+        card.lastModifiedDate(cardDto.getLastModifiedDate());
         card.isDeleted(cardDto.getIsDeleted());
         card.numCollectedStamps(cardDto.getNumCollectedStamps());
         card.numGoalStamps(cardDto.getNumGoalStamps());
-        card.expirationDate(dateMapper.asTimestamp(cardDto.getExpirationDate()));
+        //card.expirationDate(cardDto.getExpirationDate());
         card.isFavorite(cardDto.getIsFavorite());
         card.numRedeemed(cardDto.getNumRedeemed());
         card.customerId(cardDto.getCustomerId());
-        card.storeId(cardDto.getStoreId());
-        card.blueprintId(cardDto.getBlueprintId());
+        //card.store(entityManager.getReference(Store.class, cardDto.getStoreId()));
+        card.blueprint(entityManager.getReference(Blueprint.class, cardDto.getBlueprintId()));
         card.bgImageId(cardDto.getBgImageId());
         card.isDiscarded(cardDto.getIsDiscarded());
         card.isUsedOut(cardDto.getIsUsedOut());
@@ -50,18 +52,18 @@ public class CardMapperImpl implements CardMapper {
 
         cardDto.id(card.getId());
         cardDto.version(card.getVersion());
-        cardDto.displayName(card.getDisplayName());
-        cardDto.createdDate(dateMapper.asOffsetDateTime(card.getCreatedDate()));
-        cardDto.lastModifiedDate(dateMapper.asOffsetDateTime(card.getLastModifiedDate()));
+        cardDto.createdDate(card.getCreatedDate());
+        cardDto.lastModifiedDate(card.getLastModifiedDate());
         cardDto.isDeleted(card.getIsDeleted());
+        cardDto.displayName(card.getDisplayName());
         cardDto.numCollectedStamps(card.getNumCollectedStamps());
         cardDto.numGoalStamps(card.getNumGoalStamps());
-        cardDto.expirationDate(dateMapper.asOffsetDateTime(card.getExpirationDate()));
+        cardDto.expirationDate(card.getBlueprint().getExpirationDate());
         cardDto.isFavorite(card.getIsFavorite());
         cardDto.numRedeemed(card.getNumRedeemed());
         cardDto.customerId(card.getCustomerId());
-        cardDto.storeId(card.getStoreId());
-        cardDto.blueprintId(card.getBlueprintId());
+        cardDto.storeId(card.getBlueprint().getStore().getId());
+        cardDto.blueprintId(card.getBlueprint().getId());
         cardDto.bgImageId(card.getBgImageId());
         cardDto.isDiscarded(card.getIsDiscarded());
         cardDto.isUsedOut(card.getIsUsedOut());
@@ -69,5 +71,67 @@ public class CardMapperImpl implements CardMapper {
 
         return cardDto.build();
     }
-}
 
+    @Override
+    public Card partialUpdate(CardDto cardDto, Card card) {
+        if (cardDto == null) {
+            return card;
+        }
+
+        if (cardDto.getId() != null) {
+            card.setId(cardDto.getId());
+        }
+        if (cardDto.getVersion() != null) {
+            card.setVersion(cardDto.getVersion());
+        }
+        if (cardDto.getDisplayName() != null) {
+            card.setDisplayName(cardDto.getDisplayName());
+        }
+        if (cardDto.getCreatedDate() != null) {
+            card.setCreatedDate(cardDto.getCreatedDate());
+        }
+        if (cardDto.getLastModifiedDate() != null) {
+            card.setLastModifiedDate(cardDto.getLastModifiedDate());
+        }
+        if (cardDto.getIsDeleted() != null) {
+            card.setIsDeleted(cardDto.getIsDeleted());
+        }
+        if (cardDto.getNumCollectedStamps() != null) {
+            card.setNumCollectedStamps(cardDto.getNumCollectedStamps());
+        }
+        if (cardDto.getNumGoalStamps() != null) {
+            card.setNumGoalStamps(cardDto.getNumGoalStamps());
+        }
+        if (cardDto.getIsFavorite() != null) {
+            card.setIsFavorite(cardDto.getIsFavorite());
+        }
+        if (cardDto.getNumRedeemed() != null) {
+            card.setNumRedeemed(cardDto.getNumRedeemed());
+        }
+        if (cardDto.getCustomerId() != null) {
+            card.setCustomerId(cardDto.getCustomerId());
+        }
+        /*if (cardDto.getStoreId() != null) {
+            card.setStore(
+                    entityManager.getReference(Store.class, cardDto.getStoreId()));
+        }*/
+        if (cardDto.getBlueprintId() != null) {
+            card.setBlueprint(
+                    entityManager.getReference(Blueprint.class, cardDto.getBlueprintId()));
+        }
+        if (cardDto.getBgImageId() != null) {
+            card.setBgImageId(cardDto.getBgImageId());
+        }
+        if (cardDto.getIsDiscarded() != null) {
+            card.setIsDiscarded(cardDto.getIsDiscarded());
+        }
+        if (cardDto.getIsUsedOut() != null) {
+            card.setIsUsedOut(cardDto.getIsUsedOut());
+        }
+        if (cardDto.getIsInactive() != null) {
+            card.setIsInactive(cardDto.getIsInactive());
+        }
+
+        return card;
+    }
+}

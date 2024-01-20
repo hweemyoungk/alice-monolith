@@ -1,15 +1,14 @@
 package cards.alice.monolith.common.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
 
 @Getter
@@ -36,10 +35,13 @@ public abstract class BaseEntity {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private Timestamp createdDate;
+    @JdbcTypeCode(SqlTypes.TIMESTAMP)
+    private OffsetDateTime createdDate;
 
+    @JdbcTypeCode(SqlTypes.TIMESTAMP)
     @UpdateTimestamp
-    private Timestamp lastModifiedDate;
+    private OffsetDateTime lastModifiedDate;
 
-    private Boolean isDeleted;
+    @Builder.Default
+    private Boolean isDeleted = false;
 }

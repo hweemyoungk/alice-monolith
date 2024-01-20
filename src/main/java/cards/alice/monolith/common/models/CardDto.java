@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -32,6 +30,10 @@ public class CardDto extends BaseDto {
     @NotNull
     @Positive
     private Integer numGoalStamps;
+    /**
+     * Retrieves value from {@link cards.alice.monolith.common.domain.Blueprint Card.blueprint}.
+     *
+     */
     @NotNull
     private OffsetDateTime expirationDate;
     @NotNull
@@ -39,12 +41,6 @@ public class CardDto extends BaseDto {
     @NotNull
     @PositiveOrZero
     private Integer numRedeemed;
-    @NotNull
-    private UUID customerId;
-    @NotNull
-    private Long storeId;
-    @NotNull
-    private Long blueprintId;
     private String bgImageId;
     @NotNull
     private Boolean isDiscarded;
@@ -52,4 +48,15 @@ public class CardDto extends BaseDto {
     private Boolean isUsedOut;
     @NotNull
     private Boolean isInactive;
+    @NotNull
+    private UUID customerId;
+    @NotNull
+    private Long storeId;
+    @NotNull
+    private Long blueprintId;
+    //@NotNull
+    //@JsonProperty("blueprintId")
+    //@JsonSerialize(using = BlueprintIdSerializer.class)
+    //@JsonDeserialize(using = BlueprintIdDeserializer.class)
+    //private BlueprintDto blueprintDto;
 }

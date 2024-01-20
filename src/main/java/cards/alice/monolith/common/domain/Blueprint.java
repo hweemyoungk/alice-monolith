@@ -1,11 +1,15 @@
 package cards.alice.monolith.common.domain;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.sql.Timestamp;
-import java.util.HashSet;
+import java.time.OffsetDateTime;
 import java.util.Set;
 
 @SuperBuilder
@@ -18,10 +22,11 @@ import java.util.Set;
 public class Blueprint extends BaseEntity {
     private String description;
     private String stampGrantCondDescription;
-    private String numMaxStamps;
-    private String numMaxRedeems;
-    private String numMaxIssues;
-    private Timestamp expirationDate;
+    private Integer numMaxStamps;
+    private Integer numMaxRedeems;
+    private Integer numMaxIssues;
+    @JdbcTypeCode(SqlTypes.TIMESTAMP)
+    private OffsetDateTime expirationDate;
     private String bgImageId;
     private Boolean isPublishing;
     @OneToMany(mappedBy = "blueprint", cascade = CascadeType.PERSIST)
@@ -29,6 +34,6 @@ public class Blueprint extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "store_id")
     private Store store;
-    @Column(name = "store_id", insertable = false, updatable = false)
-    private Long storeId;
+    // @Column(name = "store_id", insertable = false, updatable = false)
+    // private Long storeId;
 }

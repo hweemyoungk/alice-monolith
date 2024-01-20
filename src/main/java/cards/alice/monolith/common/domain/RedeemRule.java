@@ -21,6 +21,6 @@ public class RedeemRule extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "blueprint_id")
     private Blueprint blueprint;
-    @Column(name = "blueprint_id", insertable = false, updatable = false)
-    private Long blueprintId;
+    //@Column(name = "blueprint_id", insertable = false, updatable = false)
+    //private Long blueprintId;
 }

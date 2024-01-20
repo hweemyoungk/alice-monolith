@@ -1,14 +1,16 @@
 package cards.alice.monolith.common.web.mappers;
 
+import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.RedeemRuleDto;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
 public class RedeemRuleMapperImpl implements RedeemRuleMapper {
-    private final DateMapper dateMapper;
+    private final EntityManager entityManager;
 
     @Override
     public RedeemRule toEntity(RedeemRuleDto redeemRuleDto) {
@@ -16,18 +18,17 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
             return null;
         }
 
-        RedeemRule.RedeemRuleBuilder redeemRule = RedeemRule.builder()
+        RedeemRule.RedeemRuleBuilder<?, ?> redeemRule = RedeemRule.builder()
                 .id(redeemRuleDto.getId())
                 .version(redeemRuleDto.getVersion())
                 .displayName(redeemRuleDto.getDisplayName())
-                .createdDate(dateMapper.asTimestamp(redeemRuleDto.getCreatedDate()))
-                .lastModifiedDate(dateMapper.asTimestamp(redeemRuleDto.getLastModifiedDate()))
+                .createdDate(redeemRuleDto.getCreatedDate())
+                .lastModifiedDate(redeemRuleDto.getLastModifiedDate())
                 .isDeleted(redeemRuleDto.getIsDeleted())
                 .description(redeemRuleDto.getDescription())
                 .consumes(redeemRuleDto.getConsumes())
                 .imageId(redeemRuleDto.getImageId())
-                //.blueprint(redeemRuleDto.
-                .blueprintId(redeemRuleDto.getBlueprintId());
+                .blueprint(entityManager.getReference(Blueprint.class, redeemRuleDto.getBlueprintId()));
 
         return redeemRule.build();
     }
@@ -38,19 +39,59 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
             return null;
         }
 
-        RedeemRuleDto.RedeemRuleDtoBuilder redeemRuleDto = RedeemRuleDto.builder()
+        RedeemRuleDto.RedeemRuleDtoBuilder<?, ?> redeemRuleDto = RedeemRuleDto.builder()
                 .id(redeemRule.getId())
                 .version(redeemRule.getVersion())
                 .displayName(redeemRule.getDisplayName())
-                .createdDate(dateMapper.asOffsetDateTime(redeemRule.getCreatedDate()))
-                .lastModifiedDate(dateMapper.asOffsetDateTime(redeemRule.getLastModifiedDate()))
+                .createdDate(redeemRule.getCreatedDate())
+                .lastModifiedDate(redeemRule.getLastModifiedDate())
                 .isDeleted(redeemRule.getIsDeleted())
                 .description(redeemRule.getDescription())
                 .consumes(redeemRule.getConsumes())
                 .imageId(redeemRule.getImageId())
-                //.blueprint(redeemRule.
-                .blueprintId(redeemRule.getBlueprintId());
+                .blueprintId(redeemRule.getBlueprint().getId());
 
         return redeemRuleDto.build();
+    }
+
+    @Override
+    public RedeemRule partialUpdate(RedeemRuleDto redeemRuleDto, RedeemRule redeemRule) {
+        if (redeemRuleDto == null) {
+            return redeemRule;
+        }
+
+        if (redeemRuleDto.getId() != null) {
+            redeemRule.setId(redeemRuleDto.getId());
+        }
+        if (redeemRuleDto.getVersion() != null) {
+            redeemRule.setVersion(redeemRuleDto.getVersion());
+        }
+        if (redeemRuleDto.getDisplayName() != null) {
+            redeemRule.setDisplayName(redeemRuleDto.getDisplayName());
+        }
+        if (redeemRuleDto.getCreatedDate() != null) {
+            redeemRule.setCreatedDate(redeemRuleDto.getCreatedDate());
+        }
+        if (redeemRuleDto.getLastModifiedDate() != null) {
+            redeemRule.setLastModifiedDate(redeemRuleDto.getLastModifiedDate());
+        }
+        if (redeemRuleDto.getIsDeleted() != null) {
+            redeemRule.setIsDeleted(redeemRuleDto.getIsDeleted());
+        }
+        if (redeemRuleDto.getDescription() != null) {
+            redeemRule.setDescription(redeemRuleDto.getDescription());
+        }
+        if (redeemRuleDto.getConsumes() != null) {
+            redeemRule.setConsumes(redeemRuleDto.getConsumes());
+        }
+        if (redeemRuleDto.getImageId() != null) {
+            redeemRule.setImageId(redeemRuleDto.getImageId());
+        }
+        if (redeemRuleDto.getBlueprintId() != null) {
+            redeemRule.setBlueprint(
+                    entityManager.getReference(Blueprint.class, redeemRuleDto.getBlueprintId()));
+        }
+
+        return redeemRule;
     }
 }

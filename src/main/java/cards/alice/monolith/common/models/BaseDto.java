@@ -1,8 +1,13 @@
 package cards.alice.monolith.common.models;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.OffsetDateTimeSerializer;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
@@ -19,6 +24,7 @@ public class BaseDto implements Serializable {
     @NotBlank
     @Max(30)
     private String displayName;
+    @JsonSerialize(using = OffsetDateTimeSerializer.class)
     private OffsetDateTime createdDate;
     private OffsetDateTime lastModifiedDate;
     private Boolean isDeleted;
