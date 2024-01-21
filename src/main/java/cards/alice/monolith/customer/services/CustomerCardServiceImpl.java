@@ -9,8 +9,9 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -83,5 +84,16 @@ public class CustomerCardServiceImpl implements CustomerCardService {
     @Override
     public Optional<CardDto> softDeleteCardById(Long id) {
         return patchCardById(id, CardDto.builder().isDeleted(true).build());
+    }
+
+    @Override
+    public Set<CardDto> listCards(UUID customerId, Set<Long> ids) {
+        return cardRepository.findByCustomerIdAndIdIn(customerId, ids).stream()
+                .map(cardMapper::toDto).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Long getNumIssues(UUID customerId, Long blueprintId) {
+        return cardRepository.countByCustomerIdAndBlueprint_Id(customerId, blueprintId);
     }
 }

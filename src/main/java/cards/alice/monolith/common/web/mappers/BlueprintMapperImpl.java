@@ -65,9 +65,10 @@ public class BlueprintMapperImpl implements BlueprintMapper {
                 .expirationDate(blueprint.getExpirationDate())
                 .bgImageId(blueprint.getBgImageId())
                 .isPublishing(blueprint.getIsPublishing())
-                .redeemRuleDtos(blueprint.getRedeemRules().stream()
-                        .map(redeemRuleMapper::toDto)
-                        .collect(Collectors.toSet()))
+                .redeemRuleDtos(blueprint.getRedeemRules() == null ? null :
+                        blueprint.getRedeemRules().stream()
+                                .map(redeemRuleMapper::toDto)
+                                .collect(Collectors.toSet()))
                 .storeId(blueprint.getStore().getId());
 
         return blueprintDto.build();

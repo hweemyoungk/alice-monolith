@@ -28,11 +28,9 @@ public class CardMapperImpl implements CardMapper {
         card.isDeleted(cardDto.getIsDeleted());
         card.numCollectedStamps(cardDto.getNumCollectedStamps());
         card.numGoalStamps(cardDto.getNumGoalStamps());
-        //card.expirationDate(cardDto.getExpirationDate());
         card.isFavorite(cardDto.getIsFavorite());
         card.numRedeemed(cardDto.getNumRedeemed());
         card.customerId(cardDto.getCustomerId());
-        //card.store(entityManager.getReference(Store.class, cardDto.getStoreId()));
         card.blueprint(entityManager.getReference(Blueprint.class, cardDto.getBlueprintId()));
         card.bgImageId(cardDto.getBgImageId());
         card.isDiscarded(cardDto.getIsDiscarded());

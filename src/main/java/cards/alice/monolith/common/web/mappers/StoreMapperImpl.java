@@ -61,9 +61,10 @@ public class StoreMapperImpl implements StoreMapper {
                 .bgImageId(store.getBgImageId())
                 .profileImageId(store.getProfileImageId())
                 .ownerId(store.getOwnerId())
-                .blueprintDtos(store.getBlueprints().stream()
-                        .map(blueprintMapper::toDto)
-                        .collect(Collectors.toSet()));
+                .blueprintDtos(store.getBlueprints() == null ? null :
+                        store.getBlueprints().stream()
+                                .map(blueprintMapper::toDto)
+                                .collect(Collectors.toSet()));
 
         return storeDto.build();
     }
@@ -120,7 +121,7 @@ public class StoreMapperImpl implements StoreMapper {
             if (storeDto.getOwnerId() != null) {
                 store.setOwnerId(storeDto.getOwnerId());
             }
-            if (storeDto.getBlueprintDtos() == null) {
+            if (storeDto.getBlueprintDtos() != null) {
                 store.setBlueprints(storeDto.getBlueprintDtos().stream()
                         .map(blueprintMapper::toEntity)
                         .collect(Collectors.toSet()));
