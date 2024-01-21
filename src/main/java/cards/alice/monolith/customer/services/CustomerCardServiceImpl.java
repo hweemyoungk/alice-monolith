@@ -9,7 +9,9 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -22,10 +24,6 @@ public class CustomerCardServiceImpl implements CustomerCardService {
 
     private void setBlueprintReference(Card card, Long id) {
         card.setBlueprint(entityManager.getReference(Blueprint.class, id));
-    }
-
-    private boolean validateEntityToSave(Card card) {
-        return true;
     }
 
     @Override

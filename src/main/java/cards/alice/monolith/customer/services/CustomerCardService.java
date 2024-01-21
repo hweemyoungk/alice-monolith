@@ -17,7 +17,7 @@ public interface CustomerCardService {
 
     Optional<CardDto> softDeleteCardById(Long id);
 
-    Set<CardDto> listCards(UUID userId, Set<Long> ids);
+    Set<CardDto> listCards(UUID customerId, Set<Long> ids);
 
     Long getNumIssues(UUID customerId, Long blueprintId);
 }
