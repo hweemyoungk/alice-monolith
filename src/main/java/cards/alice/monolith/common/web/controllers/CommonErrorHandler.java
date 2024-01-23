@@ -1,5 +1,6 @@
 package cards.alice.monolith.common.web.controllers;
 
+import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,10 +16,11 @@ import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class CommonErrorHandler {
-    /*@ExceptionHandler(EntityNotFoundException.class)
-    ResponseEntity handleResourceNotFound(EntityNotFoundException e) {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    ResponseEntity handleResourceNotFound(ResourceNotFoundException e) {
         return ResponseEntity.notFound().build();
-    }*/
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     ResponseEntity handleResourceNotFound() {
         return ResponseEntity.badRequest().build();

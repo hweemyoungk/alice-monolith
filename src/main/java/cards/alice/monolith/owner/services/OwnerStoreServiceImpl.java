@@ -5,6 +5,7 @@ import cards.alice.monolith.common.models.StoreDto;
 import cards.alice.monolith.common.repositories.StoreRepository;
 import cards.alice.monolith.common.web.mappers.StoreMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class OwnerStoreServiceImpl implements OwnerStoreService {
     private final StoreRepository storeRepository;
     private final StoreMapper storeMapper;
+    private final AuthenticatedStoreAccessor authenticatedStoreAccessor;
 
     @Override
     public StoreDto saveNewStore(StoreDto storeDto) {
@@ -30,20 +32,20 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
 
     @Override
     public Optional<StoreDto> getStoreById(Long id) {
-        return Optional.ofNullable(
-                storeMapper.toDto(
-                        storeRepository.findById(id).orElse(null)));
+        return Optional.ofNullable(storeMapper.toDto(
+                authenticatedStoreAccessor.authenticatedGetById(id)));
     }
 
     @Override
     public Optional<StoreDto> updateStoreById(Long id, StoreDto storeDto) {
+        // Authenticate
+        Optional<Store> store = Optional.ofNullable(authenticatedStoreAccessor.authenticatedGetById(id));
+
+        storeDto.setId(null);
         storeDto.setVersion(null);
         final var atomicReference = new AtomicReference<Optional<StoreDto>>();
-        storeRepository.findById(id).ifPresentOrElse(
+        store.ifPresentOrElse(
                 srcStore -> {
-                    /*final Store destStore = storeMapper.toEntity(storeDto);
-                    destStore.setId(srcStore.getId());
-                    destStore.setVersion(srcStore.getVersion());*/
                     storeMapper.partialUpdate(storeDto, srcStore);
                     final Store savedStore = storeRepository.save(srcStore);
                     final StoreDto savedStoreDto = storeMapper.toDto(savedStore);
@@ -57,6 +59,7 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
     }
 
     @Override
+    @PostFilter("authentication.name == filterObject.ownerId")
     public Set<StoreDto> listStores(UUID ownerId, Set<Long> ids) {
         final Set<Store> stores;
         if (ids == null) {

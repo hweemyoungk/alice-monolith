@@ -8,12 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.JedisPooled;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static cards.alice.monolith.common.models.RedeemRequestDto.getOwnerRedeemRequestsKey;
@@ -26,7 +23,6 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
     private long watchRedeemRequestDurationSeconds;
 
     private final ObjectMapper objectMapper;
-    private final Map<String, Future<?>> redeemRequestTtlTaskPool;
     private final JedisPooled jedis;
 
     @Override
@@ -40,13 +36,12 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
             } catch (JsonProcessingException ex) {
                 throw new RuntimeException(ex);
             }
-            return setTtlToRedeemRequestDto(redeemRequestDto);
+            return redeemRequestDto;
         }).collect(Collectors.toSet());
     }
 
-    private RedeemRequestDto setTtlToRedeemRequestDto(RedeemRequestDto redeemRequestDto) {
-        final long exp = Instant.now().plusSeconds(watchRedeemRequestDurationSeconds).toEpochMilli();
-        redeemRequestDto.setTtl(exp);
-        return redeemRequestDto;
-    }
+    //private void setTtlToRedeemRequestDto(RedeemRequestDto redeemRequestDto) {
+    //    final long exp = Instant.now().plusSeconds(watchRedeemRequestDurationSeconds).toEpochMilli();
+    //    redeemRequestDto.setTtl(exp);
+    //}
 }

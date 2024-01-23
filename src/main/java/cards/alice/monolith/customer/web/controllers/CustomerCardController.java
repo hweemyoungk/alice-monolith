@@ -9,6 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,18 +32,22 @@ public class CustomerCardController {
 
     // Tested
     @PostMapping(path = "${cards.alice.customer.web.controllers.path.card}")
+    @PreAuthorize("authentication.name == #cardDto.customerId")
     public ResponseEntity postCard(@RequestBody CardDto cardDto) {
         final CardDto savedCardDto = customerCardService.saveNewCard(cardDto);
         return ResponseEntity.created(URI.create(customerHostname + customerCardPath + "/" + savedCardDto.getId())).build();
     }
 
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card}/{id}")
-    public ResponseEntity<CardDto> getCard(@PathVariable Long id) {
+    public ResponseEntity<CardDto> getCard(@PathVariable Long id, @AuthenticationPrincipal Jwt principal) {
+        final var auth = SecurityContextHolder.getContext().getAuthentication();
+        //final Optional<CardDto> cardDto = customerCardService.getCardById(id);
         final Optional<CardDto> cardDto = customerCardService.getCardById(id);
         return ResponseEntity.ok(cardDto.orElseThrow(() -> new ResourceNotFoundException(Card.class, id)));
     }
 
     @PutMapping(path = "${cards.alice.customer.web.controllers.path.card}/{id}")
+    @PreAuthorize("authentication.name == #cardDto.customerId")
     public ResponseEntity putCard(@PathVariable Long id, @RequestBody CardDto cardDto) {
         Optional<CardDto> updatedCardDto = customerCardService.updateCardById(id, cardDto);
         updatedCardDto.orElseThrow(() -> new ResourceNotFoundException(Card.class, id));
@@ -54,6 +62,7 @@ public class CustomerCardController {
     }
 
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.list}")
+    @PreAuthorize("#customerId != null ? authentication.name == #customerId : true")
     public ResponseEntity<Set<CardDto>> listCards(@RequestParam(required = false) UUID customerId, @RequestParam(required = false) List<Long> ids) {
         if (customerId == null && CollectionUtils.isEmpty(ids)) {
             return ResponseEntity.badRequest().build();
@@ -64,6 +73,7 @@ public class CustomerCardController {
 
     // Tested
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.num-issues}")
+    @PreAuthorize("authentication.name == customerId")
     public ResponseEntity<Long> getNumIssues(@NotNull @RequestParam UUID customerId, @NotNull @RequestParam Long blueprintId) {
         final Long numIssues = customerCardService.getNumIssues(customerId, blueprintId);
         return ResponseEntity.ok(numIssues);

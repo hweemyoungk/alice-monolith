@@ -21,12 +21,17 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     private final BlueprintRepository blueprintRepository;
     private final BlueprintMapper blueprintMapper;
     private final OwnerRedeemRuleService ownerRedeemRuleService;
+    private final AuthenticatedStoreAccessor authenticatedStoreAccessor;
+    private final AuthenticatedBlueprintAccessor authenticatedBlueprintAccessor;
 
     // Tested
     @Override
     @Transactional
     public BlueprintDto saveNewBlueprint(BlueprintDto blueprintDto) {
         final Blueprint blueprint = blueprintMapper.toEntity(blueprintDto);
+
+        // Authenticate
+        authenticatedStoreAccessor.authenticatedGetById(blueprintDto.getStoreId());
 
         // Save blueprint without redeemRules
         blueprint.setRedeemRules(new HashSet<>());
@@ -47,17 +52,19 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     // Tested
     @Override
     public Optional<BlueprintDto> getBlueprintById(Long id) {
-        return Optional.ofNullable(
-                blueprintMapper.toDto(
-                        blueprintRepository.findById(id).orElse(null)));
+        return Optional.ofNullable(blueprintMapper.toDto(
+                authenticatedBlueprintAccessor.authenticatedGetById(id)));
 
     }
 
     // Tested
     @Override
     public Optional<BlueprintDto> updateBlueprintById(Long id, BlueprintDto blueprintDto) {
+        // Authenticate
+        Optional<Blueprint> blueprint = Optional.ofNullable(authenticatedBlueprintAccessor.authenticatedGetById(id));
+
         final var atomicReference = new AtomicReference<Optional<BlueprintDto>>();
-        blueprintRepository.findById(id).ifPresentOrElse(
+        blueprint.ifPresentOrElse(
                 srcBlueprint -> {
                     //final Blueprint destBlueprint = blueprintMapper.toEntity(blueprintDto);
                     //destBlueprint.setId(srcBlueprint.getId());
@@ -80,7 +87,16 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
 
     @Override
     public Set<BlueprintDto> listBlueprints(Long storeId, Set<Long> ids) {
-        return blueprintRepository.findByStore_IdAndIdIn(storeId, ids).stream()
+        // Authenticate
+        authenticatedStoreAccessor.authenticatedGetById(storeId);
+
+        final Set<Blueprint> blueprints;
+        if (ids == null) {
+            blueprints = blueprintRepository.findByStore_Id(storeId);
+        } else {
+            blueprints = blueprintRepository.findByStore_IdAndIdIn(storeId, ids);
+        }
+        return blueprints.stream()
                 .map(blueprintMapper::toDto).collect(Collectors.toSet());
     }
 }

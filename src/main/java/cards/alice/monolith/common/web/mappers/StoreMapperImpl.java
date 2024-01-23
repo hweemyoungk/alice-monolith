@@ -40,9 +40,19 @@ public class StoreMapperImpl implements StoreMapper {
                 .blueprints(storeDto.getBlueprintDtos() == null ? null : storeDto.getBlueprintDtos().stream()
                         .map(blueprintDto -> {
                             blueprintDto.setVersion(null);
-                            Blueprint reference = entityManager.getReference(Blueprint.class, blueprintDto.getId());
-                            blueprintMapper.partialUpdate(blueprintDto, reference);
-                            return reference;
+                            blueprintDto.setStoreId(storeDto.getId());
+                            if (blueprintDto.getId() == null) {
+                                // Brand-new blueprint
+                                return blueprintMapper.toEntity(blueprintDto);
+                            }
+                            // Modifying blueprint
+                            Blueprint blueprint = entityManager.getReference(Blueprint.class, blueprintDto.getId());
+                            if (blueprint.getStore().getId() != storeDto.getId()) {
+                                // Wrong blueprint ID provided
+                                throw new IllegalArgumentException();
+                            }
+                            blueprintMapper.partialUpdate(blueprintDto, blueprint);
+                            return blueprint;
                         })
                         .collect(Collectors.toSet()));
         return store.build();
@@ -134,9 +144,19 @@ public class StoreMapperImpl implements StoreMapper {
                 store.setBlueprints(storeDto.getBlueprintDtos().stream()
                         .map(blueprintDto -> {
                             blueprintDto.setVersion(null);
-                            Blueprint reference = entityManager.getReference(Blueprint.class, blueprintDto.getId());
-                            blueprintMapper.partialUpdate(blueprintDto, reference);
-                            return reference;
+                            blueprintDto.setStoreId(storeDto.getId());
+                            if (blueprintDto.getId() == null) {
+                                // Brand-new blueprint
+                                return blueprintMapper.toEntity(blueprintDto);
+                            }
+                            // Modifying blueprint
+                            Blueprint blueprint = entityManager.getReference(Blueprint.class, blueprintDto.getId());
+                            if (blueprint.getStore().getId() != storeDto.getId()) {
+                                // Wrong blueprint ID provided
+                                throw new IllegalArgumentException();
+                            }
+                            blueprintMapper.partialUpdate(blueprintDto, blueprint);
+                            return blueprint;
                         })
                         .collect(Collectors.toSet()));
             }

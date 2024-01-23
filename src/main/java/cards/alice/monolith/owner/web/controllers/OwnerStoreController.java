@@ -7,6 +7,7 @@ import cards.alice.monolith.owner.services.OwnerStoreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +25,8 @@ public class OwnerStoreController {
 
     private final OwnerStoreService ownerStoreService;
 
-
     @PostMapping(path = "${cards.alice.owner.web.controllers.path.store}")
+    @PreAuthorize("authentication.name == #storeDto.ownerId")
     public ResponseEntity postStore(@RequestBody StoreDto storeDto) {
         final StoreDto savedStoreDto = ownerStoreService.saveNewStore(storeDto);
         return ResponseEntity.created(URI.create(ownerHostname + ownerStorePath + "/" + savedStoreDto.getId())).build();
@@ -38,6 +39,7 @@ public class OwnerStoreController {
     }
 
     @PutMapping(path = "${cards.alice.owner.web.controllers.path.store}/{id}")
+    @PreAuthorize("authentication.name == #storeDto.ownerId")
     //public ResponseEntity putStore(@PathVariable Long id, @Validated @RequestBody StoreDto storeDto) {
     public ResponseEntity putStore(@PathVariable Long id, @RequestBody StoreDto storeDto) {
         Optional<StoreDto> updatedStoreDto = ownerStoreService.updateStoreById(id, storeDto);
@@ -46,6 +48,7 @@ public class OwnerStoreController {
     }
 
     @GetMapping(path = "${cards.alice.owner.web.controllers.path.store.list}")
+    @PreAuthorize("#ownerId == null ? true : authentication.name == #ownerId.toString()")
     public ResponseEntity<Set<StoreDto>> listStores(
             @RequestParam(required = false) UUID ownerId,
             @RequestParam(required = false) List<Long> ids) {
