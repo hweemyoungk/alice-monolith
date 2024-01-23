@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("${cards.alice.customer.web.controllers.path.base}")
+@RequestMapping("${cards.alice.owner.web.controllers.path.base}")
 @RequiredArgsConstructor
 public class OwnerCardController {
     private final OwnerCardService ownerCardService;

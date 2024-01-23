@@ -2,6 +2,7 @@ package cards.alice.monolith.customer.bootstrap;
 
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Card;
+import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.repositories.BlueprintRepository;
 import cards.alice.monolith.common.repositories.CardRepository;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -49,7 +51,7 @@ public class BootstrapData implements CommandLineRunner {
     private void populateCard() {
         final Card myFirstCard = Card.builder()
                 .displayName("My First Card")
-                .numCollectedStamps(3)
+                .numCollectedStamps(48)
                 .numGoalStamps(8)
                 .isFavorite(true)
                 .numRedeemed(0)
@@ -70,8 +72,8 @@ public class BootstrapData implements CommandLineRunner {
                 .zipcode("123")
                 .address("Foo city")
                 .phone("+818012345678")
-                .lat(BigDecimal.valueOf(37.123))
-                .lng(BigDecimal.valueOf(137.234))
+                .lat(BigDecimal.valueOf(37.1234567890))
+                .lng(BigDecimal.valueOf(137.1234567890))
                 .bgImageId(null)
                 .profileImageId(null)
                 .ownerId(ownerId)
@@ -99,14 +101,36 @@ public class BootstrapData implements CommandLineRunner {
                 .displayName("Blueprint 1")
                 .description("This is demo blueprint 1.")
                 .stampGrantCondDescription("1 stamp per $1")
-                .numMaxStamps(10)
-                .numMaxRedeems(3)
-                .numMaxIssues(2)
+                .numMaxStamps(50)
+                .numMaxRedeems(5)
+                .numMaxIssues(10)
                 .expirationDate(OffsetDateTime.now().plusMonths(1))
                 .bgImageId(null)
                 .isPublishing(true)
                 .store(entityManager.getReference(Store.class, storeId))
                 .build();
+        RedeemRule redeemRule1 = RedeemRule.builder()
+                .displayName("Rule 1")
+                .description("This is Rule 1")
+                .consumes(1)
+                .imageId(null)
+                .blueprint(blueprint1)
+                .build();
+        RedeemRule redeemRule2 = RedeemRule.builder()
+                .displayName("Rule 2")
+                .description("This is Rule 2")
+                .consumes(5)
+                .imageId(null)
+                .blueprint(blueprint1)
+                .build();
+        RedeemRule redeemRule3 = RedeemRule.builder()
+                .displayName("Rule 3")
+                .description("This is Rule 3")
+                .consumes(10)
+                .imageId(null)
+                .blueprint(blueprint1)
+                .build();
+        blueprint1.setRedeemRules(Set.of(redeemRule1, redeemRule2, redeemRule3));
         Blueprint savedBlueprint = blueprintRepository.saveAndFlush(blueprint1);
         blueprintId = savedBlueprint.getId();
 

@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -22,12 +21,12 @@ import java.util.*;
 public class CustomerCardController {
     @Value("${cards.alice.customer.server.host}:${cards.alice.customer.server.port}")
     private String customerHostname;
-    @Value("${cards.alice.customer.web.controllers.path.base}/${cards.alice.customer.web.controllers.path.card}")
+    @Value("${cards.alice.customer.web.controllers.path.base}${cards.alice.customer.web.controllers.path.card}")
     private String customerCardPath;
 
     private final CustomerCardService customerCardService;
 
-
+    // Tested
     @PostMapping(path = "${cards.alice.customer.web.controllers.path.card}")
     public ResponseEntity postCard(@RequestBody CardDto cardDto) {
         final CardDto savedCardDto = customerCardService.saveNewCard(cardDto);
@@ -41,7 +40,7 @@ public class CustomerCardController {
     }
 
     @PutMapping(path = "${cards.alice.customer.web.controllers.path.card}/{id}")
-    public ResponseEntity putCard(@PathVariable Long id, @Validated @RequestBody CardDto cardDto) {
+    public ResponseEntity putCard(@PathVariable Long id, @RequestBody CardDto cardDto) {
         Optional<CardDto> updatedCardDto = customerCardService.updateCardById(id, cardDto);
         updatedCardDto.orElseThrow(() -> new ResourceNotFoundException(Card.class, id));
         return ResponseEntity.noContent().build();
@@ -55,14 +54,15 @@ public class CustomerCardController {
     }
 
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.list}")
-    public ResponseEntity<Set<CardDto>> listCards(@RequestParam UUID customerId, @RequestParam List<Long> ids) {
+    public ResponseEntity<Set<CardDto>> listCards(@RequestParam(required = false) UUID customerId, @RequestParam(required = false) List<Long> ids) {
         if (customerId == null && CollectionUtils.isEmpty(ids)) {
             return ResponseEntity.badRequest().build();
         }
-        final Set<CardDto> cardDtos = customerCardService.listCards(customerId, new HashSet<>(ids));
+        final Set<CardDto> cardDtos = customerCardService.listCards(customerId, ids == null ? null : new HashSet<>(ids));
         return ResponseEntity.ok(cardDtos);
     }
 
+    // Tested
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.num-issues}")
     public ResponseEntity<Long> getNumIssues(@NotNull @RequestParam UUID customerId, @NotNull @RequestParam Long blueprintId) {
         final Long numIssues = customerCardService.getNumIssues(customerId, blueprintId);

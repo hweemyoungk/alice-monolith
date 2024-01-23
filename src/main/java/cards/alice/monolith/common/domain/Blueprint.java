@@ -29,7 +29,13 @@ public class Blueprint extends BaseEntity {
     private OffsetDateTime expirationDate;
     private String bgImageId;
     private Boolean isPublishing;
-    @OneToMany(mappedBy = "blueprint", cascade = CascadeType.PERSIST)
+    @OneToMany(
+            mappedBy = "blueprint", cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+            CascadeType.DETACH
+    })
     private Set<RedeemRule> redeemRules;
     @ManyToOne
     @JoinColumn(name = "store_id")

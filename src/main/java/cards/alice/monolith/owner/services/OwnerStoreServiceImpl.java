@@ -37,13 +37,15 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
 
     @Override
     public Optional<StoreDto> updateStoreById(Long id, StoreDto storeDto) {
+        storeDto.setVersion(null);
         final var atomicReference = new AtomicReference<Optional<StoreDto>>();
         storeRepository.findById(id).ifPresentOrElse(
                 srcStore -> {
-                    final Store destStore = storeMapper.toEntity(storeDto);
+                    /*final Store destStore = storeMapper.toEntity(storeDto);
                     destStore.setId(srcStore.getId());
-                    destStore.setVersion(srcStore.getVersion());
-                    final Store savedStore = storeRepository.save(destStore);
+                    destStore.setVersion(srcStore.getVersion());*/
+                    storeMapper.partialUpdate(storeDto, srcStore);
+                    final Store savedStore = storeRepository.save(srcStore);
                     final StoreDto savedStoreDto = storeMapper.toDto(savedStore);
                     atomicReference.set(Optional.of(savedStoreDto));
                 },
@@ -56,7 +58,13 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
 
     @Override
     public Set<StoreDto> listStores(UUID ownerId, Set<Long> ids) {
-        return storeRepository.findByOwnerIdAndIdIn(ownerId, ids).stream()
+        final Set<Store> stores;
+        if (ids == null) {
+            stores = storeRepository.findByOwnerId(ownerId);
+        } else {
+            stores = storeRepository.findByOwnerIdAndIdIn(ownerId, ids);
+        }
+        return stores.stream()
                 .map(storeMapper::toDto).collect(Collectors.toSet());
     }
 }

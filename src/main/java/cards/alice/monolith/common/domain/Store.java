@@ -23,7 +23,9 @@ public class Store extends BaseEntity {
     private String zipcode;
     private String address;
     private String phone;
+    @Column(precision = 10, scale = 7)
     private BigDecimal lat;
+    @Column(precision = 10, scale = 7)
     private BigDecimal lng;
     private String bgImageId;
     private String profileImageId;

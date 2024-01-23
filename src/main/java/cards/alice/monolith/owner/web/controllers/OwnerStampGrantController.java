@@ -18,12 +18,12 @@ import java.net.URI;
 public class OwnerStampGrantController {
     @Value("${cards.alice.owner.server.host}:${cards.alice.owner.server.port}")
     private String ownerHostname;
-    @Value("${cards.alice.owner.web.controllers.path.base}/${cards.alice.owner.web.controllers.path.stamp-grant}")
+    @Value("${cards.alice.owner.web.controllers.path.base}${cards.alice.owner.web.controllers.path.stamp-grant}")
     private String ownerStampGrantPath;
 
     private final OwnerStampGrantService ownerStampGrantService;
 
-    @PostMapping(path = "${cards.alice.owner.web.controllers.path.stampGrant}")
+    @PostMapping(path = "${cards.alice.owner.web.controllers.path.stamp-grant}")
     public ResponseEntity postStampGrant(@RequestBody StampGrantDto stampGrantDto) {
         final StampGrantDto savedStampGrantDto = ownerStampGrantService.saveNewStampGrant(stampGrantDto);
         return ResponseEntity.created(URI.create(ownerHostname + ownerStampGrantPath + "/" + savedStampGrantDto.getId())).build();

@@ -109,14 +109,11 @@ public class CardMapperImpl implements CardMapper {
         if (cardDto.getCustomerId() != null) {
             card.setCustomerId(cardDto.getCustomerId());
         }
-        /*if (cardDto.getStoreId() != null) {
-            card.setStore(
-                    entityManager.getReference(Store.class, cardDto.getStoreId()));
-        }*/
-        if (cardDto.getBlueprintId() != null) {
-            card.setBlueprint(
-                    entityManager.getReference(Blueprint.class, cardDto.getBlueprintId()));
-        }
+        // No need to map cardDto.storeId: card.store doesn't exist
+        //if (cardDto.getStoreId() != null) {
+        //    card.setStore(
+        //            entityManager.getReference(Store.class, cardDto.getStoreId()));
+        //}
         if (cardDto.getBgImageId() != null) {
             card.setBgImageId(cardDto.getBgImageId());
         }
@@ -128,6 +125,10 @@ public class CardMapperImpl implements CardMapper {
         }
         if (cardDto.getIsInactive() != null) {
             card.setIsInactive(cardDto.getIsInactive());
+        }
+        if (cardDto.getBlueprintId() != null) {
+            card.setBlueprint(
+                    entityManager.getReference(Blueprint.class, cardDto.getBlueprintId()));
         }
 
         return card;

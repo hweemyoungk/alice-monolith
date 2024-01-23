@@ -1,5 +1,6 @@
 package cards.alice.monolith.customer.services;
 
+import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.models.BlueprintDto;
 import cards.alice.monolith.common.repositories.BlueprintRepository;
 import cards.alice.monolith.common.web.mappers.BlueprintMapper;
@@ -25,7 +26,13 @@ public class CustomerBlueprintServiceImpl implements CustomerBlueprintService {
 
     @Override
     public Set<BlueprintDto> listBlueprints(Long storeId, Set<Long> ids) {
-        return blueprintRepository.findByStore_IdAndIdIn(storeId, ids).stream()
+        final Set<Blueprint> blueprints;
+        if (ids == null) {
+            blueprints = blueprintRepository.findByStore_Id(storeId);
+        } else {
+            blueprints = blueprintRepository.findByStore_IdAndIdIn(storeId, ids);
+        }
+        return blueprints.stream()
                 .map(blueprintMapper::toDto).collect(Collectors.toSet());
     }
 }

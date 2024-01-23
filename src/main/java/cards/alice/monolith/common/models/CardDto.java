@@ -1,6 +1,5 @@
 package cards.alice.monolith.common.models;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -22,8 +21,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @SuperBuilder
 public class CardDto extends BaseDto {
-    @NotBlank
-    private String displayName;
     @NotNull
     @PositiveOrZero
     private Integer numCollectedStamps;
@@ -32,7 +29,6 @@ public class CardDto extends BaseDto {
     private Integer numGoalStamps;
     /**
      * Retrieves value from {@link cards.alice.monolith.common.domain.Blueprint Card.blueprint}.
-     *
      */
     @NotNull
     private OffsetDateTime expirationDate;

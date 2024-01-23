@@ -1,7 +1,9 @@
 package cards.alice.monolith.common.web.mappers;
 
+import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.StoreDto;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +13,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StoreMapperImpl implements StoreMapper {
     private final BlueprintMapper blueprintMapper;
+    private final EntityManager entityManager;
 
     @Override
     public Store toEntity(StoreDto storeDto) {
@@ -33,8 +36,14 @@ public class StoreMapperImpl implements StoreMapper {
                 .lng(storeDto.getLng())
                 .bgImageId(storeDto.getBgImageId())
                 .profileImageId(storeDto.getProfileImageId())
-                .blueprints(storeDto.getBlueprintDtos().stream()
-                        .map(blueprintMapper::toEntity)
+                .ownerId(storeDto.getOwnerId())
+                .blueprints(storeDto.getBlueprintDtos() == null ? null : storeDto.getBlueprintDtos().stream()
+                        .map(blueprintDto -> {
+                            blueprintDto.setVersion(null);
+                            Blueprint reference = entityManager.getReference(Blueprint.class, blueprintDto.getId());
+                            blueprintMapper.partialUpdate(blueprintDto, reference);
+                            return reference;
+                        })
                         .collect(Collectors.toSet()));
         return store.build();
     }
@@ -123,7 +132,12 @@ public class StoreMapperImpl implements StoreMapper {
             }
             if (storeDto.getBlueprintDtos() != null) {
                 store.setBlueprints(storeDto.getBlueprintDtos().stream()
-                        .map(blueprintMapper::toEntity)
+                        .map(blueprintDto -> {
+                            blueprintDto.setVersion(null);
+                            Blueprint reference = entityManager.getReference(Blueprint.class, blueprintDto.getId());
+                            blueprintMapper.partialUpdate(blueprintDto, reference);
+                            return reference;
+                        })
                         .collect(Collectors.toSet()));
             }
 

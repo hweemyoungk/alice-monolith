@@ -6,4 +6,6 @@ public interface CustomerRedeemRequestService {
     RedeemRequestDto saveNewRedeemRequest(RedeemRequestDto redeemRequestDto);
 
     Boolean exists(String id);
+
+    void deleteRedeemRequestById(String id);
 }

@@ -1,11 +1,9 @@
 package cards.alice.monolith.customer.services;
 
-import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.CardDto;
 import cards.alice.monolith.common.repositories.CardRepository;
 import cards.alice.monolith.common.web.mappers.CardMapper;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +16,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CustomerCardServiceImpl implements CustomerCardService {
-    private final EntityManager entityManager;
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
-
-    private void setBlueprintReference(Card card, Long id) {
-        card.setBlueprint(entityManager.getReference(Blueprint.class, id));
-    }
 
     @Override
     public CardDto saveNewCard(CardDto cardDto) {
@@ -42,16 +35,21 @@ public class CustomerCardServiceImpl implements CustomerCardService {
                         cardRepository.findById(id).orElse(null)));
     }
 
+    // Tested
     @Override
     public Optional<CardDto> updateCardById(Long id, CardDto cardDto) {
         final var atomicReference = new AtomicReference<Optional<CardDto>>();
         cardRepository.findById(id).ifPresentOrElse(
                 srcCard -> {
-                    final Card destCard = cardMapper.toEntity(cardDto);
-                    destCard.setId(srcCard.getId());
-                    destCard.setVersion(srcCard.getVersion());
-                    setBlueprintReference(destCard, srcCard.getId());
-                    final Card savedCard = cardRepository.save(destCard);
+                    //final Card destCard = cardMapper.toEntity(cardDto);
+                    //destCard.setId(srcCard.getId());
+                    //destCard.setVersion(srcCard.getVersion());
+                    //setBlueprintReference(destCard, srcCard.getId());
+                    //final Card savedCard = cardRepository.save(destCard);
+                    cardDto.setId(null);
+                    cardDto.setVersion(null);
+                    cardMapper.partialUpdate(cardDto, srcCard);
+                    final Card savedCard = cardRepository.save(srcCard);
                     final CardDto savedCardDto = cardMapper.toDto(savedCard);
                     atomicReference.set(Optional.of(savedCardDto));
                 },
@@ -81,12 +79,23 @@ public class CustomerCardServiceImpl implements CustomerCardService {
 
     @Override
     public Optional<CardDto> softDeleteCardById(Long id) {
-        return patchCardById(id, CardDto.builder().isDeleted(true).build());
+        CardDto cardDto = CardDto.builder()
+                .isDiscarded(true)
+                .isDeleted(true)
+                .isInactive(true)
+                .build();
+        return patchCardById(id, cardDto);
     }
 
     @Override
     public Set<CardDto> listCards(UUID customerId, Set<Long> ids) {
-        return cardRepository.findByCustomerIdAndIdIn(customerId, ids).stream()
+        final Set<Card> cards;
+        if (ids == null) {
+            cards = cardRepository.findByCustomerId(customerId);
+        } else {
+            cards = cardRepository.findByCustomerIdAndIdIn(customerId, ids);
+        }
+        return cards.stream()
                 .map(cardMapper::toDto).collect(Collectors.toSet());
     }
 

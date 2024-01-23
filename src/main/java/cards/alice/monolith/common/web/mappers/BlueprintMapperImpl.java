@@ -1,6 +1,7 @@
 package cards.alice.monolith.common.web.mappers;
 
 import cards.alice.monolith.common.domain.Blueprint;
+import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.BlueprintDto;
 import jakarta.persistence.EntityManager;
@@ -37,7 +38,17 @@ public class BlueprintMapperImpl implements BlueprintMapper {
                 .bgImageId(blueprintDto.getBgImageId())
                 .isPublishing(blueprintDto.getIsPublishing())
                 .redeemRules(blueprintDto.getRedeemRuleDtos().stream()
-                        .map(redeemRuleMapper::toEntity)
+                        .map(redeemRuleDto -> {
+                            redeemRuleDto.setVersion(null);
+                            if (redeemRuleDto.getId() == null) {
+                                // New redeemRule
+                                return redeemRuleMapper.toEntity(redeemRuleDto);
+                            }
+                            // Modifying redeemRule
+                            RedeemRule reference = entityManager.getReference(RedeemRule.class, redeemRuleDto.getId());
+                            redeemRuleMapper.partialUpdate(redeemRuleDto, reference);
+                            return reference;
+                        })
                         .collect(Collectors.toSet()))
                 .store(entityManager.getReference(Store.class, blueprintDto.getStoreId()));
 
@@ -124,7 +135,17 @@ public class BlueprintMapperImpl implements BlueprintMapper {
         }
         if (blueprintDto.getRedeemRuleDtos() != null) {
             blueprint.setRedeemRules(blueprintDto.getRedeemRuleDtos().stream()
-                    .map(redeemRuleMapper::toEntity)
+                    .map(redeemRuleDto -> {
+                        redeemRuleDto.setVersion(null);
+                        if (redeemRuleDto.getId() == null) {
+                            // New redeemRule
+                            return redeemRuleMapper.toEntity(redeemRuleDto);
+                        }
+                        // Modifying redeemRule
+                        RedeemRule reference = entityManager.getReference(RedeemRule.class, redeemRuleDto.getId());
+                        redeemRuleMapper.partialUpdate(redeemRuleDto, reference);
+                        return reference;
+                    })
                     .collect(Collectors.toSet()));
         }
         if (blueprintDto.getStoreId() != null) {

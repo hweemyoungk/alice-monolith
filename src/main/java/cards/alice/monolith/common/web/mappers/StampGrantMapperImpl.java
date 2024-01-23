@@ -26,7 +26,8 @@ public class StampGrantMapperImpl implements StampGrantMapper {
         stampGrant.createdDate(stampGrantDto.getCreatedDate());
         stampGrant.lastModifiedDate(stampGrantDto.getLastModifiedDate());
         stampGrant.isDeleted(stampGrantDto.getIsDeleted());
-        stampGrant.card(entityManager.getReference(Card.class, stampGrantDto.getCardId()));
+        stampGrant.card(entityManager.getReference(
+                Card.class, stampGrantDto.getCardId()));
         stampGrant.numStamps(stampGrantDto.getNumStamps());
 
         return stampGrant.build();
@@ -77,8 +78,8 @@ public class StampGrantMapperImpl implements StampGrantMapper {
             stampGrant.setIsDeleted(stampGrantDto.getIsDeleted());
         }
         if (stampGrantDto.getCardId() != null) {
-            stampGrant.setCard(
-                    entityManager.getReference(Card.class, stampGrantDto.getCardId())
+            stampGrant.setCard(entityManager.getReference(
+                    Card.class, stampGrantDto.getCardId())
             );
         }
         if (stampGrantDto.getNumStamps() != null) {

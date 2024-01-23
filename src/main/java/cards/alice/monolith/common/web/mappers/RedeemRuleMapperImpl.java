@@ -28,7 +28,10 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
                 .description(redeemRuleDto.getDescription())
                 .consumes(redeemRuleDto.getConsumes())
                 .imageId(redeemRuleDto.getImageId())
-                .blueprint(entityManager.getReference(Blueprint.class, redeemRuleDto.getBlueprintId()));
+                .blueprint(
+                        // If redeemRuleDto is from brand new blueprintDto, blueprintId is null.
+                        redeemRuleDto.getBlueprintId() == null ? null : entityManager.getReference(
+                                Blueprint.class, redeemRuleDto.getBlueprintId()));
 
         return redeemRule.build();
     }
@@ -88,8 +91,8 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
             redeemRule.setImageId(redeemRuleDto.getImageId());
         }
         if (redeemRuleDto.getBlueprintId() != null) {
-            redeemRule.setBlueprint(
-                    entityManager.getReference(Blueprint.class, redeemRuleDto.getBlueprintId()));
+            redeemRule.setBlueprint(entityManager.getReference(
+                    Blueprint.class, redeemRuleDto.getBlueprintId()));
         }
 
         return redeemRule;

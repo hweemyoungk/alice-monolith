@@ -27,11 +27,11 @@ public class CustomerBlueprintController {
     }
 
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.blueprint.list}")
-    public ResponseEntity<Set<BlueprintDto>> listBlueprints(@RequestParam Long storeId, @RequestParam List<Long> ids) {
+    public ResponseEntity<Set<BlueprintDto>> listBlueprints(@RequestParam(required = false) Long storeId, @RequestParam(required = false) List<Long> ids) {
         if (storeId == null && CollectionUtils.isEmpty(ids)) {
             return ResponseEntity.badRequest().build();
         }
-        final Set<BlueprintDto> blueprintDtos = customerBlueprintService.listBlueprints(storeId, new HashSet<>(ids));
+        final Set<BlueprintDto> blueprintDtos = customerBlueprintService.listBlueprints(storeId, ids == null ? null : new HashSet<>(ids));
         return ResponseEntity.ok(blueprintDtos);
     }
 }

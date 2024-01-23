@@ -20,4 +20,14 @@ public class OwnerRedeemRuleServiceImpl implements OwnerRedeemRuleService {
         return redeemRuleRepository.findByBlueprint_Id(blueprintId).stream()
                 .map(redeemRuleMapper::toDto).collect(Collectors.toSet());
     }
+
+    /**
+     * @param redeemRuleDtos Could be mixture of old and brand new.
+     */
+    @Override
+    public Set<RedeemRuleDto> saveRedeemRules(Set<RedeemRuleDto> redeemRuleDtos) {
+        return redeemRuleRepository.saveAll(redeemRuleDtos.stream()
+                        .map(redeemRuleMapper::toEntity).collect(Collectors.toSet())).stream()
+                .map(redeemRuleMapper::toDto).collect(Collectors.toSet());
+    }
 }
