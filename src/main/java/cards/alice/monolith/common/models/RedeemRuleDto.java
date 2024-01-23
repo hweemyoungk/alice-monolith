@@ -1,10 +1,5 @@
 package cards.alice.monolith.common.models;
 
-import cards.alice.monolith.common.domain.Blueprint;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

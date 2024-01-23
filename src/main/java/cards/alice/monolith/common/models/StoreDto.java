@@ -40,8 +40,8 @@ public class StoreDto extends BaseDto {
     private BigDecimal lng;
     private String bgImageId;
     private String profileImageId;
-    @JsonProperty("blueprints")
-    private Set<BlueprintDto> blueprintDtos;
     @NotNull
     private UUID ownerId;
+    @JsonProperty("blueprints")
+    private Set<BlueprintDto> blueprintDtos;
 }

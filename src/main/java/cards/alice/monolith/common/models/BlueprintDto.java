@@ -18,14 +18,13 @@ import java.util.Set;
 public class BlueprintDto extends BaseDto {
     private String description;
     private String stampGrantCondDescription;
-    private String numMaxStamps;
-    private String numMaxRedeems;
-    private String numMaxIssues;
+    private Integer numMaxStamps;
+    private Integer numMaxRedeems;
+    private Integer numMaxIssues;
     private OffsetDateTime expirationDate;
     private String bgImageId;
     private Boolean isPublishing;
+    private Long storeId;
     @JsonProperty("redeemRules")
     private Set<RedeemRuleDto> redeemRuleDtos;
-    //private StoreDto store;
-    private Long storeId;
 }
