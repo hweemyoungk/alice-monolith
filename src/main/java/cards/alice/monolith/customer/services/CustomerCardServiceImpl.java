@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class CustomerCardServiceImpl implements CustomerCardService {
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
+    private final AuthenticatedCardAccessor authenticatedCardAccessor;
 
     @Override
     public CardDto saveNewCard(CardDto cardDto) {
@@ -30,22 +31,17 @@ public class CustomerCardServiceImpl implements CustomerCardService {
 
     @Override
     public Optional<CardDto> getCardById(Long id) {
-        return Optional.ofNullable(
-                cardMapper.toDto(
-                        cardRepository.findById(id).orElse(null)));
+        return Optional.ofNullable(cardMapper.toDto(
+                authenticatedCardAccessor.authenticatedGetById(id)));
     }
 
     // Tested
     @Override
     public Optional<CardDto> updateCardById(Long id, CardDto cardDto) {
+        Optional<Card> card = Optional.ofNullable(authenticatedCardAccessor.authenticatedGetById(id));
         final var atomicReference = new AtomicReference<Optional<CardDto>>();
-        cardRepository.findById(id).ifPresentOrElse(
+        card.ifPresentOrElse(
                 srcCard -> {
-                    //final Card destCard = cardMapper.toEntity(cardDto);
-                    //destCard.setId(srcCard.getId());
-                    //destCard.setVersion(srcCard.getVersion());
-                    //setBlueprintReference(destCard, srcCard.getId());
-                    //final Card savedCard = cardRepository.save(destCard);
                     cardDto.setId(null);
                     cardDto.setVersion(null);
                     cardMapper.partialUpdate(cardDto, srcCard);
@@ -62,10 +58,11 @@ public class CustomerCardServiceImpl implements CustomerCardService {
 
     @Override
     public Optional<CardDto> patchCardById(Long id, CardDto cardDto) {
+        Optional<Card> card = Optional.ofNullable(authenticatedCardAccessor.authenticatedGetById(id));
         final var atomicReference = new AtomicReference<Optional<CardDto>>();
-        cardRepository.findById(id).ifPresentOrElse(
-                card -> {
-                    final Card patchedCard = cardMapper.partialUpdate(cardDto, card);
+        card.ifPresentOrElse(
+                srcCard -> {
+                    final Card patchedCard = cardMapper.partialUpdate(cardDto, srcCard);
                     final Card savedCard = cardRepository.save(patchedCard);
                     final CardDto savedCardDto = cardMapper.toDto(savedCard);
                     atomicReference.set(Optional.of(savedCardDto));

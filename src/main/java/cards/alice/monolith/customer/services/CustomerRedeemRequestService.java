@@ -1,11 +1,14 @@
 package cards.alice.monolith.customer.services;
 
 import cards.alice.monolith.common.models.RedeemRequestDto;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 public interface CustomerRedeemRequestService {
     RedeemRequestDto saveNewRedeemRequest(RedeemRequestDto redeemRequestDto);
 
-    Boolean exists(String id);
+    @PreAuthorize("authentication.name == #redeemRequestDto.customerId.toString()")
+    Boolean exists(RedeemRequestDto redeemRequestDto);
 
-    void deleteRedeemRequestById(String id);
+    @PreAuthorize("authentication.name == #redeemRequestDto.customerId.toString()")
+    void deleteRedeemRequest(RedeemRequestDto redeemRequestDto);
 }

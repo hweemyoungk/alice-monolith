@@ -13,11 +13,11 @@ import java.util.Optional;
 public class OwnerCardServiceImpl implements OwnerCardService {
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
+    private final AuthenticatedCardAccessor authenticatedCardAccessor;
 
     @Override
     public Optional<CardDto> getCardById(Long id) {
-        return Optional.ofNullable(
-                cardMapper.toDto(
-                        cardRepository.findById(id).orElse(null)));
+        return Optional.ofNullable(cardMapper.toDto(
+                authenticatedCardAccessor.authenticatedGetById(id)));
     }
 }

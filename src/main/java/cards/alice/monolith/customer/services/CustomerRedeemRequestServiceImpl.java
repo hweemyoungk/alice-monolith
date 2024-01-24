@@ -32,7 +32,6 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
 
     private final CardRepository cardRepository;
     private final RedeemRuleRepository redeemRuleRepository;
-    private final CardMapper cardMapper;
     private final ObjectMapper objectMapper;
     private final JedisPooled jedis;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -139,30 +138,36 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
         return redeemRequestDto;
     }
 
-    @Override
-    public Boolean exists(String id) {
+    public RedeemRequestDto getRedeemRequestById(String id) {
         final RedeemRequestDto redeemRequestDto = new RedeemRequestDto(id);
         final String serializedRedeemRequestDto =
                 jedis.hget(redeemRequestDto.getOwnerRedeemRequestsKey(), redeemRequestDto.getFieldName());
         if (serializedRedeemRequestDto == null) {
-            return false;
+            return null;
         }
-
         final RedeemRequestDto targetRedeemRequestDto;
         try {
             targetRedeemRequestDto = objectMapper.readValue(serializedRedeemRequestDto, RedeemRequestDto.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+        return targetRedeemRequestDto;
+    }
+
+    @Override
+    public Boolean exists(RedeemRequestDto redeemRequestDto) {
+        final RedeemRequestDto targetRedeemRequestDto = getRedeemRequestById(redeemRequestDto.getId());
+        if (targetRedeemRequestDto == null) {
+            return false;
+        }
         return targetRedeemRequestDto.getToken()
                 .compareTo(redeemRequestDto.getToken()) == 0;
     }
 
     @Override
-    public void deleteRedeemRequestById(String id) {
-        final RedeemRequestDto redeemRequestDto = new RedeemRequestDto(id);
+    public void deleteRedeemRequest(RedeemRequestDto redeemRequestDto) {
         long deleted = jedis.hdel(redeemRequestDto.getOwnerRedeemRequestsKey(), redeemRequestDto.getFieldName());
-        final Future<?> redeemRequestTtlTask = redeemRequestTtlTaskPool.remove(id);
+        final Future<?> redeemRequestTtlTask = redeemRequestTtlTaskPool.remove(redeemRequestDto.getId());
         if (redeemRequestTtlTask != null) {
             redeemRequestTtlTask.cancel(true);
         }

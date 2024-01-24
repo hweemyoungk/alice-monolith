@@ -1,5 +1,6 @@
 package cards.alice.monolith.customer.services;
 
+import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.models.RedeemRuleDto;
 import cards.alice.monolith.common.repositories.RedeemRuleRepository;
 import cards.alice.monolith.common.web.mappers.RedeemRuleMapper;
@@ -14,10 +15,12 @@ import java.util.stream.Collectors;
 public class CustomerRedeemRuleServiceImpl implements CustomerRedeemRuleService {
     private final RedeemRuleRepository redeemRuleRepository;
     private final RedeemRuleMapper redeemRuleMapper;
+    private final AuthenticatedBlueprintAccessor authenticatedBlueprintAccessor;
 
     @Override
     public Set<RedeemRuleDto> listRedeemRules(Long blueprintId) {
-        return redeemRuleRepository.findByBlueprint_Id(blueprintId).stream()
-                .map(redeemRuleMapper::toDto).collect(Collectors.toSet());
+        final Blueprint blueprint = authenticatedBlueprintAccessor.authenticatedGetById(blueprintId);
+        return blueprint.getRedeemRules().stream().map(redeemRuleMapper::toDto).collect(Collectors.toSet());
+        //return redeemRuleRepository.findByBlueprint_Id(blueprintId).stream().map(redeemRuleMapper::toDto).collect(Collectors.toSet());
     }
 }

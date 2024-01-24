@@ -16,12 +16,18 @@ import java.util.stream.Collectors;
 public class CustomerBlueprintServiceImpl implements CustomerBlueprintService {
     private final BlueprintRepository blueprintRepository;
     private final BlueprintMapper blueprintMapper;
+    private final AuthenticatedBlueprintAccessor authenticatedBlueprintAccessor;
+
+    @Override
+    public BlueprintDto authorizedGetBlueprintById(Long id) {
+        return blueprintMapper.toDto(
+                blueprintRepository.findById(id).orElse(null));
+    }
 
     @Override
     public Optional<BlueprintDto> getBlueprintById(Long id) {
-        return Optional.ofNullable(
-                blueprintMapper.toDto(
-                        blueprintRepository.findById(id).orElse(null)));
+        return Optional.ofNullable(blueprintMapper.toDto(
+                authenticatedBlueprintAccessor.authenticatedGetById(id)));
     }
 
     @Override

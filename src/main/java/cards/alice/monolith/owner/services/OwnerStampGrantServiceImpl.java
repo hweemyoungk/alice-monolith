@@ -12,9 +12,13 @@ import org.springframework.stereotype.Service;
 public class OwnerStampGrantServiceImpl implements OwnerStampGrantService {
     private final StampGrantRepository stampGrantRepository;
     private final StampGrantMapper stampGrantMapper;
+    private final AuthenticatedCardAccessor authenticatedCardAccessor;
 
     @Override
     public StampGrantDto saveNewStampGrant(StampGrantDto stampGrantDto) {
+        // Authenticate
+        authenticatedCardAccessor.authenticatedGetById(stampGrantDto.getCardId());
+
         final StampGrant stampGrant = stampGrantMapper.toEntity(stampGrantDto);
         stampGrant.setId(null);
         stampGrant.setVersion(null);

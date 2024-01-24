@@ -1,5 +1,6 @@
 package cards.alice.monolith.owner.services;
 
+import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.models.RedeemRuleDto;
 import cards.alice.monolith.common.repositories.RedeemRuleRepository;
 import cards.alice.monolith.common.web.mappers.RedeemRuleMapper;
@@ -14,10 +15,13 @@ import java.util.stream.Collectors;
 public class OwnerRedeemRuleServiceImpl implements OwnerRedeemRuleService {
     private final RedeemRuleRepository redeemRuleRepository;
     private final RedeemRuleMapper redeemRuleMapper;
+    private final AuthenticatedBlueprintAccessor authenticatedBlueprintAccessor;
 
     @Override
     public Set<RedeemRuleDto> listRedeemRules(Long blueprintId) {
-        return redeemRuleRepository.findByBlueprint_Id(blueprintId).stream()
+        // Authenticate
+        final Blueprint blueprint = authenticatedBlueprintAccessor.authenticatedGetById(blueprintId);
+        return blueprint.getRedeemRules().stream()
                 .map(redeemRuleMapper::toDto).collect(Collectors.toSet());
     }
 

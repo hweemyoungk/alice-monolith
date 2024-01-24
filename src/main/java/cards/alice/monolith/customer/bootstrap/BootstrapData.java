@@ -143,7 +143,7 @@ public class BootstrapData implements CommandLineRunner {
                 .numMaxIssues(4)
                 .expirationDate(OffsetDateTime.now().plusMonths(2))
                 .bgImageId(null)
-                .isPublishing(true)
+                .isPublishing(false)
                 .store(entityManager.getReference(Store.class, storeId))
                 .build();
         blueprintRepository.saveAndFlush(blueprint2);

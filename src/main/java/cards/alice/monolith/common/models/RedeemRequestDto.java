@@ -68,8 +68,6 @@ public class RedeemRequestDto {
     public RedeemRequestDto(String id) {
         final String[] split = id.split("#");
         token = UUID.fromString(split[1]);
-        //final Matcher matcher = OWNER_REDEEM_REQUESTS_KEY_PREFIX_PATTERN.matcher(split[0]);
-        //final String keyWithFieldName = matcher.group(1);
         String keyWithFieldName = split[0].replaceFirst(OWNER_REDEEM_REQUESTS_KEY_PREFIX, "");
         String[] split1 = keyWithFieldName.split(":");
         ownerId = UUID.fromString(split1[0]);
