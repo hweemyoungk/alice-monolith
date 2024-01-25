@@ -1,4 +1,4 @@
-package cards.alice.monolith.customer.services;
+package cards.alice.monolith.owner.services;
 
 import cards.alice.monolith.common.config.AuthenticatedEntityAccessor;
 import cards.alice.monolith.common.domain.Card;
@@ -7,14 +7,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
-public class AuthenticatedCardAccessor implements AuthenticatedEntityAccessor<Card, Long> {
+public class OwnerAuthenticatedCardAccessor implements AuthenticatedEntityAccessor<Card, Long> {
     private final CardRepository cardRepository;
 
     @Override
-    @PostAuthorize("returnObject == null ? true : authentication.name == returnObject.customerId.toString()")
-    public Card authenticatedGetById(Long id) {
-        return cardRepository.findById(id).orElse(null);
+    @PostAuthorize("returnObject.empty ? true : authentication.name == returnObject.get().blueprint.store.ownerId.toString()")
+    public Optional<Card> findById(Long id) {
+        return cardRepository.findById(id);
     }
 }

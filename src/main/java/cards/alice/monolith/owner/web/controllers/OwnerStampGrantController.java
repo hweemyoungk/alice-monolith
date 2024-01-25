@@ -25,7 +25,7 @@ public class OwnerStampGrantController {
 
     @PostMapping(path = "${cards.alice.owner.web.controllers.path.stamp-grant}")
     public ResponseEntity postStampGrant(@RequestBody StampGrantDto stampGrantDto) {
-        final StampGrantDto savedStampGrantDto = ownerStampGrantService.saveNewStampGrant(stampGrantDto);
+        final StampGrantDto savedStampGrantDto = ownerStampGrantService.grantStampsToCard(stampGrantDto);
         return ResponseEntity.created(URI.create(ownerHostname + ownerStampGrantPath + "/" + savedStampGrantDto.getId())).build();
     }
 }

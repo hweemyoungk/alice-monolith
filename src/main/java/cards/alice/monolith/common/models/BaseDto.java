@@ -28,4 +28,9 @@ public class BaseDto implements Serializable {
     private OffsetDateTime createdDate;
     private OffsetDateTime lastModifiedDate;
     private Boolean isDeleted;
+
+    public void setIdVersionNull() {
+        id = null;
+        version = null;
+    }
 }

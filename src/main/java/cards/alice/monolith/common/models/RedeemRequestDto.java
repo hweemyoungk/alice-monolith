@@ -11,6 +11,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.time.Instant;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -42,7 +43,7 @@ public class RedeemRequestDto {
     private String blueprintDisplayName;
     @JsonProperty("ttlMilliseconds")
     @Positive
-    private Long ttl;
+    private Long expMilliseconds;
     private Boolean isRedeemed = false;
 
     public static String getOwnerRedeemRequestsKey(String ownerId) {
@@ -63,6 +64,10 @@ public class RedeemRequestDto {
         return OWNER_REDEEM_REQUESTS_KEY_PREFIX
                 + String.join(":", ownerId.toString(), redeemRuleId.toString(), cardId.toString())
                 + "#" + token.toString();
+    }
+
+    public void setTtlMillisecondsFromNow(long milliseconds) {
+        expMilliseconds = Instant.now().toEpochMilli() + milliseconds;
     }
 
     public RedeemRequestDto(String id) {

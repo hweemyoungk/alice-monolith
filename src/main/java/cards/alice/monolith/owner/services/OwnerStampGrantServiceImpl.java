@@ -1,28 +1,60 @@
 package cards.alice.monolith.owner.services;
 
+import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.domain.StampGrant;
+import cards.alice.monolith.common.models.CardDto;
 import cards.alice.monolith.common.models.StampGrantDto;
 import cards.alice.monolith.common.repositories.StampGrantRepository;
+import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
+import cards.alice.monolith.common.web.mappers.CardMapper;
 import cards.alice.monolith.common.web.mappers.StampGrantMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class OwnerStampGrantServiceImpl implements OwnerStampGrantService {
     private final StampGrantRepository stampGrantRepository;
     private final StampGrantMapper stampGrantMapper;
-    private final AuthenticatedCardAccessor authenticatedCardAccessor;
+    private final CardMapper cardMapper;
+    private final OwnerAuthenticatedCardAccessor authenticatedCardAccessor;
+    private final OwnerCardService ownerCardService;
 
     @Override
     public StampGrantDto saveNewStampGrant(StampGrantDto stampGrantDto) {
-        // Authenticate
-        authenticatedCardAccessor.authenticatedGetById(stampGrantDto.getCardId());
-
         final StampGrant stampGrant = stampGrantMapper.toEntity(stampGrantDto);
         stampGrant.setId(null);
         stampGrant.setVersion(null);
         return stampGrantMapper.toDto(
                 stampGrantRepository.save(stampGrant));
+    }
+
+    @Override
+    @Transactional
+    public StampGrantDto grantStampsToCard(StampGrantDto stampGrantDto) {
+        // Validate(Includes authenticate)
+        validateGrant(stampGrantDto);
+
+        // Grant
+        final Card card = authenticatedCardAccessor.findById(stampGrantDto.getCardId()).get();
+        CardDto cardDto = cardMapper.toDto(card);
+        cardDto.setNumCollectedStamps(
+                cardDto.getNumCollectedStamps() + stampGrantDto.getNumStamps());
+        ownerCardService.updateCardById(cardDto.getId(), cardDto);
+
+        // Save stampGrant
+        return saveNewStampGrant(stampGrantDto);
+    }
+
+    private void validateGrant(StampGrantDto stampGrantDto) {
+        // Authenticate
+        final Card card = authenticatedCardAccessor.findById(stampGrantDto.getCardId())
+                .orElseThrow(() -> new ResourceNotFoundException(Card.class, stampGrantDto.getCardId()));
+
+        final int maxNumGrant = card.getBlueprint().getNumMaxStamps() - card.getNumCollectedStamps();
+        if (stampGrantDto.getNumStamps() <= maxNumGrant) {
+            throw new IllegalArgumentException("Granting too many stamps: max allowed is " + maxNumGrant + " but granting " + stampGrantDto.getNumStamps());
+        }
     }
 }

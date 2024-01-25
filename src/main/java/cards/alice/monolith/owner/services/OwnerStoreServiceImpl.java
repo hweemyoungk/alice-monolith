@@ -19,13 +19,12 @@ import java.util.stream.Collectors;
 public class OwnerStoreServiceImpl implements OwnerStoreService {
     private final StoreRepository storeRepository;
     private final StoreMapper storeMapper;
-    private final AuthenticatedStoreAccessor authenticatedStoreAccessor;
+    private final OwnerAuthenticatedStoreAccessor authenticatedStoreAccessor;
 
     @Override
     public StoreDto saveNewStore(StoreDto storeDto) {
+        storeDto.setIdVersionNull();
         final Store store = storeMapper.toEntity(storeDto);
-        store.setId(null);
-        store.setVersion(null);
         return storeMapper.toDto(
                 storeRepository.save(store));
     }
@@ -33,19 +32,18 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
     @Override
     public Optional<StoreDto> getStoreById(Long id) {
         return Optional.ofNullable(storeMapper.toDto(
-                authenticatedStoreAccessor.authenticatedGetById(id)));
+                authenticatedStoreAccessor.findById(id).orElse(null)));
     }
 
     @Override
     public Optional<StoreDto> updateStoreById(Long id, StoreDto storeDto) {
         // Authenticate
-        Optional<Store> store = Optional.ofNullable(authenticatedStoreAccessor.authenticatedGetById(id));
+        Optional<Store> store = authenticatedStoreAccessor.findById(id);
 
-        storeDto.setId(null);
-        storeDto.setVersion(null);
         final var atomicReference = new AtomicReference<Optional<StoreDto>>();
         store.ifPresentOrElse(
                 srcStore -> {
+                    storeDto.setIdVersionNull();
                     storeMapper.partialUpdate(storeDto, srcStore);
                     final Store savedStore = storeRepository.save(srcStore);
                     final StoreDto savedStoreDto = storeMapper.toDto(savedStore);
@@ -59,7 +57,7 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
     }
 
     @Override
-    @PostFilter("authentication.name == filterObject.ownerId")
+    @PostFilter("authentication.name == filterObject.ownerId.toString()")
     public Set<StoreDto> listStores(UUID ownerId, Set<Long> ids) {
         final Set<Store> stores;
         if (ids == null) {

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class CustomerCardServiceImpl implements CustomerCardService {
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
-    private final AuthenticatedCardAccessor authenticatedCardAccessor;
+    private final CustomerAuthenticatedCardAccessor authenticatedCardAccessor;
 
     @Override
     public CardDto saveNewCard(CardDto cardDto) {
@@ -32,13 +32,13 @@ public class CustomerCardServiceImpl implements CustomerCardService {
     @Override
     public Optional<CardDto> getCardById(Long id) {
         return Optional.ofNullable(cardMapper.toDto(
-                authenticatedCardAccessor.authenticatedGetById(id)));
+                authenticatedCardAccessor.findById(id).orElse(null)));
     }
 
     // Tested
     @Override
     public Optional<CardDto> updateCardById(Long id, CardDto cardDto) {
-        Optional<Card> card = Optional.ofNullable(authenticatedCardAccessor.authenticatedGetById(id));
+        Optional<Card> card = authenticatedCardAccessor.findById(id);
         final var atomicReference = new AtomicReference<Optional<CardDto>>();
         card.ifPresentOrElse(
                 srcCard -> {
@@ -58,7 +58,7 @@ public class CustomerCardServiceImpl implements CustomerCardService {
 
     @Override
     public Optional<CardDto> patchCardById(Long id, CardDto cardDto) {
-        Optional<Card> card = Optional.ofNullable(authenticatedCardAccessor.authenticatedGetById(id));
+        Optional<Card> card = authenticatedCardAccessor.findById(id);
         final var atomicReference = new AtomicReference<Optional<CardDto>>();
         card.ifPresentOrElse(
                 srcCard -> {

@@ -26,7 +26,7 @@ public class OwnerStoreController {
     private final OwnerStoreService ownerStoreService;
 
     @PostMapping(path = "${cards.alice.owner.web.controllers.path.store}")
-    @PreAuthorize("authentication.name == #storeDto.ownerId")
+    @PreAuthorize("authentication.name == #storeDto.ownerId.toString()")
     public ResponseEntity postStore(@RequestBody StoreDto storeDto) {
         final StoreDto savedStoreDto = ownerStoreService.saveNewStore(storeDto);
         return ResponseEntity.created(URI.create(ownerHostname + ownerStorePath + "/" + savedStoreDto.getId())).build();
@@ -39,7 +39,7 @@ public class OwnerStoreController {
     }
 
     @PutMapping(path = "${cards.alice.owner.web.controllers.path.store}/{id}")
-    @PreAuthorize("authentication.name == #storeDto.ownerId")
+    @PreAuthorize("authentication.name == #storeDto.ownerId.toString()")
     //public ResponseEntity putStore(@PathVariable Long id, @Validated @RequestBody StoreDto storeDto) {
     public ResponseEntity putStore(@PathVariable Long id, @RequestBody StoreDto storeDto) {
         Optional<StoreDto> updatedStoreDto = ownerStoreService.updateStoreById(id, storeDto);

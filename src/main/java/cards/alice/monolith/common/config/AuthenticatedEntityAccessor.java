@@ -1,5 +1,7 @@
 package cards.alice.monolith.common.config;
 
+import java.util.Optional;
+
 public interface AuthenticatedEntityAccessor<T, ID> {
-    T authenticatedGetById(ID id);
+    Optional<T> findById(ID id);
 }

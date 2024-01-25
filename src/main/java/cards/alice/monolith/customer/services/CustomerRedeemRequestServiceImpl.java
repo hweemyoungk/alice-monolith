@@ -7,16 +7,17 @@ import cards.alice.monolith.common.models.RedeemRequestDto;
 import cards.alice.monolith.common.repositories.CardRepository;
 import cards.alice.monolith.common.repositories.RedeemRuleRepository;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
-import cards.alice.monolith.common.web.mappers.CardMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import redis.clients.jedis.JedisPooled;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -32,16 +33,18 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
 
     private final CardRepository cardRepository;
     private final RedeemRuleRepository redeemRuleRepository;
+    private final CustomerAuthenticatedCardAccessor authenticatedCardAccessor;
+    private final CustomerAuthenticatedRedeemRequestAccessor authenticatedRedeemRequestAccessor;
     private final ObjectMapper objectMapper;
     private final JedisPooled jedis;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private final Map<String, Future<?>> redeemRequestTtlTaskPool;
 
-    public Card validateRedeemRequestDto(RedeemRequestDto redeemRequestDto) {
+    private void validateRedeemRequestDto(RedeemRequestDto redeemRequestDto) {
+        final Card card = authenticatedCardAccessor.findById(redeemRequestDto.getCardId())
+                .orElseThrow(() -> new ResourceNotFoundException(Card.class, redeemRequestDto.getCardId()));
+
         // Validate
-        final Long cardId = redeemRequestDto.getCardId();
-        final Card card = cardRepository.findById(cardId)
-                .orElseThrow(() -> new ResourceNotFoundException(Card.class, cardId));
         if (!(card.getCustomerId().equals(redeemRequestDto.getCustomerId()))) {
             throw new IllegalArgumentException("Card doesn't belong to current customer");
         }
@@ -52,52 +55,64 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
         if (!card.getBlueprint().equals(redeemRule.getBlueprint())) {
             throw new IllegalArgumentException("Blueprint of card and that of redeemRule don't match");
         }
-
-        return card;
     }
 
     @Override
-    public RedeemRequestDto saveNewRedeemRequest(RedeemRequestDto redeemRequestDto) {
-        redeemRequestDto.setId(null);
-        redeemRequestDto.setIsRedeemed(false);
+    @Transactional
+    public RedeemRequestDto handlePostRedeemRequest(RedeemRequestDto redeemRequestDtoFromCustomer) {
+        validateRedeemRequestDto(redeemRequestDtoFromCustomer);
 
-        final Card card = validateRedeemRequestDto(redeemRequestDto);
+        redeemRequestDtoFromCustomer.setId(null);
+        redeemRequestDtoFromCustomer.setIsRedeemed(false);
 
         // Configure RedeemRequestDto
+        final Card card = cardRepository.findById(redeemRequestDtoFromCustomer.getCardId())
+                .orElseThrow(() -> new ResourceNotFoundException(Card.class, redeemRequestDtoFromCustomer.getCardId()));
         final Blueprint blueprint = card.getBlueprint();
         final UUID ownerId = blueprint.getStore().getOwnerId();
-        redeemRequestDto.setOwnerId(ownerId);
-        final String ownerRedeemRequestsKey = redeemRequestDto.getOwnerRedeemRequestsKey();
-        final String fieldName = redeemRequestDto.getFieldName();
+        redeemRequestDtoFromCustomer.setOwnerId(ownerId);
+
+        // Query Redis
+        final String ownerRedeemRequestsKey = redeemRequestDtoFromCustomer.getOwnerRedeemRequestsKey();
+        final String fieldName = redeemRequestDtoFromCustomer.getFieldName();
         final String serializedRedeemRequestDto = jedis.hget(ownerRedeemRequestsKey, fieldName);
         final RedeemRequestDto targetRedeemRequestDto;
         if (serializedRedeemRequestDto != null) {
+            // Deserialize
             try {
                 targetRedeemRequestDto = objectMapper.readValue(serializedRedeemRequestDto, RedeemRequestDto.class);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
 
-            if (!targetRedeemRequestDto.getIsRedeemed()) {
-                final Future<?> oldRedeemRequestTtlFuture = redeemRequestTtlTaskPool.remove(targetRedeemRequestDto.getId());
-                if (oldRedeemRequestTtlFuture != null) {
-                    // If not redeemed, cancel old timer (and set new timer later)
-                    oldRedeemRequestTtlFuture.cancel(true);
-                }
-            } else {
+            // Check redeemed
+            if (targetRedeemRequestDto.getIsRedeemed()) {
                 // If redeemed, new timer is not needed
                 return targetRedeemRequestDto;
             }
+
+            // Not redeemed yet
+            // Refresh ttl
+            targetRedeemRequestDto.setTtlMillisecondsFromNow(watchRedeemRequestDurationSeconds * 1000);
+            try {
+                final String serializedTargetRedeemRequestDto  = objectMapper.writeValueAsString(targetRedeemRequestDto);
+                jedis.hset(targetRedeemRequestDto.getOwnerRedeemRequestsKey(), targetRedeemRequestDto.getFieldName(), serializedTargetRedeemRequestDto);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+
+            // Cancel old timer
+            final Future<?> oldRedeemRequestTtlFuture = redeemRequestTtlTaskPool.remove(targetRedeemRequestDto.getId());
+            if (oldRedeemRequestTtlFuture != null) {
+                // If not redeemed, cancel old timer (and set new timer later)
+                oldRedeemRequestTtlFuture.cancel(true);
+            }
         } else {
-            // dto not exists or timer not found: Create new
-            targetRedeemRequestDto = newRedeemRequest(redeemRequestDto, blueprint);
+            // dto not exists: Create new
+            targetRedeemRequestDto = newRedeemRequest(redeemRequestDtoFromCustomer, blueprint);
         }
 
-        // Common: Set new timer
-        /*Executor executor = CompletableFuture.delayedExecutor(watchRedeemRequestDurationSeconds, TimeUnit.SECONDS);
-        executor.execute(() -> {
-            jedis.hdel(ownerRedeemRequestsKey, fieldName);
-        });*/
+        // Set new timer
         final Future<?> newRedeemRequestTtlFuture = threadPoolTaskExecutor.submit(() -> {
             // TODO: do not block IO
             try {
@@ -116,7 +131,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
 
     private RedeemRequestDto newRedeemRequest(RedeemRequestDto redeemRequestDto, Blueprint blueprint) {
         redeemRequestDto.setBlueprintDisplayName(blueprint.getDisplayName());
-        redeemRequestDto.setTtl(watchRedeemRequestDurationSeconds * 1000);
+        redeemRequestDto.setTtlMillisecondsFromNow(watchRedeemRequestDurationSeconds * 1000);
         redeemRequestDto.setIsRedeemed(false);
         redeemRequestDto.setToken(UUID.randomUUID());
 
@@ -138,7 +153,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
         return redeemRequestDto;
     }
 
-    public RedeemRequestDto getRedeemRequestById(String id) {
+    private RedeemRequestDto getRedeemRequestById(String id) {
         final RedeemRequestDto redeemRequestDto = new RedeemRequestDto(id);
         final String serializedRedeemRequestDto =
                 jedis.hget(redeemRequestDto.getOwnerRedeemRequestsKey(), redeemRequestDto.getFieldName());
@@ -155,19 +170,28 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
     }
 
     @Override
-    public Boolean exists(RedeemRequestDto redeemRequestDto) {
-        final RedeemRequestDto targetRedeemRequestDto = getRedeemRequestById(redeemRequestDto.getId());
-        if (targetRedeemRequestDto == null) {
+    public boolean exists(RedeemRequestDto redeemRequestDtoFromCustomer) {
+        final Optional<RedeemRequestDto> targetRedeemRequestDto
+                = authenticatedRedeemRequestAccessor.findById(redeemRequestDtoFromCustomer.getId());
+
+        if (targetRedeemRequestDto.isEmpty()) {
             return false;
         }
-        return targetRedeemRequestDto.getToken()
-                .compareTo(redeemRequestDto.getToken()) == 0;
+
+        if (targetRedeemRequestDto.get().getToken()
+                .compareTo(redeemRequestDtoFromCustomer.getToken()) != 0) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
     public void deleteRedeemRequest(RedeemRequestDto redeemRequestDto) {
-        long deleted = jedis.hdel(redeemRequestDto.getOwnerRedeemRequestsKey(), redeemRequestDto.getFieldName());
-        final Future<?> redeemRequestTtlTask = redeemRequestTtlTaskPool.remove(redeemRequestDto.getId());
+        final RedeemRequestDto targetRedeemRequestDto = authenticatedRedeemRequestAccessor.findById(redeemRequestDto.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Redeem request not found"));
+        jedis.hdel(targetRedeemRequestDto.getOwnerRedeemRequestsKey(), targetRedeemRequestDto.getFieldName());
+        final Future<?> redeemRequestTtlTask = redeemRequestTtlTaskPool.remove(targetRedeemRequestDto.getId());
         if (redeemRequestTtlTask != null) {
             redeemRequestTtlTask.cancel(true);
         }

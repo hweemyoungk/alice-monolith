@@ -13,9 +13,6 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface CardRepository extends JpaRepository<Card, Long> {
-    @Query("select c from Card c where c.id = :id")
-    @PostAuthorize("authentication.name == returnObject.customerId")
-    Card authorizedFindById(Long id);
     @Query("select c from Card c where c.customerId = :customerId")
     Set<Card> findByCustomerId(@Param("customerId") @NonNull UUID customerId);
     @Query("select count(c) from Card c where c.customerId = :customerId and c.blueprint.id = :id")

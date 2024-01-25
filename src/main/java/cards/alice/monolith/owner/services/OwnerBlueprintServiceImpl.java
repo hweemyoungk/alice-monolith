@@ -21,17 +21,17 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     private final BlueprintRepository blueprintRepository;
     private final BlueprintMapper blueprintMapper;
     private final OwnerRedeemRuleService ownerRedeemRuleService;
-    private final AuthenticatedStoreAccessor authenticatedStoreAccessor;
-    private final AuthenticatedBlueprintAccessor authenticatedBlueprintAccessor;
+    private final OwnerAuthenticatedStoreAccessor authenticatedStoreAccessor;
+    private final OwnerAuthenticatedBlueprintAccessor authenticatedBlueprintAccessor;
 
     // Tested
     @Override
     @Transactional
     public BlueprintDto saveNewBlueprint(BlueprintDto blueprintDto) {
-        final Blueprint blueprint = blueprintMapper.toEntity(blueprintDto);
-
         // Authenticate
-        authenticatedStoreAccessor.authenticatedGetById(blueprintDto.getStoreId());
+        authenticatedStoreAccessor.findById(blueprintDto.getStoreId());
+
+        final Blueprint blueprint = blueprintMapper.toEntity(blueprintDto);
 
         // Save blueprint without redeemRules
         blueprint.setRedeemRules(new HashSet<>());
@@ -53,7 +53,7 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     @Override
     public Optional<BlueprintDto> getBlueprintById(Long id) {
         return Optional.ofNullable(blueprintMapper.toDto(
-                authenticatedBlueprintAccessor.authenticatedGetById(id)));
+                authenticatedBlueprintAccessor.findById(id).orElse(null)));
 
     }
 
@@ -61,7 +61,7 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     @Override
     public Optional<BlueprintDto> updateBlueprintById(Long id, BlueprintDto blueprintDto) {
         // Authenticate
-        Optional<Blueprint> blueprint = Optional.ofNullable(authenticatedBlueprintAccessor.authenticatedGetById(id));
+        Optional<Blueprint> blueprint = authenticatedBlueprintAccessor.findById(id);
 
         final var atomicReference = new AtomicReference<Optional<BlueprintDto>>();
         blueprint.ifPresentOrElse(
@@ -88,7 +88,9 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     @Override
     public Set<BlueprintDto> listBlueprints(Long storeId, Set<Long> ids) {
         // Authenticate
-        authenticatedStoreAccessor.authenticatedGetById(storeId);
+        if (storeId != null) {
+            authenticatedStoreAccessor.findById(storeId);
+        }
 
         final Set<Blueprint> blueprints;
         if (ids == null) {

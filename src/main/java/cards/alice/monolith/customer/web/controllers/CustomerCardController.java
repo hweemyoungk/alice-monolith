@@ -32,7 +32,7 @@ public class CustomerCardController {
 
     // Tested
     @PostMapping(path = "${cards.alice.customer.web.controllers.path.card}")
-    @PreAuthorize("authentication.name == #cardDto.customerId")
+    @PreAuthorize("authentication.name == #cardDto.customerId.toString()")
     public ResponseEntity postCard(@RequestBody CardDto cardDto) {
         final CardDto savedCardDto = customerCardService.saveNewCard(cardDto);
         return ResponseEntity.created(URI.create(customerHostname + customerCardPath + "/" + savedCardDto.getId())).build();
@@ -47,7 +47,7 @@ public class CustomerCardController {
     }
 
     @PutMapping(path = "${cards.alice.customer.web.controllers.path.card}/{id}")
-    @PreAuthorize("authentication.name == #cardDto.customerId")
+    @PreAuthorize("authentication.name == #cardDto.customerId.toString()")
     public ResponseEntity putCard(@PathVariable Long id, @RequestBody CardDto cardDto) {
         Optional<CardDto> updatedCardDto = customerCardService.updateCardById(id, cardDto);
         updatedCardDto.orElseThrow(() -> new ResourceNotFoundException(Card.class, id));
@@ -62,7 +62,7 @@ public class CustomerCardController {
     }
 
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.list}")
-    @PreAuthorize("#customerId != null ? authentication.name == #customerId : true")
+    @PreAuthorize("#customerId != null ? authentication.name == #customerId.toString() : true")
     public ResponseEntity<Set<CardDto>> listCards(@RequestParam(required = false) UUID customerId, @RequestParam(required = false) List<Long> ids) {
         if (customerId == null && CollectionUtils.isEmpty(ids)) {
             return ResponseEntity.badRequest().build();
@@ -73,7 +73,7 @@ public class CustomerCardController {
 
     // Tested
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.num-issues}")
-    @PreAuthorize("authentication.name == customerId")
+    @PreAuthorize("authentication.name == customerId.toString()")
     public ResponseEntity<Long> getNumIssues(@NotNull @RequestParam UUID customerId, @NotNull @RequestParam Long blueprintId) {
         final Long numIssues = customerCardService.getNumIssues(customerId, blueprintId);
         return ResponseEntity.ok(numIssues);

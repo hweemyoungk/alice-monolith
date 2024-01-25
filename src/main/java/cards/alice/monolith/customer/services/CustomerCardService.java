@@ -18,7 +18,7 @@ public interface CustomerCardService {
 
     Optional<CardDto> softDeleteCardById(Long id);
 
-    @PostFilter("authentication.name == filterObject.customerId")
+    @PostFilter("authentication.name == filterObject.customerId.toString()")
     Set<CardDto> listCards(UUID customerId, Set<Long> ids);
 
     Long getNumIssues(UUID customerId, Long blueprintId);

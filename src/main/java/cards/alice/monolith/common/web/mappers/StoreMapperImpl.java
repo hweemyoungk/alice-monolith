@@ -47,7 +47,7 @@ public class StoreMapperImpl implements StoreMapper {
                             }
                             // Modifying blueprint
                             Blueprint blueprint = entityManager.getReference(Blueprint.class, blueprintDto.getId());
-                            if (blueprint.getStore().getId() != storeDto.getId()) {
+                            if (!blueprint.getStore().getId().equals(storeDto.getId())) {
                                 // Wrong blueprint ID provided
                                 throw new IllegalArgumentException();
                             }
@@ -151,7 +151,7 @@ public class StoreMapperImpl implements StoreMapper {
                             }
                             // Modifying blueprint
                             Blueprint blueprint = entityManager.getReference(Blueprint.class, blueprintDto.getId());
-                            if (blueprint.getStore().getId() != storeDto.getId()) {
+                            if (!blueprint.getStore().getId().equals(storeDto.getId())) {
                                 // Wrong blueprint ID provided
                                 throw new IllegalArgumentException();
                             }
