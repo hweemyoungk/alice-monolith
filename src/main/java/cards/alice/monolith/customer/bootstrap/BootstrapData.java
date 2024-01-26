@@ -6,6 +6,7 @@ import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.repositories.BlueprintRepository;
 import cards.alice.monolith.common.repositories.CardRepository;
+import cards.alice.monolith.customer.repositories.CustomerBlueprintRepository;
 import cards.alice.monolith.common.repositories.StoreRepository;
 import jakarta.persistence.EntityManager;
 import lombok.Getter;
@@ -35,6 +36,7 @@ public class BootstrapData implements CommandLineRunner {
 
     private final StoreRepository storeRepository;
     private final BlueprintRepository blueprintRepository;
+    private final CustomerBlueprintRepository extendedBlueprintRepository;
     private final CardRepository cardRepository;
     private final EntityManager entityManager;
 

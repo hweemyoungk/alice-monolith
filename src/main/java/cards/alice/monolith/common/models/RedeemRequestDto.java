@@ -1,6 +1,5 @@
 package cards.alice.monolith.common.models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -41,7 +40,7 @@ public class RedeemRequestDto {
     private UUID ownerId;
     private UUID token;
     private String blueprintDisplayName;
-    @JsonProperty("ttlMilliseconds")
+
     @Positive
     private Long expMilliseconds;
     private Boolean isRedeemed = false;
@@ -51,7 +50,7 @@ public class RedeemRequestDto {
     }
 
     public String getOwnerRedeemRequestsKey() {
-        return OWNER_REDEEM_REQUESTS_KEY_PREFIX + ownerId;
+        return getOwnerRedeemRequestsKey(ownerId.toString());
     }
 
 

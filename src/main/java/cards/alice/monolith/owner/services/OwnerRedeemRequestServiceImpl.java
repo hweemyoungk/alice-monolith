@@ -7,6 +7,8 @@ import cards.alice.monolith.common.models.RedeemDto;
 import cards.alice.monolith.common.models.RedeemRequestDto;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.common.web.mappers.CardMapper;
+import cards.alice.monolith.owner.repositories.OwnerCardRepository;
+import cards.alice.monolith.owner.repositories.OwnerRedeemRuleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +31,17 @@ import static cards.alice.monolith.common.models.RedeemRequestDto.getOwnerRedeem
 @Service
 @RequiredArgsConstructor
 public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService {
-    private final Map<String, Future<?>> redeemRequestTtlTaskPool;
     @Value("${cards.alice.customer.app.watch-redeem-request-duration-seconds}")
     private long watchRedeemRequestDurationSeconds;
 
+    private final OwnerRedeemRuleRepository redeemRuleRepository;
+    private final OwnerCardRepository cardRepository;
+    private final OwnerAuthenticatedRedeemRequestAccessor authenticatedRedeemRequestAccessor;
+
+    private final Map<String, Future<?>> redeemRequestTtlTaskPool;
+
     private final OwnerRedeemService ownerRedeemService;
     private final OwnerCardService ownerCardService;
-    private final OwnerAuthenticatedCardAccessor authenticatedCardAccessor;
-    private final OwnerAuthenticatedRedeemRuleAccessor authenticatedRedeemRuleAccessor;
-    private final OwnerAuthenticatedRedeemRequestAccessor authenticatedRedeemRequestAccessor;
     private final CardMapper cardMapper;
     private final ObjectMapper objectMapper;
     private final JedisPooled jedis;
@@ -80,8 +84,8 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
         // Validate(Includes authenticate)
         validateApproval(deserializedRedeemRequestDto);
 
-        final Card card = authenticatedCardAccessor.findById(deserializedRedeemRequestDto.getCardId()).get();
-        final RedeemRule redeemRule = authenticatedRedeemRuleAccessor.findById(deserializedRedeemRequestDto.getRedeemRuleId()).get();
+        final Card card = cardRepository.findById(deserializedRedeemRequestDto.getCardId()).get();
+        final RedeemRule redeemRule = redeemRuleRepository.findById(deserializedRedeemRequestDto.getRedeemRuleId()).get();
         final int numStampsBefore = card.getNumCollectedStamps();
         final int numStampsAfter = numStampsBefore - redeemRule.getConsumes();
         final int numRedeemed = card.getNumRedeemed();
@@ -133,9 +137,9 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
         }
 
         // Authenticate
-        final Card card = authenticatedCardAccessor.findById(redeemRequestDto.getCardId())
+        final Card card = cardRepository.findById(redeemRequestDto.getCardId())
                 .orElseThrow(() -> new ResourceNotFoundException(Card.class, redeemRequestDto.getCardId()));
-        final RedeemRule redeemRule = authenticatedRedeemRuleAccessor.findById(redeemRequestDto.getRedeemRuleId())
+        final RedeemRule redeemRule = redeemRuleRepository.findById(redeemRequestDto.getRedeemRuleId())
                 .orElseThrow(() -> new ResourceNotFoundException(RedeemRule.class, redeemRequestDto.getRedeemRuleId()));
 
         final Integer numCollectedStamps = card.getNumCollectedStamps();

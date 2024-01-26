@@ -73,7 +73,7 @@ public class CustomerCardController {
 
     // Tested
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.num-issues}")
-    @PreAuthorize("authentication.name == customerId.toString()")
+    @PreAuthorize("authentication.name == #customerId.toString()")
     public ResponseEntity<Long> getNumIssues(@NotNull @RequestParam UUID customerId, @NotNull @RequestParam Long blueprintId) {
         final Long numIssues = customerCardService.getNumIssues(customerId, blueprintId);
         return ResponseEntity.ok(numIssues);

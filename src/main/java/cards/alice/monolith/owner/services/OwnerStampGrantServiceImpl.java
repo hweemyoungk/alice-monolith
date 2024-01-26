@@ -8,6 +8,7 @@ import cards.alice.monolith.common.repositories.StampGrantRepository;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.common.web.mappers.CardMapper;
 import cards.alice.monolith.common.web.mappers.StampGrantMapper;
+import cards.alice.monolith.owner.repositories.OwnerCardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class OwnerStampGrantServiceImpl implements OwnerStampGrantService {
+    private final OwnerCardRepository cardRepository;
     private final StampGrantRepository stampGrantRepository;
     private final StampGrantMapper stampGrantMapper;
     private final CardMapper cardMapper;
-    private final OwnerAuthenticatedCardAccessor authenticatedCardAccessor;
     private final OwnerCardService ownerCardService;
 
     @Override
@@ -37,7 +38,7 @@ public class OwnerStampGrantServiceImpl implements OwnerStampGrantService {
         validateGrant(stampGrantDto);
 
         // Grant
-        final Card card = authenticatedCardAccessor.findById(stampGrantDto.getCardId()).get();
+        final Card card = cardRepository.findById(stampGrantDto.getCardId()).get();
         CardDto cardDto = cardMapper.toDto(card);
         cardDto.setNumCollectedStamps(
                 cardDto.getNumCollectedStamps() + stampGrantDto.getNumStamps());
@@ -49,7 +50,7 @@ public class OwnerStampGrantServiceImpl implements OwnerStampGrantService {
 
     private void validateGrant(StampGrantDto stampGrantDto) {
         // Authenticate
-        final Card card = authenticatedCardAccessor.findById(stampGrantDto.getCardId())
+        final Card card = cardRepository.findById(stampGrantDto.getCardId())
                 .orElseThrow(() -> new ResourceNotFoundException(Card.class, stampGrantDto.getCardId()));
 
         final int maxNumGrant = card.getBlueprint().getNumMaxStamps() - card.getNumCollectedStamps();

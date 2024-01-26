@@ -2,8 +2,8 @@ package cards.alice.monolith.owner.services;
 
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.StoreDto;
-import cards.alice.monolith.common.repositories.StoreRepository;
 import cards.alice.monolith.common.web.mappers.StoreMapper;
+import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Service;
@@ -17,9 +17,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class OwnerStoreServiceImpl implements OwnerStoreService {
-    private final StoreRepository storeRepository;
+    private final OwnerStoreRepository storeRepository;
     private final StoreMapper storeMapper;
-    private final OwnerAuthenticatedStoreAccessor authenticatedStoreAccessor;
 
     @Override
     public StoreDto saveNewStore(StoreDto storeDto) {
@@ -32,13 +31,13 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
     @Override
     public Optional<StoreDto> getStoreById(Long id) {
         return Optional.ofNullable(storeMapper.toDto(
-                authenticatedStoreAccessor.findById(id).orElse(null)));
+                storeRepository.findById(id).orElse(null)));
     }
 
     @Override
     public Optional<StoreDto> updateStoreById(Long id, StoreDto storeDto) {
         // Authenticate
-        Optional<Store> store = authenticatedStoreAccessor.findById(id);
+        Optional<Store> store = storeRepository.findById(id);
 
         final var atomicReference = new AtomicReference<Optional<StoreDto>>();
         store.ifPresentOrElse(

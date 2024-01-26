@@ -4,9 +4,9 @@ import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.RedeemRequestDto;
-import cards.alice.monolith.common.repositories.CardRepository;
 import cards.alice.monolith.common.repositories.RedeemRuleRepository;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
+import cards.alice.monolith.customer.repositories.CustomerCardRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +31,8 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
     @Value("${cards.alice.customer.user-id}")
     private UUID customerId;
 
-    private final CardRepository cardRepository;
+    private final CustomerCardRepository cardRepository;
     private final RedeemRuleRepository redeemRuleRepository;
-    private final CustomerAuthenticatedCardAccessor authenticatedCardAccessor;
     private final CustomerAuthenticatedRedeemRequestAccessor authenticatedRedeemRequestAccessor;
     private final ObjectMapper objectMapper;
     private final JedisPooled jedis;
@@ -41,7 +40,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
     private final Map<String, Future<?>> redeemRequestTtlTaskPool;
 
     private void validateRedeemRequestDto(RedeemRequestDto redeemRequestDto) {
-        final Card card = authenticatedCardAccessor.findById(redeemRequestDto.getCardId())
+        final Card card = cardRepository.findById(redeemRequestDto.getCardId())
                 .orElseThrow(() -> new ResourceNotFoundException(Card.class, redeemRequestDto.getCardId()));
 
         // Validate
@@ -95,7 +94,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
             // Refresh ttl
             targetRedeemRequestDto.setTtlMillisecondsFromNow(watchRedeemRequestDurationSeconds * 1000);
             try {
-                final String serializedTargetRedeemRequestDto  = objectMapper.writeValueAsString(targetRedeemRequestDto);
+                final String serializedTargetRedeemRequestDto = objectMapper.writeValueAsString(targetRedeemRequestDto);
                 jedis.hset(targetRedeemRequestDto.getOwnerRedeemRequestsKey(), targetRedeemRequestDto.getFieldName(), serializedTargetRedeemRequestDto);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);

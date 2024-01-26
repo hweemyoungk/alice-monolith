@@ -2,8 +2,8 @@ package cards.alice.monolith.customer.services;
 
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.CardDto;
-import cards.alice.monolith.common.repositories.CardRepository;
 import cards.alice.monolith.common.web.mappers.CardMapper;
+import cards.alice.monolith.customer.repositories.CustomerCardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,9 +16,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CustomerCardServiceImpl implements CustomerCardService {
-    private final CardRepository cardRepository;
+    private final CustomerCardRepository cardRepository;
     private final CardMapper cardMapper;
-    private final CustomerAuthenticatedCardAccessor authenticatedCardAccessor;
 
     @Override
     public CardDto saveNewCard(CardDto cardDto) {
@@ -32,13 +31,13 @@ public class CustomerCardServiceImpl implements CustomerCardService {
     @Override
     public Optional<CardDto> getCardById(Long id) {
         return Optional.ofNullable(cardMapper.toDto(
-                authenticatedCardAccessor.findById(id).orElse(null)));
+                cardRepository.findById(id).orElse(null)));
     }
 
     // Tested
     @Override
     public Optional<CardDto> updateCardById(Long id, CardDto cardDto) {
-        Optional<Card> card = authenticatedCardAccessor.findById(id);
+        Optional<Card> card = cardRepository.findById(id);
         final var atomicReference = new AtomicReference<Optional<CardDto>>();
         card.ifPresentOrElse(
                 srcCard -> {
@@ -58,7 +57,7 @@ public class CustomerCardServiceImpl implements CustomerCardService {
 
     @Override
     public Optional<CardDto> patchCardById(Long id, CardDto cardDto) {
-        Optional<Card> card = authenticatedCardAccessor.findById(id);
+        Optional<Card> card = cardRepository.findById(id);
         final var atomicReference = new AtomicReference<Optional<CardDto>>();
         card.ifPresentOrElse(
                 srcCard -> {

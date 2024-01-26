@@ -2,8 +2,8 @@ package cards.alice.monolith.customer.services;
 
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.models.BlueprintDto;
-import cards.alice.monolith.common.repositories.BlueprintRepository;
 import cards.alice.monolith.common.web.mappers.BlueprintMapper;
+import cards.alice.monolith.customer.repositories.CustomerBlueprintRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +14,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CustomerBlueprintServiceImpl implements CustomerBlueprintService {
-    private final BlueprintRepository blueprintRepository;
+    private final CustomerBlueprintRepository blueprintRepository;
     private final BlueprintMapper blueprintMapper;
-    private final CustomerAuthenticatedBlueprintAccessor authenticatedBlueprintAccessor;
 
     @Override
     public BlueprintDto authorizedGetBlueprintById(Long id) {
@@ -27,7 +26,7 @@ public class CustomerBlueprintServiceImpl implements CustomerBlueprintService {
     @Override
     public Optional<BlueprintDto> getBlueprintById(Long id) {
         return Optional.ofNullable(blueprintMapper.toDto(
-                authenticatedBlueprintAccessor.findById(id).orElse(null)));
+                blueprintRepository.findById(id).orElse(null)));
     }
 
     @Override

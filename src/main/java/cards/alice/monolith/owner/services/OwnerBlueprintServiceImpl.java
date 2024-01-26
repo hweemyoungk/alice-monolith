@@ -3,8 +3,9 @@ package cards.alice.monolith.owner.services;
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.models.BlueprintDto;
 import cards.alice.monolith.common.models.RedeemRuleDto;
-import cards.alice.monolith.common.repositories.BlueprintRepository;
 import cards.alice.monolith.common.web.mappers.BlueprintMapper;
+import cards.alice.monolith.owner.repositories.OwnerBlueprintRepository;
+import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,18 +19,17 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
-    private final BlueprintRepository blueprintRepository;
+    private final OwnerStoreRepository storeRepository;
+    private final OwnerBlueprintRepository blueprintRepository;
     private final BlueprintMapper blueprintMapper;
     private final OwnerRedeemRuleService ownerRedeemRuleService;
-    private final OwnerAuthenticatedStoreAccessor authenticatedStoreAccessor;
-    private final OwnerAuthenticatedBlueprintAccessor authenticatedBlueprintAccessor;
 
     // Tested
     @Override
     @Transactional
     public BlueprintDto saveNewBlueprint(BlueprintDto blueprintDto) {
         // Authenticate
-        authenticatedStoreAccessor.findById(blueprintDto.getStoreId());
+        storeRepository.findById(blueprintDto.getStoreId());
 
         final Blueprint blueprint = blueprintMapper.toEntity(blueprintDto);
 
@@ -53,7 +53,7 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     @Override
     public Optional<BlueprintDto> getBlueprintById(Long id) {
         return Optional.ofNullable(blueprintMapper.toDto(
-                authenticatedBlueprintAccessor.findById(id).orElse(null)));
+                blueprintRepository.findById(id).orElse(null)));
 
     }
 
@@ -61,7 +61,7 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     @Override
     public Optional<BlueprintDto> updateBlueprintById(Long id, BlueprintDto blueprintDto) {
         // Authenticate
-        Optional<Blueprint> blueprint = authenticatedBlueprintAccessor.findById(id);
+        Optional<Blueprint> blueprint = blueprintRepository.findById(id);
 
         final var atomicReference = new AtomicReference<Optional<BlueprintDto>>();
         blueprint.ifPresentOrElse(
@@ -89,7 +89,7 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     public Set<BlueprintDto> listBlueprints(Long storeId, Set<Long> ids) {
         // Authenticate
         if (storeId != null) {
-            authenticatedStoreAccessor.findById(storeId);
+            storeRepository.findById(storeId);
         }
 
         final Set<Blueprint> blueprints;
