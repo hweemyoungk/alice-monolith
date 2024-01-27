@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -38,13 +39,18 @@ public class OAuth2SecurityConfig {
                         return config;
                     }
                 }))
+                .headers(configurer -> {
+                    configurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable);
+                })
                 .csrf(configurer -> configurer
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                         // .ignoringRequestMatchers("/csrfNotRequiredPath/*")) // TODO Configure ignoringRequestMatchers
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // Frontend app script should access cookies
+                        .ignoringRequestMatchers("/h2-console/**")
                 )
                 .addFilterBefore(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests((requests) -> requests
+                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/customer/**").hasRole("customer")
                         .requestMatchers("/owner/**").hasRole("owner")
                 )
@@ -59,7 +65,7 @@ public class OAuth2SecurityConfig {
                     jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
                     configurer.jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter));
                 });
-                //.oauth2ResourceServer(configurer -> {configurer.jwt(Customizer.withDefaults());});
+        //.oauth2ResourceServer(configurer -> {configurer.jwt(Customizer.withDefaults());});
         return http.build();
     }
 }

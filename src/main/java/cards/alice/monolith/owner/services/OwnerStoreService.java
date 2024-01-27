@@ -13,5 +13,7 @@ public interface OwnerStoreService {
 
     Optional<StoreDto> updateStoreById(Long id, StoreDto storeDto);
 
+    Optional<StoreDto> patchStoreById(Long id, StoreDto storeDto);
+
     Set<StoreDto> listStores(UUID ownerId, Set<Long> ids);
 }

@@ -8,10 +8,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("${cards.alice.owner.web.controllers.path.base}")
@@ -25,7 +29,7 @@ public class OwnerBlueprintController {
     private final OwnerBlueprintService ownerBlueprintService;
 
     @PostMapping(path = "${cards.alice.owner.web.controllers.path.blueprint}")
-    public ResponseEntity postBlueprint(@RequestBody BlueprintDto blueprintDto) {
+    public ResponseEntity postBlueprint(@Validated @RequestBody BlueprintDto blueprintDto) {
         final BlueprintDto savedBlueprintDto = ownerBlueprintService.saveNewBlueprint(blueprintDto);
         return ResponseEntity.created(URI.create(ownerHostname + ownerBlueprintPath + "/" + savedBlueprintDto.getId())).build();
     }
@@ -37,8 +41,7 @@ public class OwnerBlueprintController {
     }
 
     @PutMapping(path = "${cards.alice.owner.web.controllers.path.blueprint}/{id}")
-    //public ResponseEntity putBlueprint(@PathVariable Long id, @Validated @RequestBody BlueprintDto blueprintDto) {
-    public ResponseEntity putBlueprint(@PathVariable Long id, @RequestBody BlueprintDto blueprintDto) {
+    public ResponseEntity putBlueprint(@PathVariable Long id, @Validated @RequestBody BlueprintDto blueprintDto) {
         Optional<BlueprintDto> updatedBlueprintDto = ownerBlueprintService.updateBlueprintById(id, blueprintDto);
         updatedBlueprintDto.orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, id));
         return ResponseEntity.noContent().build();

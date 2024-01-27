@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -24,7 +25,7 @@ public class CustomerRedeemRequestController {
 
     @PostMapping(path = "${cards.alice.customer.web.controllers.path.redeem-request}")
     @PreAuthorize("authentication.name == #redeemRequestDto.customerId.toString()")
-    public ResponseEntity postRedeemRequest(@RequestBody RedeemRequestDto redeemRequestDto) {
+    public ResponseEntity postRedeemRequest(@Validated @RequestBody RedeemRequestDto redeemRequestDto) {
         RedeemRequestDto savedRedeemRequest = customerRedeemRequestService.handlePostRedeemRequest(redeemRequestDto);
         return ResponseEntity.created(URI.create(customerHostname + customerRedeemRequestPath + "/" + savedRedeemRequest.getId())).build();
     }

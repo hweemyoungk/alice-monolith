@@ -92,7 +92,7 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
         final int numMaxRedeems = card.getBlueprint().getNumMaxRedeems();
 
         // Update Card
-        CardDto cardDto = cardMapper.toDto(card);
+        final CardDto cardDto = cardMapper.toDto(card);
         cardDto.setNumCollectedStamps(numStampsAfter);
         cardDto.setNumRedeemed(numRedeemed + 1);
         if (numRedeemed + 1 == numMaxRedeems) {

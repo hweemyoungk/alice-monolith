@@ -1,0 +1,26 @@
+package cards.alice.monolith.common.web.exceptions;
+
+import lombok.Getter;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Getter
+public class DtoProcessingException extends RuntimeException {
+    private final Set<String> violationMessages;
+
+    public DtoProcessingException(String message, Set<String> violationMessages) {
+        super(message);
+        this.violationMessages = violationMessages;
+    }
+
+    public DtoProcessingException(String message) {
+        super(message);
+        this.violationMessages = new HashSet<>();
+    }
+
+    public DtoProcessingException() {
+        super();
+        this.violationMessages = new HashSet<>();
+    }
+}

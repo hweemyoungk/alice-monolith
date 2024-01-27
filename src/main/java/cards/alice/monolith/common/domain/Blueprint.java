@@ -61,7 +61,7 @@ public class Blueprint extends BaseEntity {
             CascadeType.DETACH
     })
     private Set<Card> cards;*/
-    @ManyToOne
-    @JoinColumn(name = "store_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 }

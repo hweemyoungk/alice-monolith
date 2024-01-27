@@ -40,7 +40,6 @@ public class RedeemRequestDto {
     private UUID ownerId;
     private UUID token;
     private String blueprintDisplayName;
-
     @Positive
     private Long expMilliseconds;
     private Boolean isRedeemed = false;

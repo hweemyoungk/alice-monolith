@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -18,17 +19,17 @@ import java.util.UUID;
 @AllArgsConstructor
 @SuperBuilder
 public class StoreDto extends BaseDto {
-    @Max(1000)
     @NotBlank
+    @Length(max = 1000)
     private String description;
     @NotBlank
-    @Max(7)
+    @Length(max = 7)
     private String zipcode;
     @NotBlank
-    @Max(120)
+    @Length(max = 120)
     private String address;
     @NotBlank
-    @Max(15)
+    @Length(max = 15)
     private String phone;
     @DecimalMin("-90.0")
     @DecimalMax("90.0")

@@ -12,5 +12,9 @@ public interface OwnerBlueprintService {
 
     Optional<BlueprintDto> updateBlueprintById(Long id, BlueprintDto blueprintDto);
 
+    Optional<BlueprintDto> patchBlueprintById(Long id, BlueprintDto blueprintDto);
+
     Set<BlueprintDto> listBlueprints(Long storeId, Set<Long> ids);
+
+    Set<BlueprintDto> saveBlueprints(Set<BlueprintDto> blueprintDtos);
 }

@@ -5,6 +5,7 @@ import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.RedeemRequestDto;
 import cards.alice.monolith.common.repositories.RedeemRuleRepository;
+import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.customer.repositories.CustomerCardRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,9 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import redis.clients.jedis.JedisPooled;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -39,49 +38,71 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private final Map<String, Future<?>> redeemRequestTtlTaskPool;
 
-    private void validateRedeemRequestDto(RedeemRequestDto redeemRequestDto) {
+    private RedeemRequestDto preprocessNewRedeemRequestDto(RedeemRequestDto redeemRequestDto) {
+        // Validate
+        Set<String> violationMessages = new HashSet<>();
         final Card card = cardRepository.findById(redeemRequestDto.getCardId())
                 .orElseThrow(() -> new ResourceNotFoundException(Card.class, redeemRequestDto.getCardId()));
-
-        // Validate
         if (!(card.getCustomerId().equals(redeemRequestDto.getCustomerId()))) {
-            throw new IllegalArgumentException("Card doesn't belong to current customer");
+            violationMessages.add("Card doesn't belong to current customer");
         }
 
         final Long redeemRuleId = redeemRequestDto.getRedeemRuleId();
         final RedeemRule redeemRule = redeemRuleRepository.findById(redeemRuleId)
                 .orElseThrow(() -> new ResourceNotFoundException(RedeemRule.class, redeemRuleId));
         if (!card.getBlueprint().equals(redeemRule.getBlueprint())) {
-            throw new IllegalArgumentException("Blueprint of card and that of redeemRule don't match");
+            violationMessages.add("Blueprint of card and that of redeemRule don't match");
         }
+
+        if (!violationMessages.isEmpty()) {
+            throw new DtoProcessingException("Failed to preprocess RedeemRequestDto", violationMessages);
+        }
+
+        // id, version must be null
+        redeemRequestDto.setId(null);
+
+        // customerId
+        // Validated by @PreAuthorize postRedeemRequest
+
+        // customerDisplayName, cardId, redeemRuleId
+        // Validated by @Validated
+
+        // isRedeemed must be false
+        redeemRequestDto.setIsRedeemed(false);
+
+        // Set blueprintDisplayName
+        final Blueprint blueprint = card.getBlueprint();
+        redeemRequestDto.setBlueprintDisplayName(blueprint.getDisplayName());
+
+        // Set ownerId
+        redeemRequestDto.setOwnerId(blueprint.getStore().getOwnerId());
+
+        // Set expMilliseconds
+        redeemRequestDto.setTtlMillisecondsFromNow(watchRedeemRequestDurationSeconds * 1000);
+
+        // Set new token
+        redeemRequestDto.setToken(UUID.randomUUID());
+
+        return redeemRequestDto;
     }
 
     @Override
     @Transactional
     public RedeemRequestDto handlePostRedeemRequest(RedeemRequestDto redeemRequestDtoFromCustomer) {
-        validateRedeemRequestDto(redeemRequestDtoFromCustomer);
-
-        redeemRequestDtoFromCustomer.setId(null);
-        redeemRequestDtoFromCustomer.setIsRedeemed(false);
-
-        // Configure RedeemRequestDto
-        final Card card = cardRepository.findById(redeemRequestDtoFromCustomer.getCardId())
-                .orElseThrow(() -> new ResourceNotFoundException(Card.class, redeemRequestDtoFromCustomer.getCardId()));
-        final Blueprint blueprint = card.getBlueprint();
-        final UUID ownerId = blueprint.getStore().getOwnerId();
-        redeemRequestDtoFromCustomer.setOwnerId(ownerId);
+        RedeemRequestDto preprocessedRedeemRequestDto = preprocessNewRedeemRequestDto(redeemRequestDtoFromCustomer);
 
         // Query Redis
-        final String ownerRedeemRequestsKey = redeemRequestDtoFromCustomer.getOwnerRedeemRequestsKey();
-        final String fieldName = redeemRequestDtoFromCustomer.getFieldName();
+        final String ownerRedeemRequestsKey = preprocessedRedeemRequestDto.getOwnerRedeemRequestsKey();
+        final String fieldName = preprocessedRedeemRequestDto.getFieldName();
         final String serializedRedeemRequestDto = jedis.hget(ownerRedeemRequestsKey, fieldName);
+
         final RedeemRequestDto targetRedeemRequestDto;
         if (serializedRedeemRequestDto != null) {
             // Deserialize
             try {
                 targetRedeemRequestDto = objectMapper.readValue(serializedRedeemRequestDto, RedeemRequestDto.class);
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                throw new DtoProcessingException(e.getMessage());
             }
 
             // Check redeemed
@@ -97,7 +118,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
                 final String serializedTargetRedeemRequestDto = objectMapper.writeValueAsString(targetRedeemRequestDto);
                 jedis.hset(targetRedeemRequestDto.getOwnerRedeemRequestsKey(), targetRedeemRequestDto.getFieldName(), serializedTargetRedeemRequestDto);
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                throw new DtoProcessingException(e.getMessage());
             }
 
             // Cancel old timer
@@ -108,7 +129,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
             }
         } else {
             // dto not exists: Create new
-            targetRedeemRequestDto = newRedeemRequest(redeemRequestDtoFromCustomer, blueprint);
+            targetRedeemRequestDto = newRedeemRequest(preprocessedRedeemRequestDto);
         }
 
         // Set new timer
@@ -128,12 +149,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
         return targetRedeemRequestDto;
     }
 
-    private RedeemRequestDto newRedeemRequest(RedeemRequestDto redeemRequestDto, Blueprint blueprint) {
-        redeemRequestDto.setBlueprintDisplayName(blueprint.getDisplayName());
-        redeemRequestDto.setTtlMillisecondsFromNow(watchRedeemRequestDurationSeconds * 1000);
-        redeemRequestDto.setIsRedeemed(false);
-        redeemRequestDto.setToken(UUID.randomUUID());
-
+    private RedeemRequestDto newRedeemRequest(RedeemRequestDto redeemRequestDto) {
         final String serializedNewRedeemRequestDto;
         try {
             serializedNewRedeemRequestDto = objectMapper.writeValueAsString(redeemRequestDto);
@@ -144,9 +160,9 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
         jedis.hset(redeemRequestDto.getOwnerRedeemRequestsKey(), redeemRequestDto.getFieldName(), serializedNewRedeemRequestDto);
         final Future<?> oldRedeemRequestTtlFuture = redeemRequestTtlTaskPool.remove(redeemRequestDto.getId());
         if (oldRedeemRequestTtlFuture != null) {
-            // Try canceling but DO NOT interrupt if removing: Always guarantee TTL.
             oldRedeemRequestTtlFuture.cancel(true);
         }
+
         // Should NOT happen but if timer not found, create new timer anyway.
 
         return redeemRequestDto;
