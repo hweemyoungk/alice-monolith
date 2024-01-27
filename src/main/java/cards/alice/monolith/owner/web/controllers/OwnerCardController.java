@@ -19,7 +19,7 @@ import java.util.Optional;
 public class OwnerCardController {
     private final OwnerCardService ownerCardService;
 
-    @GetMapping(path = "${cards.alice.owner.web.controllers.path.card}/{id}")
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.card}/{id}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<CardDto> getCard(@PathVariable Long id) {
         final Optional<CardDto> cardDto = ownerCardService.getCardById(id);
         return ResponseEntity.ok(cardDto.orElseThrow(() -> new ResourceNotFoundException(Card.class, id)));

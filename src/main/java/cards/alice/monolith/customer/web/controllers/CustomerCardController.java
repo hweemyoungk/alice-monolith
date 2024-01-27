@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.CollectionUtils;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -38,7 +39,7 @@ public class CustomerCardController {
         return ResponseEntity.created(URI.create(customerHostname + customerCardPath + "/" + savedCardDto.getId())).build();
     }
 
-    @GetMapping(path = "${cards.alice.customer.web.controllers.path.card}/{id}")
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.card}/{id}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<CardDto> getCard(@PathVariable Long id, @AuthenticationPrincipal Jwt principal) {
         final var auth = SecurityContextHolder.getContext().getAuthentication();
         //final Optional<CardDto> cardDto = customerCardService.getCardById(id);
@@ -48,7 +49,7 @@ public class CustomerCardController {
 
     @PutMapping(path = "${cards.alice.customer.web.controllers.path.card}/{id}")
     @PreAuthorize("authentication.name == #cardDto.customerId.toString()")
-    public ResponseEntity putCard(@PathVariable Long id, @RequestBody CardDto cardDto) {
+    public ResponseEntity putCard(@PathVariable Long id, @Validated @RequestBody CardDto cardDto) {
         Optional<CardDto> updatedCardDto = customerCardService.updateCardById(id, cardDto);
         updatedCardDto.orElseThrow(() -> new ResourceNotFoundException(Card.class, id));
         return ResponseEntity.noContent().build();
@@ -61,7 +62,7 @@ public class CustomerCardController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.list}")
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.list}", produces = "application/json;charset=UTF-8")
     @PreAuthorize("#customerId != null ? authentication.name == #customerId.toString() : true")
     public ResponseEntity<Set<CardDto>> listCards(@RequestParam(required = false) UUID customerId, @RequestParam(required = false) List<Long> ids) {
         if (customerId == null && CollectionUtils.isEmpty(ids)) {

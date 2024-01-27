@@ -21,7 +21,7 @@ import java.util.UUID;
 public class CustomerStoreController {
     private final CustomerStoreService customerStoreService;
 
-    @GetMapping(path = "${cards.alice.customer.web.controllers.path.store.list}")
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.store.list}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<Set<StoreDto>> listStores(
             @RequestParam(required = false) UUID ownerId,
             @RequestParam(required = false) List<Long> ids) {

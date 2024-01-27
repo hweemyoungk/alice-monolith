@@ -17,7 +17,7 @@ import java.util.Set;
 public class CustomerRedeemRuleController {
     private final CustomerRedeemRuleService customerRedeemRuleService;
 
-    @GetMapping(path = "${cards.alice.customer.web.controllers.path.redeem-rule.list}")
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.redeem-rule.list}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<Set<RedeemRuleDto>> listRedeemRules(@RequestParam Long blueprintId) {
         if (blueprintId == null) {
             return ResponseEntity.badRequest().build();

@@ -20,13 +20,13 @@ import java.util.Set;
 public class CustomerBlueprintController {
     private final CustomerBlueprintService customerBlueprintService;
 
-    @GetMapping(path = "${cards.alice.customer.web.controllers.path.blueprint}/{id}")
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.blueprint}/{id}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<BlueprintDto> getBlueprintById(@PathVariable Long id) {
         final Optional<BlueprintDto> blueprintDto = customerBlueprintService.getBlueprintById(id);
         return ResponseEntity.ok(blueprintDto.orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, id)));
     }
 
-    @GetMapping(path = "${cards.alice.customer.web.controllers.path.blueprint.list}")
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.blueprint.list}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<Set<BlueprintDto>> listBlueprints(
             @RequestParam(required = false) Long storeId,
             @RequestParam(required = false) List<Long> ids) {

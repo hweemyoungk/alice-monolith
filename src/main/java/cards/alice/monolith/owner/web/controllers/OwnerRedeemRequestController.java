@@ -16,7 +16,7 @@ import java.util.UUID;
 public class OwnerRedeemRequestController {
     private final OwnerRedeemRequestService ownerRedeemRequestService;
 
-    @GetMapping(path = "${cards.alice.owner.web.controllers.path.redeem-request.list}")
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.redeem-request.list}", produces = "application/json;charset=UTF-8")
     @PreAuthorize("authentication.name == #ownerId.toString()")
     public ResponseEntity<Set<RedeemRequestDto>> listRedeemRequests(@RequestParam UUID ownerId) {
         final Set<RedeemRequestDto> redeemRuleDtos = ownerRedeemRequestService.listRedeemRequests(ownerId);

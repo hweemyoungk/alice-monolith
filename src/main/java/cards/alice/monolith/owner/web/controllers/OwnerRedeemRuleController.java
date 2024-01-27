@@ -20,7 +20,7 @@ import java.util.Set;
 public class OwnerRedeemRuleController {
     private final OwnerRedeemRuleService ownerRedeemRuleService;
 
-    @GetMapping(path = "${cards.alice.owner.web.controllers.path.redeem-rule.list}")
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.redeem-rule.list}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<Set<RedeemRuleDto>> listRedeemRules(
             @RequestParam(required = false) Long blueprintId,
             @RequestParam(required = false) List<Long> ids) {

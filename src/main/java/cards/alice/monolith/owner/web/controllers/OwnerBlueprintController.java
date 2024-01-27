@@ -30,7 +30,7 @@ public class OwnerBlueprintController {
         return ResponseEntity.created(URI.create(ownerHostname + ownerBlueprintPath + "/" + savedBlueprintDto.getId())).build();
     }
 
-    @GetMapping(path = "${cards.alice.owner.web.controllers.path.blueprint}/{id}")
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.blueprint}/{id}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<BlueprintDto> getBlueprint(@PathVariable Long id) {
         final Optional<BlueprintDto> blueprintDto = ownerBlueprintService.getBlueprintById(id);
         return ResponseEntity.ok(blueprintDto.orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, id)));
@@ -44,7 +44,7 @@ public class OwnerBlueprintController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping(path = "${cards.alice.owner.web.controllers.path.blueprint.list}")
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.blueprint.list}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<Set<BlueprintDto>> listBlueprints(@RequestParam(required = false) Long storeId, @RequestParam(required = false) List<Long> ids) {
         if (storeId == null && CollectionUtils.isEmpty(ids)) {
             return ResponseEntity.badRequest().build();

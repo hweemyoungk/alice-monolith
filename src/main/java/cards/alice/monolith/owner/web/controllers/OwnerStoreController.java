@@ -32,7 +32,7 @@ public class OwnerStoreController {
         return ResponseEntity.created(URI.create(ownerHostname + ownerStorePath + "/" + savedStoreDto.getId())).build();
     }
 
-    @GetMapping(path = "${cards.alice.owner.web.controllers.path.store}/{id}")
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.store}/{id}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<StoreDto> getStore(@PathVariable Long id) {
         final Optional<StoreDto> storeDto = ownerStoreService.getStoreById(id);
         return ResponseEntity.ok(storeDto.orElseThrow(() -> new ResourceNotFoundException(Store.class, id)));
@@ -47,7 +47,7 @@ public class OwnerStoreController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping(path = "${cards.alice.owner.web.controllers.path.store.list}")
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.store.list}", produces = "application/json;charset=UTF-8")
     @PreAuthorize("#ownerId == null ? true : authentication.name == #ownerId.toString()")
     public ResponseEntity<Set<StoreDto>> listStores(
             @RequestParam(required = false) UUID ownerId,
