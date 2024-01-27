@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +22,11 @@ import java.util.UUID;
 @Entity
 @Table(name = "redeem")
 public class Redeem extends BaseEntity {
+    @NotNull
+    @PositiveOrZero
     private Integer numStampsBefore;
+    @NotNull
+    @PositiveOrZero
     private Integer numStampsAfter;
     @ManyToOne
     @JoinColumn(name = "redeem_rule_id")
@@ -28,5 +34,6 @@ public class Redeem extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "card_id")
     private Card card;
+    @NotNull
     private UUID token;
 }

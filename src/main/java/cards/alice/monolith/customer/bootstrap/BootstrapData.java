@@ -6,7 +6,7 @@ import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.repositories.BlueprintRepository;
 import cards.alice.monolith.common.repositories.CardRepository;
-import cards.alice.monolith.customer.repositories.CustomerBlueprintRepository;
+import cards.alice.monolith.common.repositories.RedeemRuleRepository;
 import cards.alice.monolith.common.repositories.StoreRepository;
 import jakarta.persistence.EntityManager;
 import lombok.Getter;
@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
+@Profile("dev")
 @Getter
 @Setter
 @RequiredArgsConstructor
@@ -36,8 +38,8 @@ public class BootstrapData implements CommandLineRunner {
 
     private final StoreRepository storeRepository;
     private final BlueprintRepository blueprintRepository;
-    private final CustomerBlueprintRepository extendedBlueprintRepository;
     private final CardRepository cardRepository;
+    private final RedeemRuleRepository redeemRuleRepository;
     private final EntityManager entityManager;
 
     @Override
@@ -48,6 +50,35 @@ public class BootstrapData implements CommandLineRunner {
         populateBlueprint();
         // Card
         populateCard();
+        // RedeemRule
+        populateRedeemRule();
+        // Modify Blueprint
+        modifyBlueprint();
+    }
+
+    private void populateRedeemRule() {
+        RedeemRule redeemRule = RedeemRule.builder()
+                .displayName("Rule 4")
+                .description("Demo redeem rule 4")
+                .consumes(3)
+                .imageId(null)
+                .blueprint(entityManager.getReference(Blueprint.class, blueprintId))
+                .build();
+        redeemRuleRepository.saveAndFlush(redeemRule);
+    }
+
+    private void modifyBlueprint() {
+        Blueprint blueprint = blueprintRepository.findById(blueprintId).orElseThrow();
+        blueprint.setDescription("Modified demo blueprint 1.");
+        // Works: RedeemRule#1,2,3,4 still references blueprint#1
+        blueprint.setRedeemRules(null);
+        Blueprint savedBlueprint = blueprintRepository.saveAndFlush(blueprint);
+
+        // Doesn't work: RedeemRule#3,4 still references blueprint#1
+        savedBlueprint.setRedeemRules(Set.of(
+                entityManager.getReference(RedeemRule.class, 1), entityManager.getReference(RedeemRule.class, 2)));
+        Blueprint savedBlueprint2 = blueprintRepository.saveAndFlush(savedBlueprint);
+        System.out.println();
     }
 
     private void populateCard() {
