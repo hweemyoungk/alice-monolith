@@ -22,7 +22,7 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-@Profile("dev")
+@Profile("dev & h2")
 @Getter
 @Setter
 @RequiredArgsConstructor
@@ -35,6 +35,7 @@ public class BootstrapData implements CommandLineRunner {
 
     private Long storeId;
     private Long blueprintId;
+    private Long cardId;
 
     private final StoreRepository storeRepository;
     private final BlueprintRepository blueprintRepository;
@@ -95,7 +96,8 @@ public class BootstrapData implements CommandLineRunner {
                 .isUsedOut(false)
                 .isInactive(false)
                 .build();
-        cardRepository.saveAndFlush(myFirstCard);
+        final Card savedCard = cardRepository.saveAndFlush(myFirstCard);
+        cardId = savedCard.getId();
     }
 
     private void populateStore() {

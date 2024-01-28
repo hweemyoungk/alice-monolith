@@ -1,5 +1,6 @@
 package cards.alice.monolith.common.web.controllers;
 
+import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -63,5 +64,10 @@ public class CommonErrorHandler {
                     return errorMap;
                 }).collect(Collectors.toList());
         return ResponseEntity.badRequest().body(errorList);
+    }
+
+    @ExceptionHandler(DtoProcessingException.class)
+    ResponseEntity handleBeanValidationViolations(DtoProcessingException e) {
+        return ResponseEntity.badRequest().body(e.getViolationMessages());
     }
 }
