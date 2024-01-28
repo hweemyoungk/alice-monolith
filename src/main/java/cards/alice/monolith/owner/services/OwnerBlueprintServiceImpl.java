@@ -4,6 +4,7 @@ import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.models.BlueprintDto;
 import cards.alice.monolith.common.models.RedeemRuleDto;
 import cards.alice.monolith.common.web.mappers.BlueprintMapper;
+import cards.alice.monolith.owner.models.processors.OwnerBlueprintDtoProcessor;
 import cards.alice.monolith.owner.repositories.OwnerBlueprintRepository;
 import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,26 +23,27 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     private final OwnerStoreRepository storeRepository;
     private final OwnerBlueprintRepository blueprintRepository;
     private final BlueprintMapper blueprintMapper;
+    private final OwnerBlueprintDtoProcessor blueprintProcessor;
     private final OwnerRedeemRuleService ownerRedeemRuleService;
 
     // Tested
     @Override
     @Transactional
     public BlueprintDto saveNewBlueprint(BlueprintDto blueprintDto) {
-        // Authenticate
-        storeRepository.findById(blueprintDto.getStoreId());
-
-        final Blueprint blueprint = blueprintMapper.toEntity(blueprintDto);
+        final BlueprintDto preprocessedBlueprintDto = blueprintProcessor.preprocessForPost(blueprintDto);
 
         // Save blueprint without redeemRules
+        final Blueprint blueprint = blueprintMapper.toEntity(preprocessedBlueprintDto);
         blueprint.setRedeemRules(new HashSet<>());
-        blueprint.setId(null);
-        blueprint.setVersion(null);
         final BlueprintDto savedBlueprintDto = blueprintMapper.toDto(
                 blueprintRepository.save(blueprint));
 
+        if (preprocessedBlueprintDto.getRedeemRuleDtos() == null) {
+            return savedBlueprintDto;
+        }
+
         // Save redeemRules
-        final Set<RedeemRuleDto> redeemRuleDtos = blueprintDto.getRedeemRuleDtos();
+        final Set<RedeemRuleDto> redeemRuleDtos = preprocessedBlueprintDto.getRedeemRuleDtos();
         redeemRuleDtos.forEach(redeemRuleDto -> redeemRuleDto.setBlueprintId(savedBlueprintDto.getId()));
         final Set<RedeemRuleDto> savedRedeemRuleDtos = ownerRedeemRuleService.saveRedeemRules(redeemRuleDtos);
 
@@ -59,20 +61,19 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
 
     // Tested
     @Override
+    @Transactional
     public Optional<BlueprintDto> updateBlueprintById(Long id, BlueprintDto blueprintDto) {
-        // Authenticate
-        Optional<Blueprint> blueprint = blueprintRepository.findById(id);
+        final BlueprintDto preprocessedBlueprintDto = blueprintProcessor.preprocessForPut(id, blueprintDto);
+        return patchBlueprintById(id, preprocessedBlueprintDto);
+    }
 
+    @Override
+    @Transactional
+    public Optional<BlueprintDto> patchBlueprintById(Long id, BlueprintDto blueprintDto) {
+        final Optional<Blueprint> blueprint = blueprintRepository.findById(id);
         final var atomicReference = new AtomicReference<Optional<BlueprintDto>>();
         blueprint.ifPresentOrElse(
                 srcBlueprint -> {
-                    //final Blueprint destBlueprint = blueprintMapper.toEntity(blueprintDto);
-                    //destBlueprint.setId(srcBlueprint.getId());
-                    //destBlueprint.setVersion(srcBlueprint.getVersion());
-                    //setStoreReference(destBlueprint, srcBlueprint.getStore().getId());
-                    //final Blueprint savedBlueprint = blueprintRepository.save(destBlueprint);
-                    blueprintDto.setId(null);
-                    blueprintDto.setVersion(null);
                     blueprintMapper.partialUpdate(blueprintDto, srcBlueprint);
                     final Blueprint savedBlueprint = blueprintRepository.save(srcBlueprint);
                     final BlueprintDto savedBlueprintDto = blueprintMapper.toDto(savedBlueprint);
@@ -99,6 +100,16 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
             blueprints = blueprintRepository.findByStore_IdAndIdIn(storeId, ids);
         }
         return blueprints.stream()
+                .map(blueprintMapper::toDto).collect(Collectors.toSet());
+    }
+
+    /**
+     * @param blueprintDtos Could be mixture of old and brand new.
+     */
+    @Override
+    public Set<BlueprintDto> saveBlueprints(Set<BlueprintDto> blueprintDtos) {
+        return blueprintRepository.saveAll(blueprintDtos.stream()
+                        .map(blueprintMapper::toEntity).collect(Collectors.toSet())).stream()
                 .map(blueprintMapper::toDto).collect(Collectors.toSet());
     }
 }

@@ -10,9 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -40,9 +37,7 @@ public class CustomerCardController {
     }
 
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card}/{id}", produces = "application/json;charset=UTF-8")
-    public ResponseEntity<CardDto> getCard(@PathVariable Long id, @AuthenticationPrincipal Jwt principal) {
-        final var auth = SecurityContextHolder.getContext().getAuthentication();
-        //final Optional<CardDto> cardDto = customerCardService.getCardById(id);
+    public ResponseEntity<CardDto> getCard(@PathVariable Long id) {
         final Optional<CardDto> cardDto = customerCardService.getCardById(id);
         return ResponseEntity.ok(cardDto.orElseThrow(() -> new ResourceNotFoundException(Card.class, id)));
     }

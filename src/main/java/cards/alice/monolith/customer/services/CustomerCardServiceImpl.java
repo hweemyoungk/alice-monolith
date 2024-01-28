@@ -3,9 +3,11 @@ package cards.alice.monolith.customer.services;
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.CardDto;
 import cards.alice.monolith.common.web.mappers.CardMapper;
+import cards.alice.monolith.customer.models.processors.CustomerCardDtoProcessor;
 import cards.alice.monolith.customer.repositories.CustomerCardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.Set;
@@ -17,13 +19,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CustomerCardServiceImpl implements CustomerCardService {
     private final CustomerCardRepository cardRepository;
+    private final CustomerCardDtoProcessor cardProcessor;
     private final CardMapper cardMapper;
 
     @Override
+    @Transactional
     public CardDto saveNewCard(CardDto cardDto) {
-        final Card card = cardMapper.toEntity(cardDto);
-        card.setId(null);
-        card.setVersion(null);
+        final CardDto preprocessedCardDto = cardProcessor.preprocessForPost(cardDto);
+        final Card card = cardMapper.toEntity(preprocessedCardDto);
         return cardMapper.toDto(
                 cardRepository.save(card));
     }
@@ -36,28 +39,16 @@ public class CustomerCardServiceImpl implements CustomerCardService {
 
     // Tested
     @Override
+    @Transactional
     public Optional<CardDto> updateCardById(Long id, CardDto cardDto) {
-        Optional<Card> card = cardRepository.findById(id);
-        final var atomicReference = new AtomicReference<Optional<CardDto>>();
-        card.ifPresentOrElse(
-                srcCard -> {
-                    cardDto.setId(null);
-                    cardDto.setVersion(null);
-                    cardMapper.partialUpdate(cardDto, srcCard);
-                    final Card savedCard = cardRepository.save(srcCard);
-                    final CardDto savedCardDto = cardMapper.toDto(savedCard);
-                    atomicReference.set(Optional.of(savedCardDto));
-                },
-                () -> {
-                    atomicReference.set(Optional.empty());
-                }
-        );
-        return atomicReference.get();
+        final CardDto preprocessedCardDto = cardProcessor.preprocessForPut(id, cardDto);
+        return patchCardById(id, preprocessedCardDto);
     }
 
     @Override
+    @Transactional
     public Optional<CardDto> patchCardById(Long id, CardDto cardDto) {
-        Optional<Card> card = cardRepository.findById(id);
+        final Optional<Card> card = cardRepository.findById(id);
         final var atomicReference = new AtomicReference<Optional<CardDto>>();
         card.ifPresentOrElse(
                 srcCard -> {
@@ -74,6 +65,7 @@ public class CustomerCardServiceImpl implements CustomerCardService {
     }
 
     @Override
+    @Transactional
     public Optional<CardDto> softDeleteCardById(Long id) {
         CardDto cardDto = CardDto.builder()
                 .isDiscarded(true)
