@@ -47,19 +47,6 @@ class CustomerCardServiceImplTest {
     @Autowired
     CustomerCardServiceImpl customerCardService;
 
-//    @BeforeEach
-//    void setUp() {
-//        bootstrapData.run();
-//    }
-//
-//    @AfterEach
-//    void tearDown() {
-//        redeemRuleRepository.deleteAll();
-//        cardRepository.deleteAll();
-//        blueprintRepository.deleteAll();
-//        storeRepository.deleteAll();
-//    }
-
     @Test
     @Transactional
     @Rollback

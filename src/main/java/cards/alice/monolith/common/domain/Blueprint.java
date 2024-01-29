@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,10 +35,13 @@ public class Blueprint extends BaseEntity {
     @Positive
     private Integer numMaxStamps;
     @NotNull
-    @Positive
+    @PositiveOrZero
     private Integer numMaxRedeems;
     @NotNull
     @Positive
+    private Integer numMaxIssuesPerCustomer;
+    @NotNull
+    @PositiveOrZero
     private Integer numMaxIssues;
     @JdbcTypeCode(SqlTypes.TIMESTAMP)
     @NotNull
