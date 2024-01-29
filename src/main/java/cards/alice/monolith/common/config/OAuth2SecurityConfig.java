@@ -1,6 +1,7 @@
 package cards.alice.monolith.common.config;
 
 import cards.alice.monolith.common.filters.CsrfCookieFilter;
+import cards.alice.monolith.common.filters.EmailVerifiedFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -9,6 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -49,6 +51,7 @@ public class OAuth2SecurityConfig {
                         .ignoringRequestMatchers("/h2-console/**")
                 )
                 .addFilterBefore(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
+                .addFilterAfter(new EmailVerifiedFilter(), BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/customer/**").hasRole("customer")
