@@ -18,7 +18,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class StampGrantDto extends BaseDto implements Serializable {
+public class StampGrantDto extends BaseDto<Long> implements Serializable {
     @NotNull
     @Positive
     private Long cardId;

@@ -12,7 +12,7 @@ import org.springframework.lang.Nullable;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class RedeemRuleDto extends BaseDto {
+public class RedeemRuleDto extends BaseDto<Long> {
     private String description;
     private Integer consumes;
     private String imageId;

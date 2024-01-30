@@ -19,8 +19,8 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class BaseDto implements Serializable {
-    private Long id;
+public abstract class BaseDto<ID> implements Serializable {
+    private ID id;
     private Integer version;
     @NotBlank
     @Length(max = 30)

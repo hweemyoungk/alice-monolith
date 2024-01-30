@@ -18,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class StoreDto extends BaseDto {
+public class StoreDto extends BaseDto<Long> {
     @NotBlank
     @Length(max = 1000)
     private String description;

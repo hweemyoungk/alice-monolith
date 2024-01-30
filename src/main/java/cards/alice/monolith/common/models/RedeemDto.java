@@ -19,7 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class RedeemDto extends BaseDto {
+public class RedeemDto extends BaseDto<Long> {
     @NotNull
     @Positive
     private Integer numStampsBefore;

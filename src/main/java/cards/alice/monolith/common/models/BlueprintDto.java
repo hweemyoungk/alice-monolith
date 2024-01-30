@@ -20,7 +20,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class BlueprintDto extends BaseDto {
+public class BlueprintDto extends BaseDto<Long> {
     @NotBlank
     @Length(max = 1000)
     private String description;

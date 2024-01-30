@@ -20,7 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class CardDto extends BaseDto {
+public class CardDto extends BaseDto<Long> {
     @NotNull
     @PositiveOrZero
     private Integer numCollectedStamps;
