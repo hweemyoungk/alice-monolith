@@ -77,7 +77,7 @@ public class BootstrapData implements CommandLineRunner {
 
         // Doesn't work: RedeemRule#3,4 still references blueprint#1
         savedBlueprint.setRedeemRules(Set.of(
-                entityManager.getReference(RedeemRule.class, 11), entityManager.getReference(RedeemRule.class, 12)));
+                entityManager.getReference(RedeemRule.class, 1), entityManager.getReference(RedeemRule.class, 2)));
         Blueprint savedBlueprint2 = blueprintRepository.saveAndFlush(savedBlueprint);
         System.out.println();
     }
