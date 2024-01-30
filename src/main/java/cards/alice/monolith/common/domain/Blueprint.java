@@ -10,7 +10,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.validator.constraints.Length;
 
@@ -23,8 +26,17 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@GenericGenerator(
+        name = "long-generator",
+        type = SequenceStyleGenerator.class,
+        parameters = {
+                @Parameter(name = "sequence_name", value = "blueprint-id-sequence"),
+                @Parameter(name = "initial_value", value = "11"),
+                @Parameter(name = "increment_size", value = "1")
+        }
+)
 @Table(name = "blueprint")
-public class Blueprint extends BaseEntity {
+public class Blueprint extends LongEntity {
     @NotBlank
     @Length(max = 1000)
     private String description;

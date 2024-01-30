@@ -10,6 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
@@ -23,7 +26,16 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "store", indexes = @Index(columnList = "ownerId"))
-public class Store extends BaseEntity {
+@GenericGenerator(
+        name = "long-generator",
+        type = SequenceStyleGenerator.class,
+        parameters = {
+                @Parameter(name = "sequence_name", value = "store-id-sequence"),
+                @Parameter(name = "initial_value", value = "11"),
+                @Parameter(name = "increment_size", value = "1")
+        }
+)
+public class Store extends LongEntity {
     @NotBlank
     @Length(max = 1000)
     private String description;
