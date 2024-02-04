@@ -24,9 +24,6 @@ import lombok.experimental.SuperBuilder;
 )
 @Table(name = "stamp_grant")
 public class StampGrant extends LongEntity {
-    @ManyToOne
-    @JoinColumn(name = "card_id")
-    private Card card;
     @NotNull
     @Positive
     private Integer numStamps;
@@ -36,4 +33,7 @@ public class StampGrant extends LongEntity {
     @NotNull
     @Positive
     private Integer numStampsAfter;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "card_id")
+    private Card card;
 }

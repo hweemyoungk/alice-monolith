@@ -19,8 +19,8 @@ import java.time.OffsetDateTime;
 @MappedSuperclass
 @SuperBuilder
 public abstract class BaseEntity {
-    @Version
-    private Integer version;
+    //@Version
+    //private Integer version;
     @NotBlank
     @Length(max = 30)
     private String displayName;

@@ -16,6 +16,20 @@ import java.math.BigDecimal;
 import java.util.Set;
 import java.util.UUID;
 
+//@NamedEntityGraph(
+//        name = "owner-models",
+//        attributeNodes = {
+//                @NamedAttributeNode(value = "blueprints", subgraph = "blueprint-subgraph")
+//        },
+//        subgraphs = {
+//                @NamedSubgraph(
+//                        name = "blueprint-subgraph",
+//                        attributeNodes = {
+//                                @NamedAttributeNode("redeemRules")
+//                        }
+//                )
+//        }
+//)
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -54,6 +68,6 @@ public class Store extends LongEntity {
     private String profileImageId;
     @NotNull
     private UUID ownerId;
-    @OneToMany(mappedBy = "store", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "store")
     private Set<Blueprint> blueprints;
 }

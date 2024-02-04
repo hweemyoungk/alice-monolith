@@ -2,7 +2,7 @@ package cards.alice.monolith.owner.models.processors;
 
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.StoreDto;
-import cards.alice.monolith.common.models.processors.DtoProcessor;
+import cards.alice.monolith.common.models.processors.StoreDtoProcessor;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class OwnerStoreDtoProcessor implements DtoProcessor<StoreDto, Long> {
+public class OwnerStoreDtoProcessor implements StoreDtoProcessor {
     private final OwnerStoreRepository storeRepository;
 
     @Override

@@ -1,19 +1,19 @@
 package cards.alice.monolith.common.web.mappers;
 
-import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.StoreDto;
-import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class StoreMapperImpl implements StoreMapper {
     private final BlueprintMapper blueprintMapper;
-    private final EntityManager entityManager;
+
+    public StoreMapperImpl(@Lazy BlueprintMapper blueprintMapper) {
+        this.blueprintMapper = blueprintMapper;
+    }
 
     @Override
     public Store toEntity(StoreDto storeDto) {
@@ -23,7 +23,7 @@ public class StoreMapperImpl implements StoreMapper {
 
         Store.StoreBuilder<?, ?> store = Store.builder()
                 .id(storeDto.getId())
-                .version(storeDto.getVersion())
+                //.version(storeDto.getVersion())
                 .displayName(storeDto.getDisplayName())
                 .createdDate(storeDto.getCreatedDate())
                 .lastModifiedDate(storeDto.getLastModifiedDate())
@@ -37,24 +37,10 @@ public class StoreMapperImpl implements StoreMapper {
                 .bgImageId(storeDto.getBgImageId())
                 .profileImageId(storeDto.getProfileImageId())
                 .ownerId(storeDto.getOwnerId())
-                .blueprints(storeDto.getBlueprintDtos() == null ? null : storeDto.getBlueprintDtos().stream()
-                        .map(blueprintDto -> {
-                            blueprintDto.setVersion(null);
-                            blueprintDto.setStoreId(storeDto.getId());
-                            if (blueprintDto.getId() == null) {
-                                // Brand-new blueprint
-                                return blueprintMapper.toEntity(blueprintDto);
-                            }
-                            // Modifying blueprint
-                            Blueprint blueprint = entityManager.getReference(Blueprint.class, blueprintDto.getId());
-                            if (!blueprint.getStore().getId().equals(storeDto.getId())) {
-                                // Wrong blueprint ID provided
-                                throw new IllegalArgumentException();
-                            }
-                            blueprintMapper.partialUpdate(blueprintDto, blueprint);
-                            return blueprint;
-                        })
-                        .collect(Collectors.toSet()));
+                .blueprints(storeDto.getBlueprintDtos() == null ? null :
+                        storeDto.getBlueprintDtos().stream()
+                                .map(blueprintMapper::toEntity)
+                                .collect(Collectors.toSet()));
         return store.build();
     }
 
@@ -66,7 +52,7 @@ public class StoreMapperImpl implements StoreMapper {
 
         StoreDto.StoreDtoBuilder<?, ?> storeDto = StoreDto.builder()
                 .id(store.getId())
-                .version(store.getVersion())
+                //.version(store.getVersion())
                 .displayName(store.getDisplayName())
                 .createdDate(store.getCreatedDate())
                 .lastModifiedDate(store.getLastModifiedDate())
@@ -80,7 +66,8 @@ public class StoreMapperImpl implements StoreMapper {
                 .bgImageId(store.getBgImageId())
                 .profileImageId(store.getProfileImageId())
                 .ownerId(store.getOwnerId())
-                .blueprintDtos(store.getBlueprints() == null ? null :
+                .blueprintDtos(!PERSISTENCE_UTIL.isLoaded(store, "blueprints") || store.getBlueprints() == null ?
+                        null :
                         store.getBlueprints().stream()
                                 .map(blueprintMapper::toDto)
                                 .collect(Collectors.toSet()));
@@ -99,7 +86,7 @@ public class StoreMapperImpl implements StoreMapper {
                 store.setId(storeDto.getId());
             }
             if (storeDto.getVersion() != null) {
-                store.setVersion(storeDto.getVersion());
+                //store.setVersion(storeDto.getVersion());
             }
             if (storeDto.getDisplayName() != null) {
                 store.setDisplayName(storeDto.getDisplayName());
@@ -142,22 +129,7 @@ public class StoreMapperImpl implements StoreMapper {
             }
             if (storeDto.getBlueprintDtos() != null) {
                 store.setBlueprints(storeDto.getBlueprintDtos().stream()
-                        .map(blueprintDto -> {
-                            blueprintDto.setVersion(null);
-                            blueprintDto.setStoreId(storeDto.getId());
-                            if (blueprintDto.getId() == null) {
-                                // Brand-new blueprint
-                                return blueprintMapper.toEntity(blueprintDto);
-                            }
-                            // Modifying blueprint
-                            Blueprint blueprint = entityManager.getReference(Blueprint.class, blueprintDto.getId());
-                            if (!blueprint.getStore().getId().equals(storeDto.getId())) {
-                                // Wrong blueprint ID provided
-                                throw new IllegalArgumentException();
-                            }
-                            blueprintMapper.partialUpdate(blueprintDto, blueprint);
-                            return blueprint;
-                        })
+                        .map(blueprintMapper::toEntity)
                         .collect(Collectors.toSet()));
             }
 

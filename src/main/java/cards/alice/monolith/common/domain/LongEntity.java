@@ -16,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 public abstract class LongEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "long-generator")
+    @Access(AccessType.PROPERTY)
     @Column(updatable = false, nullable = false)
     private Long id;
 }

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -52,20 +53,9 @@ public class BootstrapData implements CommandLineRunner {
         // Card
         populateCard();
         // RedeemRule
-        populateRedeemRule();
+        populateRedeemRules();
         // Modify Blueprint
         modifyBlueprint();
-    }
-
-    private void populateRedeemRule() {
-        RedeemRule redeemRule = RedeemRule.builder()
-                .displayName("Rule 4")
-                .description("Demo redeem rule 4")
-                .consumes(3)
-                .imageId(null)
-                .blueprint(entityManager.getReference(Blueprint.class, blueprintId))
-                .build();
-        redeemRuleRepository.saveAndFlush(redeemRule);
     }
 
     private void modifyBlueprint() {
@@ -145,28 +135,7 @@ public class BootstrapData implements CommandLineRunner {
                 .isPublishing(true)
                 .store(entityManager.getReference(Store.class, storeId))
                 .build();
-        RedeemRule redeemRule1 = RedeemRule.builder()
-                .displayName("Rule 1")
-                .description("This is Rule 1")
-                .consumes(1)
-                .imageId(null)
-                .blueprint(blueprint1)
-                .build();
-        RedeemRule redeemRule2 = RedeemRule.builder()
-                .displayName("Rule 2")
-                .description("This is Rule 2")
-                .consumes(5)
-                .imageId(null)
-                .blueprint(blueprint1)
-                .build();
-        RedeemRule redeemRule3 = RedeemRule.builder()
-                .displayName("Rule 3")
-                .description("This is Rule 3")
-                .consumes(10)
-                .imageId(null)
-                .blueprint(blueprint1)
-                .build();
-        blueprint1.setRedeemRules(Set.of(redeemRule1, redeemRule2, redeemRule3));
+
         Blueprint savedBlueprint = blueprintRepository.saveAndFlush(blueprint1);
         blueprintId = savedBlueprint.getId();
 
@@ -184,5 +153,37 @@ public class BootstrapData implements CommandLineRunner {
                 .store(entityManager.getReference(Store.class, storeId))
                 .build();
         blueprintRepository.saveAndFlush(blueprint2);
+    }
+
+    void populateRedeemRules(){
+        RedeemRule redeemRule1 = RedeemRule.builder()
+                .displayName("Rule 1")
+                .description("This is Rule 1")
+                .consumes(1)
+                .imageId(null)
+                .blueprint(blueprintRepository.getReferenceById(blueprintId))
+                .build();
+        RedeemRule redeemRule2 = RedeemRule.builder()
+                .displayName("Rule 2")
+                .description("This is Rule 2")
+                .consumes(5)
+                .imageId(null)
+                .blueprint(blueprintRepository.getReferenceById(blueprintId))
+                .build();
+        RedeemRule redeemRule3 = RedeemRule.builder()
+                .displayName("Rule 3")
+                .description("This is Rule 3")
+                .consumes(10)
+                .imageId(null)
+                .blueprint(blueprintRepository.getReferenceById(blueprintId))
+                .build();
+        RedeemRule redeemRule4 = RedeemRule.builder()
+                .displayName("Rule 4")
+                .description("Demo redeem rule 4")
+                .consumes(3)
+                .imageId(null)
+                .blueprint(entityManager.getReference(Blueprint.class, blueprintId))
+                .build();
+        redeemRuleRepository.saveAllAndFlush(List.of(redeemRule1, redeemRule2, redeemRule3, redeemRule4));
     }
 }

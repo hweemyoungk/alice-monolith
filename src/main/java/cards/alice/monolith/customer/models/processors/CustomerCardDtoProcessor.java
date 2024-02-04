@@ -2,7 +2,7 @@ package cards.alice.monolith.customer.models.processors;
 
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.models.CardDto;
-import cards.alice.monolith.common.models.processors.DtoProcessor;
+import cards.alice.monolith.common.models.processors.CardDtoProcessor;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.customer.repositories.CustomerBlueprintRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class CustomerCardDtoProcessor implements DtoProcessor<CardDto, Long> {
+public class CustomerCardDtoProcessor implements CardDtoProcessor {
     private final CustomerBlueprintRepository blueprintRepository;
 
     @Override
@@ -42,9 +42,6 @@ public class CustomerCardDtoProcessor implements DtoProcessor<CardDto, Long> {
 
         // (If strict) expirationDate must be equal to blueprint.expirationDate
         dto.setExpirationDate(null);
-
-        // (If strict) storeId must equal to blueprint.store.id
-        dto.setStoreId(null);
 
         return dto;
     }
@@ -84,9 +81,6 @@ public class CustomerCardDtoProcessor implements DtoProcessor<CardDto, Long> {
 
         // (If strict) expirationDate must be equal to blueprint.expirationDate
         dto.setExpirationDate(null);
-
-        // (If strict) storeId must equal to blueprint.store.id
-        dto.setStoreId(null);
 
         return dto;
     }

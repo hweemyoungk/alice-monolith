@@ -11,6 +11,8 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.Length;
 
+import java.util.Set;
+
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,7 +35,9 @@ public class RedeemRule extends LongEntity {
     private Integer consumes;
     private String imageId;
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blueprint_id")
     private Blueprint blueprint;
+    @OneToMany(mappedBy = "redeemRule")
+    private Set<Redeem> redeems;
 }

@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -23,28 +22,29 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     private final OwnerStoreRepository storeRepository;
     private final OwnerBlueprintRepository blueprintRepository;
     private final BlueprintMapper blueprintMapper;
-    private final OwnerBlueprintDtoProcessor blueprintProcessor;
+    private final OwnerBlueprintDtoProcessor blueprintDtoProcessor;
     private final OwnerRedeemRuleService ownerRedeemRuleService;
 
     // Tested
     @Override
     @Transactional
     public BlueprintDto saveNewBlueprint(BlueprintDto blueprintDto) {
-        final BlueprintDto preprocessedBlueprintDto = blueprintProcessor.preprocessForPost(blueprintDto);
-
         // Save blueprint without redeemRules
+        final Set<RedeemRuleDto> redeemRuleDtos = blueprintDto.getRedeemRuleDtos();
+        final BlueprintDto preprocessedBlueprintDto = blueprintDtoProcessor.preprocessForPost(blueprintDto);
         final Blueprint blueprint = blueprintMapper.toEntity(preprocessedBlueprintDto);
-        blueprint.setRedeemRules(new HashSet<>());
         final BlueprintDto savedBlueprintDto = blueprintMapper.toDto(
                 blueprintRepository.save(blueprint));
 
-        if (preprocessedBlueprintDto.getRedeemRuleDtos() == null) {
+        if (redeemRuleDtos == null) {
             return savedBlueprintDto;
         }
 
         // Save redeemRules
-        final Set<RedeemRuleDto> redeemRuleDtos = preprocessedBlueprintDto.getRedeemRuleDtos();
+        // 1. Set blueprint id: Otherwise redeemRuleDtoProcessor.preprocessForPost will throw
         redeemRuleDtos.forEach(redeemRuleDto -> redeemRuleDto.setBlueprintId(savedBlueprintDto.getId()));
+        // Skip redeemRuleDtoProcessor.preprocessForPost: Will be done in ownerRedeemRuleService.saveRedeemRules.
+        // 2. Save
         final Set<RedeemRuleDto> savedRedeemRuleDtos = ownerRedeemRuleService.saveRedeemRules(redeemRuleDtos);
 
         savedBlueprintDto.setRedeemRuleDtos(savedRedeemRuleDtos);
@@ -63,8 +63,25 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     @Override
     @Transactional
     public Optional<BlueprintDto> updateBlueprintById(Long id, BlueprintDto blueprintDto) {
-        final BlueprintDto preprocessedBlueprintDto = blueprintProcessor.preprocessForPut(id, blueprintDto);
-        return patchBlueprintById(id, preprocessedBlueprintDto);
+        // Update blueprint without redeemRules
+        final Set<RedeemRuleDto> redeemRuleDtos = blueprintDto.getRedeemRuleDtos();
+        final BlueprintDto preprocessedBlueprintDto = blueprintDtoProcessor.preprocessForPut(id, blueprintDto);
+        final BlueprintDto savedBlueprintDto = patchBlueprintById(id, preprocessedBlueprintDto)
+                .orElseThrow();
+
+        if (redeemRuleDtos == null) {
+            return Optional.of(savedBlueprintDto);
+        }
+
+        // Save redeemRules
+        // 1. Set blueprint id to new redeem rule, if any: redeemRuleDtoProcessor.preprocessForPost will throw
+        redeemRuleDtos.forEach(redeemRuleDto -> redeemRuleDto.setBlueprintId(savedBlueprintDto.getId()));
+        // Skip redeemRuleDtoProcessor.preprocessForPu: Will be done in ownerRedeemRuleService.saveRedeemRules.
+        // 2. Save
+        final Set<RedeemRuleDto> savedRedeemRuleDtos = ownerRedeemRuleService.saveRedeemRules(redeemRuleDtos);
+
+        savedBlueprintDto.setRedeemRuleDtos(savedRedeemRuleDtos);
+        return Optional.of(savedBlueprintDto);
     }
 
     @Override

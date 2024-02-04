@@ -4,15 +4,13 @@ import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.models.BlueprintDto;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.customer.services.CustomerBlueprintService;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequestMapping("${cards.alice.customer.web.controllers.path.base}")
@@ -35,5 +33,11 @@ public class CustomerBlueprintController {
         }
         final Set<BlueprintDto> blueprintDtos = customerBlueprintService.listBlueprints(storeId, ids == null ? null : new HashSet<>(ids));
         return ResponseEntity.ok(blueprintDtos);
+    }
+
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.blueprint.num-issues}")
+    public ResponseEntity<Long> getNumIssues(@NotNull @RequestParam Long blueprintId) {
+        final Long numIssues = customerBlueprintService.getNumIssues(blueprintId);
+        return ResponseEntity.ok(numIssues);
     }
 }

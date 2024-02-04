@@ -3,14 +3,26 @@ package cards.alice.monolith.common.web.mappers;
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.RedeemRuleDto;
+import cards.alice.monolith.common.repositories.BlueprintRepository;
 import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-@RequiredArgsConstructor
+import java.util.stream.Collectors;
+
 @Component
 public class RedeemRuleMapperImpl implements RedeemRuleMapper {
+    private final BlueprintRepository blueprintRepository;
+    private final BlueprintMapper blueprintMapper;
+    private final RedeemMapper redeemMapper;
     private final EntityManager entityManager;
+
+    public RedeemRuleMapperImpl(BlueprintRepository blueprintRepository, BlueprintMapper blueprintMapper, @Lazy RedeemMapper redeemMapper, EntityManager entityManager) {
+        this.blueprintRepository = blueprintRepository;
+        this.blueprintMapper = blueprintMapper;
+        this.redeemMapper = redeemMapper;
+        this.entityManager = entityManager;
+    }
 
     @Override
     public RedeemRule toEntity(RedeemRuleDto redeemRuleDto) {
@@ -20,7 +32,7 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
 
         RedeemRule.RedeemRuleBuilder<?, ?> redeemRule = RedeemRule.builder()
                 .id(redeemRuleDto.getId())
-                .version(redeemRuleDto.getVersion())
+                //.version(redeemRuleDto.getVersion())
                 .displayName(redeemRuleDto.getDisplayName())
                 .createdDate(redeemRuleDto.getCreatedDate())
                 .lastModifiedDate(redeemRuleDto.getLastModifiedDate())
@@ -28,10 +40,11 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
                 .description(redeemRuleDto.getDescription())
                 .consumes(redeemRuleDto.getConsumes())
                 .imageId(redeemRuleDto.getImageId())
-                .blueprint(
-                        // If redeemRuleDto is from brand new blueprintDto, blueprintId is null.
-                        redeemRuleDto.getBlueprintId() == null ? null : entityManager.getReference(
-                                Blueprint.class, redeemRuleDto.getBlueprintId()));
+                .blueprint(blueprintRepository.getReferenceById(redeemRuleDto.getBlueprintId()))
+                .redeems(redeemRuleDto.getRedeemDtos() == null ? null :
+                        redeemRuleDto.getRedeemDtos().stream()
+                                .map(redeemMapper::toEntity)
+                                .collect(Collectors.toSet()));
 
         return redeemRule.build();
     }
@@ -44,7 +57,7 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
 
         RedeemRuleDto.RedeemRuleDtoBuilder<?, ?> redeemRuleDto = RedeemRuleDto.builder()
                 .id(redeemRule.getId())
-                .version(redeemRule.getVersion())
+                //.version(redeemRule.getVersion())
                 .displayName(redeemRule.getDisplayName())
                 .createdDate(redeemRule.getCreatedDate())
                 .lastModifiedDate(redeemRule.getLastModifiedDate())
@@ -52,7 +65,15 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
                 .description(redeemRule.getDescription())
                 .consumes(redeemRule.getConsumes())
                 .imageId(redeemRule.getImageId())
-                .blueprintId(redeemRule.getBlueprint().getId());
+                .blueprintDto(!PERSISTENCE_UTIL.isLoaded(redeemRule, "blueprint") ?
+                        null :
+                        blueprintMapper.toDto(redeemRule.getBlueprint()))
+                .blueprintId(redeemRule.getBlueprint().getId())
+                .redeemDtos(!PERSISTENCE_UTIL.isLoaded(redeemRule, "redeems") || redeemRule.getRedeems() == null ?
+                        null :
+                        redeemRule.getRedeems().stream()
+                                .map(redeemMapper::toDto)
+                                .collect(Collectors.toSet()));
 
         return redeemRuleDto.build();
     }
@@ -67,7 +88,7 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
             redeemRule.setId(redeemRuleDto.getId());
         }
         if (redeemRuleDto.getVersion() != null) {
-            redeemRule.setVersion(redeemRuleDto.getVersion());
+            //redeemRule.setVersion(redeemRuleDto.getVersion());
         }
         if (redeemRuleDto.getDisplayName() != null) {
             redeemRule.setDisplayName(redeemRuleDto.getDisplayName());
@@ -93,6 +114,11 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
         if (redeemRuleDto.getBlueprintId() != null) {
             redeemRule.setBlueprint(entityManager.getReference(
                     Blueprint.class, redeemRuleDto.getBlueprintId()));
+        }
+        if (redeemRuleDto.getRedeemDtos() != null) {
+            redeemRule.setRedeems(redeemRuleDto.getRedeemDtos().stream()
+                    .map(redeemMapper::toEntity)
+                    .collect(Collectors.toSet()));
         }
 
         return redeemRule;
