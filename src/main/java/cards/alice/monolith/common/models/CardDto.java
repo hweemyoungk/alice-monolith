@@ -1,5 +1,6 @@
 package cards.alice.monolith.common.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -20,7 +21,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class CardDto extends BaseDto<Long> {
+public class CardDto extends LongDto {
     @NotNull
     @PositiveOrZero
     private Integer numCollectedStamps;
@@ -46,13 +47,9 @@ public class CardDto extends BaseDto<Long> {
     private Boolean isInactive;
     @NotNull
     private UUID customerId;
+    @JsonProperty("blueprint")
+    private BlueprintDto blueprintDto;
     @NotNull
-    private Long storeId;
-    @NotNull
+    @Positive
     private Long blueprintId;
-    //@NotNull
-    //@JsonProperty("blueprintId")
-    //@JsonSerialize(using = BlueprintIdSerializer.class)
-    //@JsonDeserialize(using = BlueprintIdDeserializer.class)
-    //private BlueprintDto blueprintDto;
 }

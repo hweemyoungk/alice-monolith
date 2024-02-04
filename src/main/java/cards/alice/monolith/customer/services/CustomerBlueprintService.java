@@ -10,7 +10,11 @@ import java.util.Set;
 public interface CustomerBlueprintService {
     @PostAuthorize("returnObject.isPublishing")
     BlueprintDto authorizedGetBlueprintById(Long id);
+
     Optional<BlueprintDto> getBlueprintById(Long id);
+
     @PostFilter("filterObject.isPublishing")
     Set<BlueprintDto> listBlueprints(Long storeId, Set<Long> ids);
+
+    Long getNumIssues(Long blueprintId);
 }

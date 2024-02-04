@@ -1,5 +1,6 @@
 package cards.alice.monolith.common.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -18,11 +19,13 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class StampGrantDto extends BaseDto<Long> implements Serializable {
-    @NotNull
-    @Positive
-    private Long cardId;
+public class StampGrantDto extends LongDto implements Serializable {
     @NotNull
     @Positive
     private Integer numStamps;
+    @JsonProperty("card")
+    private CardDto cardDto;
+    @NotNull
+    @Positive
+    private Long cardId;
 }

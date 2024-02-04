@@ -31,12 +31,12 @@ public class Redeem extends LongEntity {
     @NotNull
     @PositiveOrZero
     private Integer numStampsAfter;
-    @ManyToOne
-    @JoinColumn(name = "redeem_rule_id")
-    private RedeemRule redeemRule;
-    @ManyToOne
-    @JoinColumn(name = "card_id")
-    private Card card;
     @NotNull
     private UUID token;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "redeem_rule_id")
+    private RedeemRule redeemRule;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "card_id")
+    private Card card;
 }

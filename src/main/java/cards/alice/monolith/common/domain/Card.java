@@ -38,15 +38,15 @@ public class Card extends LongEntity {
     @PositiveOrZero
     private Integer numRedeemed;
     @NotNull
-    private UUID customerId;
-    @ManyToOne
-    @JoinColumn(name = "blueprint_id")
-    private Blueprint blueprint;
-    private String bgImageId;
-    @NotNull
     private Boolean isDiscarded;
     @NotNull
     private Boolean isUsedOut;
     @NotNull
     private Boolean isInactive;
+    private String bgImageId;
+    @NotNull
+    private UUID customerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "blueprint_id")
+    private Blueprint blueprint;
 }

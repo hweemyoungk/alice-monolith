@@ -1,16 +1,16 @@
 package cards.alice.monolith.common.web.mappers;
 
-import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.domain.StampGrant;
 import cards.alice.monolith.common.models.StampGrantDto;
-import jakarta.persistence.EntityManager;
+import cards.alice.monolith.common.repositories.CardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
 public class StampGrantMapperImpl implements StampGrantMapper {
-    private final EntityManager entityManager;
+    private final CardRepository cardRepository;
+    private final CardMapper cardMapper;
 
     @Override
     public StampGrant toEntity(StampGrantDto stampGrantDto) {
@@ -21,14 +21,13 @@ public class StampGrantMapperImpl implements StampGrantMapper {
         StampGrant.StampGrantBuilder<?, ?> stampGrant = StampGrant.builder();
 
         stampGrant.id(stampGrantDto.getId());
-        stampGrant.version(stampGrantDto.getVersion());
+        //stampGrant.version(stampGrantDto.getVersion());
         stampGrant.displayName(stampGrantDto.getDisplayName());
         stampGrant.createdDate(stampGrantDto.getCreatedDate());
         stampGrant.lastModifiedDate(stampGrantDto.getLastModifiedDate());
         stampGrant.isDeleted(stampGrantDto.getIsDeleted());
-        stampGrant.card(entityManager.getReference(
-                Card.class, stampGrantDto.getCardId()));
         stampGrant.numStamps(stampGrantDto.getNumStamps());
+        stampGrant.card(cardRepository.getReferenceById(stampGrantDto.getCardId()));
 
         return stampGrant.build();
     }
@@ -42,13 +41,16 @@ public class StampGrantMapperImpl implements StampGrantMapper {
         StampGrantDto.StampGrantDtoBuilder<?, ?> stampGrantDto = StampGrantDto.builder();
 
         stampGrantDto.id(stampGrant.getId());
-        stampGrantDto.version(stampGrant.getVersion());
+        //stampGrantDto.version(stampGrant.getVersion());
         stampGrantDto.displayName(stampGrant.getDisplayName());
         stampGrantDto.createdDate(stampGrant.getCreatedDate());
         stampGrantDto.lastModifiedDate(stampGrant.getLastModifiedDate());
         stampGrantDto.isDeleted(stampGrant.getIsDeleted());
-        stampGrantDto.cardId(stampGrant.getCard().getId());
         stampGrantDto.numStamps(stampGrant.getNumStamps());
+        stampGrantDto.cardDto(!PERSISTENCE_UTIL.isLoaded(stampGrant, "card") ?
+                null :
+                cardMapper.toDto(stampGrant.getCard()));
+        stampGrantDto.cardId(stampGrant.getCard().getId());
 
         return stampGrantDto.build();
     }
@@ -63,7 +65,7 @@ public class StampGrantMapperImpl implements StampGrantMapper {
             stampGrant.setId(stampGrantDto.getId());
         }
         if (stampGrantDto.getVersion() != null) {
-            stampGrant.setVersion(stampGrantDto.getVersion());
+            //stampGrant.setVersion(stampGrantDto.getVersion());
         }
         if (stampGrantDto.getDisplayName() != null) {
             stampGrant.setDisplayName(stampGrantDto.getDisplayName());
@@ -77,13 +79,12 @@ public class StampGrantMapperImpl implements StampGrantMapper {
         if (stampGrantDto.getIsDeleted() != null) {
             stampGrant.setIsDeleted(stampGrantDto.getIsDeleted());
         }
-        if (stampGrantDto.getCardId() != null) {
-            stampGrant.setCard(entityManager.getReference(
-                    Card.class, stampGrantDto.getCardId())
-            );
-        }
         if (stampGrantDto.getNumStamps() != null) {
             stampGrant.setNumStamps(stampGrantDto.getNumStamps());
+        }
+        if (stampGrantDto.getCardId() != null) {
+            stampGrant.setCard(cardRepository
+                    .getReferenceById(stampGrantDto.getCardId()));
         }
 
         return stampGrant;

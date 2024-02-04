@@ -55,13 +55,7 @@ public class Blueprint extends LongEntity {
     private String bgImageId;
     @NotNull
     private Boolean isPublishing;
-    @OneToMany(
-            mappedBy = "blueprint", cascade = {
-            CascadeType.PERSIST,
-            CascadeType.MERGE,
-            CascadeType.REFRESH,
-            CascadeType.DETACH
-    })
+    @OneToMany(mappedBy = "blueprint")
     private Set<RedeemRule> redeemRules;
     /*@OneToMany(
             mappedBy = "blueprint", cascade = {

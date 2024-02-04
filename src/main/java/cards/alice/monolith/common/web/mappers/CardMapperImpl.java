@@ -1,16 +1,16 @@
 package cards.alice.monolith.common.web.mappers;
 
-import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.CardDto;
-import jakarta.persistence.EntityManager;
+import cards.alice.monolith.common.repositories.BlueprintRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
 public class CardMapperImpl implements CardMapper {
-    private final EntityManager entityManager;
+    private final BlueprintMapper blueprintMapper;
+    private final BlueprintRepository blueprintRepository;
 
     @Override
     public Card toEntity(CardDto cardDto) {
@@ -21,7 +21,7 @@ public class CardMapperImpl implements CardMapper {
         Card.CardBuilder<?, ?> card = Card.builder();
 
         card.id(cardDto.getId());
-        card.version(cardDto.getVersion());
+        //card.version(cardDto.getVersion());
         card.displayName(cardDto.getDisplayName());
         card.createdDate(cardDto.getCreatedDate());
         card.lastModifiedDate(cardDto.getLastModifiedDate());
@@ -31,11 +31,12 @@ public class CardMapperImpl implements CardMapper {
         card.isFavorite(cardDto.getIsFavorite());
         card.numRedeemed(cardDto.getNumRedeemed());
         card.customerId(cardDto.getCustomerId());
-        card.blueprint(entityManager.getReference(Blueprint.class, cardDto.getBlueprintId()));
         card.bgImageId(cardDto.getBgImageId());
         card.isDiscarded(cardDto.getIsDiscarded());
         card.isUsedOut(cardDto.getIsUsedOut());
         card.isInactive(cardDto.getIsInactive());
+        card.blueprint(blueprintRepository.getReferenceById(
+                cardDto.getBlueprintId()));
 
         return card.build();
     }
@@ -49,7 +50,7 @@ public class CardMapperImpl implements CardMapper {
         CardDto.CardDtoBuilder<?, ?> cardDto = CardDto.builder();
 
         cardDto.id(card.getId());
-        cardDto.version(card.getVersion());
+        //cardDto.version(card.getVersion());
         cardDto.createdDate(card.getCreatedDate());
         cardDto.lastModifiedDate(card.getLastModifiedDate());
         cardDto.isDeleted(card.getIsDeleted());
@@ -60,12 +61,14 @@ public class CardMapperImpl implements CardMapper {
         cardDto.isFavorite(card.getIsFavorite());
         cardDto.numRedeemed(card.getNumRedeemed());
         cardDto.customerId(card.getCustomerId());
-        cardDto.storeId(card.getBlueprint().getStore().getId());
-        cardDto.blueprintId(card.getBlueprint().getId());
         cardDto.bgImageId(card.getBgImageId());
         cardDto.isDiscarded(card.getIsDiscarded());
         cardDto.isUsedOut(card.getIsUsedOut());
         cardDto.isInactive(card.getIsInactive());
+        cardDto.blueprintDto(!PERSISTENCE_UTIL.isLoaded(card, "blueprint") ?
+                null :
+                blueprintMapper.toDto(card.getBlueprint()));
+        cardDto.blueprintId(card.getBlueprint().getId());
 
         return cardDto.build();
     }
@@ -80,7 +83,7 @@ public class CardMapperImpl implements CardMapper {
             card.setId(cardDto.getId());
         }
         if (cardDto.getVersion() != null) {
-            card.setVersion(cardDto.getVersion());
+            //card.setVersion(cardDto.getVersion());
         }
         if (cardDto.getDisplayName() != null) {
             card.setDisplayName(cardDto.getDisplayName());
@@ -109,11 +112,6 @@ public class CardMapperImpl implements CardMapper {
         if (cardDto.getCustomerId() != null) {
             card.setCustomerId(cardDto.getCustomerId());
         }
-        // No need to map cardDto.storeId: card.store doesn't exist
-        //if (cardDto.getStoreId() != null) {
-        //    card.setStore(
-        //            entityManager.getReference(Store.class, cardDto.getStoreId()));
-        //}
         if (cardDto.getBgImageId() != null) {
             card.setBgImageId(cardDto.getBgImageId());
         }
@@ -126,9 +124,12 @@ public class CardMapperImpl implements CardMapper {
         if (cardDto.getIsInactive() != null) {
             card.setIsInactive(cardDto.getIsInactive());
         }
+        if (cardDto.getBlueprintDto() != null) {
+            // NOOP: cannot create, modify, or delete blueprint through association
+        }
         if (cardDto.getBlueprintId() != null) {
             card.setBlueprint(
-                    entityManager.getReference(Blueprint.class, cardDto.getBlueprintId()));
+                    blueprintRepository.getReferenceById(cardDto.getBlueprintId()));
         }
 
         return card;

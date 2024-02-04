@@ -4,6 +4,7 @@ import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.models.BlueprintDto;
 import cards.alice.monolith.common.web.mappers.BlueprintMapper;
 import cards.alice.monolith.customer.repositories.CustomerBlueprintRepository;
+import cards.alice.monolith.customer.repositories.CustomerCardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CustomerBlueprintServiceImpl implements CustomerBlueprintService {
     private final CustomerBlueprintRepository blueprintRepository;
+    private final CustomerCardRepository cardRepository;
     private final BlueprintMapper blueprintMapper;
 
     @Override
@@ -39,5 +41,10 @@ public class CustomerBlueprintServiceImpl implements CustomerBlueprintService {
         }
         return blueprints.stream()
                 .map(blueprintMapper::toDto).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Long getNumIssues(Long blueprintId) {
+        return cardRepository.countByBlueprint_Id(blueprintId);
     }
 }

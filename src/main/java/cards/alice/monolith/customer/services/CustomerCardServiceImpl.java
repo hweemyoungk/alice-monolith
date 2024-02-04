@@ -5,6 +5,7 @@ import cards.alice.monolith.common.models.CardDto;
 import cards.alice.monolith.common.web.mappers.CardMapper;
 import cards.alice.monolith.customer.models.processors.CustomerCardDtoProcessor;
 import cards.alice.monolith.customer.repositories.CustomerCardRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class CustomerCardServiceImpl implements CustomerCardService {
     private final CustomerCardRepository cardRepository;
     private final CustomerCardDtoProcessor cardProcessor;
     private final CardMapper cardMapper;
+    private final EntityManager em;
 
     @Override
     @Transactional
@@ -83,8 +85,8 @@ public class CustomerCardServiceImpl implements CustomerCardService {
         } else {
             cards = cardRepository.findByCustomerIdAndIdIn(customerId, ids);
         }
-        return cards.stream()
-                .map(cardMapper::toDto).collect(Collectors.toSet());
+
+        return cards.stream().map(cardMapper::toDto).collect(Collectors.toSet());
     }
 
     @Override

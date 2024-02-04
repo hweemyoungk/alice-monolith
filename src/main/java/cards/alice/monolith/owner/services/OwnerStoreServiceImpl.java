@@ -1,12 +1,14 @@
 package cards.alice.monolith.owner.services;
 
+import cards.alice.monolith.common.domain.Blueprint;
+import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.BlueprintDto;
 import cards.alice.monolith.common.models.StoreDto;
 import cards.alice.monolith.common.web.mappers.StoreMapper;
 import cards.alice.monolith.owner.models.processors.OwnerStoreDtoProcessor;
-import cards.alice.monolith.owner.repositories.OwnerRedeemRuleRepository;
 import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Service;
@@ -23,10 +25,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OwnerStoreServiceImpl implements OwnerStoreService {
     private final OwnerStoreRepository storeRepository;
-    private final OwnerRedeemRuleRepository redeemRuleRepository;
-    private final OwnerStoreDtoProcessor storeDtoProcessor;
     private final StoreMapper storeMapper;
+    private final OwnerStoreDtoProcessor storeDtoProcessor;
     private final OwnerBlueprintService ownerBlueprintService;
+    private final EntityManager em;
 
     @Override
     @Transactional
@@ -44,8 +46,13 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
         }
 
         // Save Blueprints
+        // 1. Set store id: Otherwise blueprintDtoProcessor.preprocessForPost will throw
         final Set<BlueprintDto> blueprintDtos = preprocessedStoreDto.getBlueprintDtos();
         blueprintDtos.forEach(blueprintDto -> blueprintDto.setStoreId(savedStoreDto.getId()));
+
+        // Skip blueprintDtoProcessor.preprocessForPost: will be done in ownerBlueprintService.saveBlueprints
+
+        // 2. Save
         final Set<BlueprintDto> savedBlueprintDtos = ownerBlueprintService.saveBlueprints(blueprintDtos);
 
         savedStoreDto.setBlueprintDtos(savedBlueprintDtos);
@@ -73,8 +80,9 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
         store.ifPresentOrElse(
                 srcStore -> {
                     storeMapper.partialUpdate(storeDto, srcStore);
-                    final StoreDto savedStoreDto = storeMapper.toDto(
-                            storeRepository.save(srcStore));
+                    srcStore.setBlueprints(null); // I fucking don't know why store is eagerly fetching blueprints...
+                    final Store savedStore = storeRepository.save(srcStore); // Neither fucking know why persists children...
+                    final StoreDto savedStoreDto = storeMapper.toDto(savedStore);
                     atomicReference.set(Optional.of(savedStoreDto));
                 },
                 () -> {
@@ -93,7 +101,22 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
         } else {
             stores = storeRepository.findByOwnerIdAndIdIn(ownerId, ids);
         }
-        return stores.stream()
-                .map(storeMapper::toDto).collect(Collectors.toSet());
+        return stores.stream().peek(store -> store.getBlueprints().stream().peek(blueprint -> {
+            blueprint.getRedeemRules().forEach(this::detachBlueprint);
+        }).forEach(this::detachStore)).map(storeMapper::toDto).collect(Collectors.toSet());
+        //return stores.stream()
+        //        .map(storeMapper::toDto).collect(Collectors.toSet());
+    }
+
+    private void detachStore(Blueprint blueprint) {
+        Store manyToOneStore = blueprint.getStore();
+        em.detach(manyToOneStore);
+        blueprint.setStore(em.getReference(Store.class, manyToOneStore.getId()));
+    }
+
+    private void detachBlueprint(RedeemRule redeemRule) {
+        Blueprint manyToOneBlueprint = redeemRule.getBlueprint();
+        em.detach(manyToOneBlueprint);
+        redeemRule.setBlueprint(em.getReference(Blueprint.class, manyToOneBlueprint.getId()));
     }
 }

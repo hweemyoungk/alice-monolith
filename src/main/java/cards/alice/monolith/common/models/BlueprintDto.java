@@ -20,7 +20,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class BlueprintDto extends BaseDto<Long> {
+public class BlueprintDto extends LongDto {
     @NotBlank
     @Length(max = 1000)
     private String description;
@@ -44,6 +44,8 @@ public class BlueprintDto extends BaseDto<Long> {
     private String bgImageId;
     @NotNull
     private Boolean isPublishing;
+    @JsonProperty("store")
+    private StoreDto storeDto;
     @NotNull
     @Positive
     private Long storeId;

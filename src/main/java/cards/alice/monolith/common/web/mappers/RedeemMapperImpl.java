@@ -1,60 +1,69 @@
 package cards.alice.monolith.common.web.mappers;
 
-import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.domain.Redeem;
-import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.RedeemDto;
-import jakarta.persistence.EntityManager;
+import cards.alice.monolith.common.repositories.CardRepository;
+import cards.alice.monolith.common.repositories.RedeemRuleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
 public class RedeemMapperImpl implements RedeemMapper {
-    private final EntityManager entityManager;
+    private final RedeemRuleRepository redeemRuleRepository;
+    private final CardRepository cardRepository;
+
+    private final RedeemRuleMapper redeemRuleMapper;
+    private final CardMapper cardMapper;
 
     @Override
-    public Redeem toEntity(RedeemDto dto) {
-        if (dto == null) {
+    public Redeem toEntity(RedeemDto redeemDto) {
+        if (redeemDto == null) {
             return null;
         }
 
         Redeem.RedeemBuilder<?, ?> redeem = Redeem.builder();
 
-        redeem.id(dto.getId());
-        redeem.version(dto.getVersion());
-        redeem.displayName(dto.getDisplayName());
-        redeem.createdDate(dto.getCreatedDate());
-        redeem.lastModifiedDate(dto.getLastModifiedDate());
-        redeem.isDeleted(dto.getIsDeleted());
-        redeem.numStampsBefore(dto.getNumStampsBefore());
-        redeem.numStampsAfter(dto.getNumStampsAfter());
-        redeem.token(dto.getToken());
-        redeem.redeemRule(entityManager.getReference(RedeemRule.class, dto.getRedeemRuleId()));
-        redeem.card(entityManager.getReference(Card.class, dto.getCardId()));
+        redeem.id(redeemDto.getId());
+        //redeem.version(redeemDto.getVersion());
+        redeem.displayName(redeemDto.getDisplayName());
+        redeem.createdDate(redeemDto.getCreatedDate());
+        redeem.lastModifiedDate(redeemDto.getLastModifiedDate());
+        redeem.isDeleted(redeemDto.getIsDeleted());
+        redeem.numStampsBefore(redeemDto.getNumStampsBefore());
+        redeem.numStampsAfter(redeemDto.getNumStampsAfter());
+        redeem.token(redeemDto.getToken());
+        redeem.redeemRule(redeemRuleRepository.getReferenceById(redeemDto.getRedeemRuleId()));
+        redeem.card(cardRepository.getReferenceById(redeemDto.getCardId()));
 
         return redeem.build();
     }
 
     @Override
-    public RedeemDto toDto(Redeem entity) {
-        if (entity == null) {
+    public RedeemDto toDto(Redeem redeem) {
+        if (redeem == null) {
             return null;
         }
 
         RedeemDto.RedeemDtoBuilder<?, ?> redeemDto = RedeemDto.builder();
 
-        redeemDto.id(entity.getId());
-        redeemDto.version(entity.getVersion());
-        redeemDto.displayName(entity.getDisplayName());
-        redeemDto.createdDate(entity.getCreatedDate());
-        redeemDto.lastModifiedDate(entity.getLastModifiedDate());
-        redeemDto.isDeleted(entity.getIsDeleted());
-        redeemDto.numStampsBefore(entity.getNumStampsBefore());
-        redeemDto.numStampsAfter(entity.getNumStampsAfter());
-        redeemDto.token(entity.getToken());
-        redeemDto.redeemRuleId(entity.getRedeemRule().getId());
-        redeemDto.cardId(entity.getCard().getId());
+        redeemDto.id(redeem.getId());
+        //redeemDto.version(redeem.getVersion());
+        redeemDto.displayName(redeem.getDisplayName());
+        redeemDto.createdDate(redeem.getCreatedDate());
+        redeemDto.lastModifiedDate(redeem.getLastModifiedDate());
+        redeemDto.isDeleted(redeem.getIsDeleted());
+        redeemDto.numStampsBefore(redeem.getNumStampsBefore());
+        redeemDto.numStampsAfter(redeem.getNumStampsAfter());
+        redeemDto.token(redeem.getToken());
+        redeemDto.redeemRuleDto(!PERSISTENCE_UTIL.isLoaded(redeem, "redeemRule") ?
+                null :
+                redeemRuleMapper.toDto(redeem.getRedeemRule()));
+        redeemDto.redeemRuleId(redeem.getRedeemRule().getId());
+        redeemDto.cardDto(!PERSISTENCE_UTIL.isLoaded(redeem, "card") ?
+                null :
+                cardMapper.toDto(redeem.getCard()));
+        redeemDto.cardId(redeem.getCard().getId());
 
         return redeemDto.build();
     }
@@ -69,7 +78,7 @@ public class RedeemMapperImpl implements RedeemMapper {
             entity.setId(dto.getId());
         }
         if (dto.getVersion() != null) {
-            entity.setVersion(dto.getVersion());
+            //entity.setVersion(dto.getVersion());
         }
         if (dto.getDisplayName() != null) {
             entity.setDisplayName(dto.getDisplayName());
@@ -94,11 +103,11 @@ public class RedeemMapperImpl implements RedeemMapper {
         }
         if (dto.getRedeemRuleId() != null) {
             entity.setRedeemRule(
-                    entityManager.getReference(RedeemRule.class, dto.getRedeemRuleId()));
+                    redeemRuleRepository.getReferenceById(dto.getRedeemRuleId()));
         }
         if (dto.getCardId() != null) {
             entity.setCard(
-                    entityManager.getReference(Card.class, dto.getCardId()));
+                    cardRepository.getReferenceById(dto.getCardId()));
         }
 
         return entity;

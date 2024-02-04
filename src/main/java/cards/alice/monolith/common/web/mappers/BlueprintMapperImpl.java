@@ -1,20 +1,25 @@
 package cards.alice.monolith.common.web.mappers;
 
 import cards.alice.monolith.common.domain.Blueprint;
-import cards.alice.monolith.common.domain.RedeemRule;
-import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.BlueprintDto;
-import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
+import cards.alice.monolith.common.repositories.StoreRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
 @Component
 public class BlueprintMapperImpl implements BlueprintMapper {
+    private final StoreMapper storeMapper;
     private final RedeemRuleMapper redeemRuleMapper;
-    private final EntityManager entityManager;
+
+    private final StoreRepository storeRepository;
+
+    public BlueprintMapperImpl(StoreMapper storeMapper, @Lazy RedeemRuleMapper redeemRuleMapper, StoreRepository storeRepository) {
+        this.storeMapper = storeMapper;
+        this.redeemRuleMapper = redeemRuleMapper;
+        this.storeRepository = storeRepository;
+    }
 
     @Override
     public Blueprint toEntity(BlueprintDto blueprintDto) {
@@ -24,7 +29,7 @@ public class BlueprintMapperImpl implements BlueprintMapper {
 
         Blueprint.BlueprintBuilder<?, ?> blueprint = Blueprint.builder()
                 .id(blueprintDto.getId())
-                .version(blueprintDto.getVersion())
+                //.version(blueprintDto.getVersion())
                 .displayName(blueprintDto.getDisplayName())
                 .createdDate(blueprintDto.getCreatedDate())
                 .lastModifiedDate(blueprintDto.getLastModifiedDate())
@@ -33,24 +38,17 @@ public class BlueprintMapperImpl implements BlueprintMapper {
                 .stampGrantCondDescription(blueprintDto.getStampGrantCondDescription())
                 .numMaxStamps(blueprintDto.getNumMaxStamps())
                 .numMaxRedeems(blueprintDto.getNumMaxRedeems())
+                .numMaxIssuesPerCustomer(blueprintDto.getNumMaxIssuesPerCustomer())
                 .numMaxIssues(blueprintDto.getNumMaxIssues())
                 .expirationDate(blueprintDto.getExpirationDate())
                 .bgImageId(blueprintDto.getBgImageId())
                 .isPublishing(blueprintDto.getIsPublishing())
-                .redeemRules(blueprintDto.getRedeemRuleDtos().stream()
-                        .map(redeemRuleDto -> {
-                            redeemRuleDto.setVersion(null);
-                            if (redeemRuleDto.getId() == null) {
-                                // New redeemRule
-                                return redeemRuleMapper.toEntity(redeemRuleDto);
-                            }
-                            // Modifying redeemRule
-                            RedeemRule reference = entityManager.getReference(RedeemRule.class, redeemRuleDto.getId());
-                            redeemRuleMapper.partialUpdate(redeemRuleDto, reference);
-                            return reference;
-                        })
-                        .collect(Collectors.toSet()))
-                .store(entityManager.getReference(Store.class, blueprintDto.getStoreId()));
+                .store(storeRepository.getReferenceById(blueprintDto.getStoreId()))
+                .redeemRules(blueprintDto.getRedeemRuleDtos() == null ?
+                        null :
+                        blueprintDto.getRedeemRuleDtos().stream()
+                                .map(redeemRuleMapper::toEntity)
+                                .collect(Collectors.toSet()));
 
         return blueprint.build();
     }
@@ -63,7 +61,7 @@ public class BlueprintMapperImpl implements BlueprintMapper {
 
         BlueprintDto.BlueprintDtoBuilder<?, ?> blueprintDto = BlueprintDto.builder()
                 .id(blueprint.getId())
-                .version(blueprint.getVersion())
+                //.version(blueprint.getVersion())
                 .displayName(blueprint.getDisplayName())
                 .createdDate(blueprint.getCreatedDate())
                 .lastModifiedDate(blueprint.getLastModifiedDate())
@@ -72,15 +70,20 @@ public class BlueprintMapperImpl implements BlueprintMapper {
                 .stampGrantCondDescription(blueprint.getStampGrantCondDescription())
                 .numMaxStamps(blueprint.getNumMaxStamps())
                 .numMaxRedeems(blueprint.getNumMaxRedeems())
+                .numMaxIssuesPerCustomer(blueprint.getNumMaxIssuesPerCustomer())
                 .numMaxIssues(blueprint.getNumMaxIssues())
                 .expirationDate(blueprint.getExpirationDate())
                 .bgImageId(blueprint.getBgImageId())
                 .isPublishing(blueprint.getIsPublishing())
-                .redeemRuleDtos(blueprint.getRedeemRules() == null ? null :
+                .storeDto(!PERSISTENCE_UTIL.isLoaded(blueprint, "store") ?
+                        null :
+                        storeMapper.toDto(blueprint.getStore()))
+                .storeId(blueprint.getStore().getId())
+                .redeemRuleDtos(!PERSISTENCE_UTIL.isLoaded(blueprint, "redeemRules") || blueprint.getRedeemRules() == null ?
+                        null :
                         blueprint.getRedeemRules().stream()
                                 .map(redeemRuleMapper::toDto)
-                                .collect(Collectors.toSet()))
-                .storeId(blueprint.getStore().getId());
+                                .collect(Collectors.toSet()));
 
         return blueprintDto.build();
     }
@@ -95,7 +98,7 @@ public class BlueprintMapperImpl implements BlueprintMapper {
             blueprint.setId(blueprintDto.getId());
         }
         if (blueprintDto.getVersion() != null) {
-            blueprint.setVersion(blueprintDto.getVersion());
+            //blueprint.setVersion(blueprintDto.getVersion());
         }
         if (blueprintDto.getDisplayName() != null) {
             blueprint.setDisplayName(blueprintDto.getDisplayName());
@@ -121,6 +124,9 @@ public class BlueprintMapperImpl implements BlueprintMapper {
         if (blueprintDto.getNumMaxRedeems() != null) {
             blueprint.setNumMaxRedeems(blueprintDto.getNumMaxRedeems());
         }
+        if (blueprintDto.getNumMaxIssuesPerCustomer() != null) {
+            blueprint.setNumMaxIssues(blueprintDto.getNumMaxIssuesPerCustomer());
+        }
         if (blueprintDto.getNumMaxIssues() != null) {
             blueprint.setNumMaxIssues(blueprintDto.getNumMaxIssues());
         }
@@ -133,24 +139,14 @@ public class BlueprintMapperImpl implements BlueprintMapper {
         if (blueprintDto.getIsPublishing() != null) {
             blueprint.setIsPublishing(blueprintDto.getIsPublishing());
         }
-        if (blueprintDto.getRedeemRuleDtos() != null) {
-            blueprint.setRedeemRules(blueprintDto.getRedeemRuleDtos().stream()
-                    .map(redeemRuleDto -> {
-                        redeemRuleDto.setVersion(null);
-                        if (redeemRuleDto.getId() == null) {
-                            // New redeemRule
-                            return redeemRuleMapper.toEntity(redeemRuleDto);
-                        }
-                        // Modifying redeemRule
-                        RedeemRule reference = entityManager.getReference(RedeemRule.class, redeemRuleDto.getId());
-                        redeemRuleMapper.partialUpdate(redeemRuleDto, reference);
-                        return reference;
-                    })
-                    .collect(Collectors.toSet()));
-        }
         if (blueprintDto.getStoreId() != null) {
             blueprint.setStore(
-                    entityManager.getReference(Store.class, blueprintDto.getStoreId()));
+                    storeRepository.getReferenceById(blueprintDto.getStoreId()));
+        }
+        if (blueprintDto.getRedeemRuleDtos() != null) {
+            blueprint.setRedeemRules(blueprintDto.getRedeemRuleDtos().stream()
+                    .map(redeemRuleMapper::toEntity)
+                    .collect(Collectors.toSet()));
         }
 
         return blueprint;
