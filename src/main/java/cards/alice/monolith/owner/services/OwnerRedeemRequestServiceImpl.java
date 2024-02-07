@@ -5,6 +5,7 @@ import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.CardDto;
 import cards.alice.monolith.common.models.RedeemDto;
 import cards.alice.monolith.common.models.RedeemRequestDto;
+import cards.alice.monolith.common.models.RedeemRuleDto;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.common.web.mappers.CardMapper;
 import cards.alice.monolith.owner.repositories.OwnerCardRepository;
@@ -40,8 +41,9 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
 
     private final Map<String, Future<?>> redeemRequestTtlTaskPool;
 
-    private final OwnerRedeemService ownerRedeemService;
-    private final OwnerCardService ownerCardService;
+    private final OwnerRedeemRuleService redeemRuleService;
+    private final OwnerRedeemService redeemService;
+    private final OwnerCardService cardService;
     private final CardMapper cardMapper;
     private final ObjectMapper objectMapper;
     private final JedisPooled jedis;
@@ -50,6 +52,7 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
     public Set<RedeemRequestDto> listRedeemRequests(UUID ownerId) {
         final String ownerRedeemRequestsKey = getOwnerRedeemRequestsKey(ownerId.toString());
         final Map<String, String> hash = jedis.hgetAll(ownerRedeemRequestsKey);
+
         return hash.values().stream().map(s -> {
             final RedeemRequestDto redeemRequestDto;
             try {
@@ -57,6 +60,9 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
             } catch (JsonProcessingException ex) {
                 throw new RuntimeException(ex);
             }
+            final RedeemRuleDto redeemRuleDto = redeemRuleService.getRedeemRuleById(redeemRequestDto.getRedeemRuleId())
+                    .orElseThrow(() -> new ResourceNotFoundException(RedeemRule.class, redeemRequestDto.getRedeemRuleId()));
+            redeemRequestDto.setRedeemRuleDto(redeemRuleDto);
             return redeemRequestDto;
         }).collect(Collectors.toSet());
     }
@@ -99,19 +105,20 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
             cardDto.setIsUsedOut(true);
             cardDto.setIsInactive(true);
         }
-        ownerCardService.updateCardById(card.getId(), cardDto);
+        cardService.updateCardById(card.getId(), cardDto);
 
         // Save new Redeem
         final RedeemDto redeemDtoToSave = RedeemDto.builder()
                 // TODO: What is good display name for Redeem?
-                .displayName(deserializedRedeemRequestDto.getId())
+                .isDeleted(false)
+                .displayName("A good Redeem display name")
                 .numStampsBefore(numStampsBefore)
                 .numStampsAfter(numStampsAfter)
                 .redeemRuleId(deserializedRedeemRequestDto.getRedeemRuleId())
                 .cardId(deserializedRedeemRequestDto.getCardId())
                 .token(deserializedRedeemRequestDto.getToken())
                 .build();
-        ownerRedeemService.saveNewRedeem(redeemDtoToSave);
+        redeemService.saveNewRedeem(redeemDtoToSave);
 
         // Delete RedeemRequestDto
         deleteRedeemRequest(deserializedRedeemRequestDto);

@@ -1,5 +1,6 @@
 package cards.alice.monolith.common.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -25,6 +26,7 @@ public class RedeemRequestDto {
     private static final Pattern OWNER_REDEEM_REQUESTS_KEY_PREFIX_PATTERN = Pattern.compile("(?<=" + OWNER_REDEEM_REQUESTS_KEY_PREFIX + ").+");
 
     private String id;
+    private Boolean isDeleted;
     @NotNull
     private UUID customerId;
     @NotNull
@@ -34,6 +36,8 @@ public class RedeemRequestDto {
     @NotNull
     @Positive
     private Long cardId;
+    @JsonProperty("redeemRule")
+    private RedeemRuleDto redeemRuleDto;
     @NotNull
     @Positive
     private Long redeemRuleId;

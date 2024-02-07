@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface OwnerRedeemRuleService {
+    Optional<RedeemRuleDto> getRedeemRuleById(Long id);
+
     Set<RedeemRuleDto> listRedeemRules(Long blueprintId, Set<Long> ids);
 
     Set<RedeemRuleDto> saveRedeemRules(Set<RedeemRuleDto> redeemRuleDtos);

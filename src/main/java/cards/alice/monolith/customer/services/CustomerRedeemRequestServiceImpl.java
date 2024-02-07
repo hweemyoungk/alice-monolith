@@ -60,6 +60,8 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
 
         // id, version must be null
         redeemRequestDto.setId(null);
+        // isDeleted must be false
+        redeemRequestDto.setIsDeleted(false);
 
         // customerId
         // Validated by @PreAuthorize postRedeemRequest

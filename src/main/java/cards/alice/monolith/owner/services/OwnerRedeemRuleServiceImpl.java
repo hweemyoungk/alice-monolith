@@ -25,6 +25,12 @@ public class OwnerRedeemRuleServiceImpl implements OwnerRedeemRuleService {
     private final OwnerRedeemRuleDtoProcessor redeemRuleDtoProcessor;
 
     @Override
+    public Optional<RedeemRuleDto> getRedeemRuleById(Long id) {
+        return Optional.ofNullable(redeemRuleMapper.toDto(
+                redeemRuleRepository.findById(id).orElse(null)));
+    }
+
+    @Override
     public Set<RedeemRuleDto> listRedeemRules(Long blueprintId, Set<Long> ids) {
         final Set<RedeemRule> redeemRules;
         if (ids == null) {
