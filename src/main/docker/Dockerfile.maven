@@ -1,0 +1,20 @@
+# Run by io.fabric8:docker-maven-plugin.docker:build
+# Context is target/docker/{image.name}/build
+FROM amazoncorretto:17-alpine as builder
+
+WORKDIR application
+ADD maven/${project.build.finalName}.jar ./
+RUN java -Djarmode=layertools -jar ${project.build.finalName}.jar extract
+
+FROM amazoncorretto:17-alpine
+LABEL authors="hweemyoung.k@gmail.com"
+LABEL version="${project.version}"
+
+WORKDIR application
+COPY --from=builder /application/dependencies/ ./
+COPY --from=builder /application/spring-boot-loader/ ./
+COPY --from=builder /application/snapshot-dependencies/ ./
+COPY --from=builder /application/application/ ./
+
+ENV JAVA_OPTS "-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=default,dev,common,h2,monolith,oauth2_https"
+ENTRYPOINT exec java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher

@@ -1,0 +1,20 @@
+FROM amazoncorretto:17-alpine as builder
+
+WORKDIR application
+ADD ../../../target/alice-monolith-0.1.0-SNAPSHOT.jar ./application.jar
+RUN java -Djarmode=layertools -jar application.jar extract
+
+FROM amazoncorretto:17-alpine
+LABEL authors="hweemyoung.k@gmail.com"
+LABEL version="0.1.0"
+
+WORKDIR application
+#COPY ../../../target/alice-monolith-0.1.0-SNAPSHOT.jar ./
+COPY --from=builder /application/dependencies/ ./
+COPY --from=builder /application/spring-boot-loader/ ./
+COPY --from=builder /application/snapshot-dependencies/ ./
+COPY --from=builder /application/application/ ./
+
+ENV JAVA_OPTS "-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=default,dev,common,h2,monolith,oauth2_https"
+#ENTRYPOINT exec java $JAVA_OPTS -jar alice-monolith-0.1.0-SNAPSHOT.jar
+ENTRYPOINT exec java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher
