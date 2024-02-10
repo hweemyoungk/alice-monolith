@@ -5,7 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-@ActiveProfiles({"default", "dev", "common", "h2", "monolith", "oauth2_https"})
+@ActiveProfiles({"default", "monolith", "local"})
 class AliceMonolithApplicationTests {
 
     @Test

@@ -1,12 +1,14 @@
 # Run by io.fabric8:docker-maven-plugin.docker:build
 # Context is target/docker/{image.name}/build
 FROM amazoncorretto:17-alpine as builder
+# FROM amazoncorretto:17 as builder
 
 WORKDIR application
 ADD maven/${project.build.finalName}.jar ./
 RUN java -Djarmode=layertools -jar ${project.build.finalName}.jar extract
 
 FROM amazoncorretto:17-alpine
+# FROM amazoncorretto:17
 LABEL authors="hweemyoung.k@gmail.com"
 LABEL version="${project.version}"
 
@@ -16,5 +18,8 @@ COPY --from=builder /application/spring-boot-loader/ ./
 COPY --from=builder /application/snapshot-dependencies/ ./
 COPY --from=builder /application/application/ ./
 
-ENV JAVA_OPTS "-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=default,dev,common,h2,monolith,oauth2_https"
+RUN keytool -importcert -trustcacerts -noprompt -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit -alias carolcardscert -file BOOT-INF/classes/keystore/carol.cards.crt
+# RUN keytool -importcert -trustcacerts -noprompt -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit -alias carolcardscert -file BOOT-INF/classes/keystore/carol.cards.crt
+
+ENV JAVA_OPTS "-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=default,monolith,local"
 ENTRYPOINT exec java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher
