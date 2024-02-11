@@ -93,7 +93,9 @@ public class BootstrapData implements CommandLineRunner {
     private void populateStore() {
         final Store store1 = Store.builder()
                 .displayName("My Flower Shop 1")
-                .description("This is demo store 1.")
+                .description("This is demo store 1.\n" +
+                        "Excepteur quis veniam consequat anim et proident exercitation enim Lorem nisi dolore. Laboris fugiat reprehenderit irure velit ut exercitation. Elit et amet ipsum aliqua et esse aliquip adipisicing cillum reprehenderit.\n" +
+                        "Aliquip tempor proident elit id tempor aliquip culpa sunt deserunt laborum sit ad tempor. Id eiusmod excepteur in tempor labore esse ut magna anim pariatur et esse sit. Anim anim amet sit qui sit.")
                 .zipcode("123")
                 .address("Foo city")
                 .phone("+818012345678")
