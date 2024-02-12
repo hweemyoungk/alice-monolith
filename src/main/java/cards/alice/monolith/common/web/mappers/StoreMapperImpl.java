@@ -34,6 +34,8 @@ public class StoreMapperImpl implements StoreMapper {
                 .phone(storeDto.getPhone())
                 .lat(storeDto.getLat())
                 .lng(storeDto.getLng())
+                .isClosed(storeDto.getIsClosed())
+                .isInactive(storeDto.getIsInactive())
                 .bgImageId(storeDto.getBgImageId())
                 .profileImageId(storeDto.getProfileImageId())
                 .ownerId(storeDto.getOwnerId())
@@ -63,6 +65,8 @@ public class StoreMapperImpl implements StoreMapper {
                 .phone(store.getPhone())
                 .lat(store.getLat())
                 .lng(store.getLng())
+                .isClosed(store.getIsClosed())
+                .isInactive(store.getIsInactive())
                 .bgImageId(store.getBgImageId())
                 .profileImageId(store.getProfileImageId())
                 .ownerId(store.getOwnerId())
@@ -117,6 +121,12 @@ public class StoreMapperImpl implements StoreMapper {
             }
             if (storeDto.getLng() != null) {
                 store.setLng(storeDto.getLng());
+            }
+            if (storeDto.getIsClosed() != null) {
+                store.setIsClosed(storeDto.getIsClosed());
+            }
+            if (storeDto.getIsInactive() != null) {
+                store.setIsInactive(storeDto.getIsInactive());
             }
             if (storeDto.getBgImageId() != null) {
                 store.setBgImageId(storeDto.getBgImageId());

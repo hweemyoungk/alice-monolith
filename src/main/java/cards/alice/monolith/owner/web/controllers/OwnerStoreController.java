@@ -6,6 +6,7 @@ import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.owner.services.OwnerStoreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
@@ -45,6 +46,13 @@ public class OwnerStoreController {
         Optional<StoreDto> updatedStoreDto = ownerStoreService.updateStoreById(id, storeDto);
         updatedStoreDto.orElseThrow(() -> new ResourceNotFoundException(Store.class, id));
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping(path = "${cards.alice.owner.web.controllers.path.store}/{id}")
+    public ResponseEntity discardCard(@PathVariable Long id) {
+        final Optional<StoreDto> storeDto = ownerStoreService.closeStoreById(id);
+        storeDto.orElseThrow(() -> new ResourceNotFoundException(Store.class, id));
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @GetMapping(path = "${cards.alice.owner.web.controllers.path.store.list}", produces = "application/json;charset=UTF-8")

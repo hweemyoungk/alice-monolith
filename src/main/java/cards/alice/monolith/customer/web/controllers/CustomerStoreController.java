@@ -1,25 +1,27 @@
 package cards.alice.monolith.customer.web.controllers;
 
+import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.StoreDto;
+import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.customer.services.CustomerStoreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("${cards.alice.customer.web.controllers.path.base}")
 @RequiredArgsConstructor
 public class CustomerStoreController {
     private final CustomerStoreService customerStoreService;
+
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.store}/{id}", produces = "application/json;charset=UTF-8")
+    public ResponseEntity<StoreDto> getStore(@PathVariable Long id) {
+        final Optional<StoreDto> storeDto = customerStoreService.getStoreById(id);
+        return ResponseEntity.ok(storeDto.orElseThrow(() -> new ResourceNotFoundException(Store.class, id)));
+    }
 
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.store.list}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<Set<StoreDto>> listStores(

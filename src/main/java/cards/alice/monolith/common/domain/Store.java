@@ -64,6 +64,10 @@ public class Store extends LongEntity {
     @DecimalMin("-180.0")
     @DecimalMax("180.0")
     private BigDecimal lng;
+    @NotNull
+    private Boolean isClosed;
+    @NotNull
+    private Boolean isInactive;
     private String bgImageId;
     private String profileImageId;
     @NotNull

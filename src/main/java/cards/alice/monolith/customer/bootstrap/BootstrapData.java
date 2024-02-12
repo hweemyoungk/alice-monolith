@@ -73,7 +73,7 @@ public class BootstrapData implements CommandLineRunner {
     }
 
     private void populateCard() {
-        final Card myFirstCard = Card.builder()
+        final Card card1 = Card.builder()
                 .displayName("My First Card")
                 .numCollectedStamps(48)
                 .numGoalStamps(8)
@@ -86,8 +86,50 @@ public class BootstrapData implements CommandLineRunner {
                 .isUsedOut(false)
                 .isInactive(false)
                 .build();
-        final Card savedCard = cardRepository.saveAndFlush(myFirstCard);
+        final Card savedCard = cardRepository.saveAndFlush(card1);
         cardId = savedCard.getId();
+        final Card card2 = Card.builder()
+                .displayName("My Second Card")
+                .numCollectedStamps(48)
+                .numGoalStamps(8)
+                .isFavorite(true)
+                .numRedeemed(0)
+                .customerId(customerId)
+                .blueprint(entityManager.getReference(Blueprint.class, blueprintId))
+                .bgImageId(null)
+                .isDiscarded(true)
+                .isUsedOut(false)
+                .isInactive(true)
+                .build();
+        cardRepository.saveAndFlush(card2);
+        final Card card3 = Card.builder()
+                .displayName("My Third Card")
+                .numCollectedStamps(48)
+                .numGoalStamps(8)
+                .isFavorite(true)
+                .numRedeemed(0)
+                .customerId(customerId)
+                .blueprint(entityManager.getReference(Blueprint.class, blueprintId))
+                .bgImageId(null)
+                .isDiscarded(false)
+                .isUsedOut(false)
+                .isInactive(false)
+                .build();
+        cardRepository.saveAndFlush(card3);
+        final Card card4 = Card.builder()
+                .displayName("My Fourth Card")
+                .numCollectedStamps(48)
+                .numGoalStamps(8)
+                .isFavorite(true)
+                .numRedeemed(0)
+                .customerId(customerId)
+                .blueprint(entityManager.getReference(Blueprint.class, blueprintId))
+                .bgImageId(null)
+                .isDiscarded(false)
+                .isUsedOut(false)
+                .isInactive(false)
+                .build();
+        cardRepository.saveAndFlush(card4);
     }
 
     private void populateStore() {
@@ -101,6 +143,8 @@ public class BootstrapData implements CommandLineRunner {
                 .phone("+818012345678")
                 .lat(BigDecimal.valueOf(37.1234567890))
                 .lng(BigDecimal.valueOf(137.1234567890))
+                .isClosed(false)
+                .isInactive(false)
                 .bgImageId(null)
                 .profileImageId(null)
                 .ownerId(ownerId)
@@ -116,11 +160,47 @@ public class BootstrapData implements CommandLineRunner {
                 .phone("+821098765432")
                 .lat(BigDecimal.valueOf(-10.234))
                 .lng(BigDecimal.valueOf(-20.678))
+                .isClosed(true)
+                .isInactive(true)
                 .bgImageId("Bx13SaZ")
                 .profileImageId("ApRCkR2")
                 .ownerId(ownerId)
                 .build();
         storeRepository.saveAndFlush(store2);
+
+        final Store store3 = Store.builder()
+                .displayName("My Flower Shop 3")
+                .description("This is demo store 3.\n" +
+                        "Excepteur quis veniam consequat anim et proident exercitation enim Lorem nisi dolore. Laboris fugiat reprehenderit irure velit ut exercitation. Elit et amet ipsum aliqua et esse aliquip adipisicing cillum reprehenderit.\n" +
+                        "Aliquip tempor proident elit id tempor aliquip culpa sunt deserunt laborum sit ad tempor. Id eiusmod excepteur in tempor labore esse ut magna anim pariatur et esse sit. Anim anim amet sit qui sit.")
+                .zipcode("123")
+                .address("Foo city")
+                .phone("+818012345678")
+                .lat(BigDecimal.valueOf(37.1234567890))
+                .lng(BigDecimal.valueOf(137.1234567890))
+                .isClosed(false)
+                .isInactive(false)
+                .bgImageId(null)
+                .profileImageId(null)
+                .ownerId(ownerId)
+                .build();
+        storeRepository.saveAndFlush(store3);
+
+        final Store store4 = Store.builder()
+                .displayName("My Bakery 4")
+                .description("This is demo store 4.")
+                .zipcode("456")
+                .address("Bar state")
+                .phone("+821098765432")
+                .lat(BigDecimal.valueOf(-10.234))
+                .lng(BigDecimal.valueOf(-20.678))
+                .isClosed(false)
+                .isInactive(false)
+                .bgImageId("Bx13SaZ")
+                .profileImageId("ApRCkR2")
+                .ownerId(ownerId)
+                .build();
+        storeRepository.saveAndFlush(store4);
     }
 
     private void populateBlueprint() {
@@ -130,7 +210,7 @@ public class BootstrapData implements CommandLineRunner {
                 .stampGrantCondDescription("1 stamp per $1")
                 .numMaxStamps(50)
                 .numMaxRedeems(5)
-                .numMaxIssuesPerCustomer(3)
+                .numMaxIssuesPerCustomer(10)
                 .numMaxIssues(0)
                 .expirationDate(OffsetDateTime.now().plusMonths(1))
                 .bgImageId(null)
