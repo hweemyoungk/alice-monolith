@@ -7,6 +7,7 @@ import cards.alice.monolith.common.web.mappers.StoreMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,5 +28,11 @@ public class CustomerStoreServiceImpl implements CustomerStoreService {
         }
         return stores.stream()
                 .map(storeMapper::toDto).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Optional<StoreDto> getStoreById(Long id) {
+        return Optional.ofNullable(storeMapper.toDto(
+                storeRepository.findById(id).orElse(null)));
     }
 }

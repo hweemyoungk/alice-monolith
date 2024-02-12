@@ -16,7 +16,7 @@ public interface CustomerCardService {
 
     Optional<CardDto> patchCardById(Long id, CardDto cardDto);
 
-    Optional<CardDto> softDeleteCardById(Long id);
+    Optional<CardDto> discardCardById(Long id);
 
     @PostFilter("authentication.name == filterObject.customerId.toString()")
     Set<CardDto> listCards(UUID customerId, Set<Long> ids);

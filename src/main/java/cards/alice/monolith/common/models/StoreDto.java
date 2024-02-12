@@ -42,6 +42,10 @@ public class StoreDto extends LongDto {
     @DecimalMax("180.0")
     @NotNull
     private BigDecimal lng;
+    @NotNull
+    private Boolean isClosed;
+    @NotNull
+    private Boolean isInactive;
     private String bgImageId;
     private String profileImageId;
     @NotNull

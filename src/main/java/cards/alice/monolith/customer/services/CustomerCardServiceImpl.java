@@ -68,10 +68,9 @@ public class CustomerCardServiceImpl implements CustomerCardService {
 
     @Override
     @Transactional
-    public Optional<CardDto> softDeleteCardById(Long id) {
+    public Optional<CardDto> discardCardById(Long id) {
         CardDto cardDto = CardDto.builder()
                 .isDiscarded(true)
-                .isDeleted(true)
                 .isInactive(true)
                 .build();
         return patchCardById(id, cardDto);

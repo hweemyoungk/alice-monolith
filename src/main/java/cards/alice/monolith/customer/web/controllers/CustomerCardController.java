@@ -51,8 +51,8 @@ public class CustomerCardController {
     }
 
     @DeleteMapping(path = "${cards.alice.customer.web.controllers.path.card}/{id}")
-    public ResponseEntity softDeleteCard(@PathVariable Long id) {
-        final Optional<CardDto> cardDto = customerCardService.softDeleteCardById(id);
+    public ResponseEntity discardCard(@PathVariable Long id) {
+        final Optional<CardDto> cardDto = customerCardService.discardCardById(id);
         cardDto.orElseThrow(() -> new ResourceNotFoundException(Card.class, id));
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

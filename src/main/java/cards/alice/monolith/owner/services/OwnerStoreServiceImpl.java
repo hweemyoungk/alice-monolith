@@ -79,9 +79,9 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
         final var atomicReference = new AtomicReference<Optional<StoreDto>>();
         store.ifPresentOrElse(
                 srcStore -> {
-                    storeMapper.partialUpdate(storeDto, srcStore);
-                    srcStore.setBlueprints(null); // I fucking don't know why store is eagerly fetching blueprints...
-                    final Store savedStore = storeRepository.save(srcStore); // Neither fucking know why persists children...
+                    final Store patchedStore = storeMapper.partialUpdate(storeDto, srcStore);
+                    patchedStore.setBlueprints(null); // I fucking don't know why store is eagerly fetching blueprints...
+                    final Store savedStore = storeRepository.save(patchedStore); // Neither fucking know why persists children...
                     final StoreDto savedStoreDto = storeMapper.toDto(savedStore);
                     atomicReference.set(Optional.of(savedStoreDto));
                 },
@@ -106,6 +106,16 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
         }).forEach(this::detachStore)).map(storeMapper::toDto).collect(Collectors.toSet());
         //return stores.stream()
         //        .map(storeMapper::toDto).collect(Collectors.toSet());
+    }
+
+    @Override
+    @Transactional
+    public Optional<StoreDto> closeStoreById(Long id) {
+        final StoreDto storeDto = StoreDto.builder()
+                .isClosed(true)
+                .isInactive(true)
+                .build();
+        return patchStoreById(id, storeDto);
     }
 
     private void detachStore(Blueprint blueprint) {
