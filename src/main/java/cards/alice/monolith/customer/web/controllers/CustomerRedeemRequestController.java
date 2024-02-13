@@ -1,6 +1,6 @@
 package cards.alice.monolith.customer.web.controllers;
 
-import cards.alice.monolith.common.models.RedeemRequestDto;
+import cards.alice.monolith.common.models.RedeemRequestNewDto;
 import cards.alice.monolith.customer.services.CustomerRedeemRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,20 +25,20 @@ public class CustomerRedeemRequestController {
 
     @PostMapping(path = "${cards.alice.customer.web.controllers.path.redeem-request}")
     @PreAuthorize("authentication.name == #redeemRequestDto.customerId.toString()")
-    public ResponseEntity postRedeemRequest(@Validated @RequestBody RedeemRequestDto redeemRequestDto) {
-        RedeemRequestDto savedRedeemRequest = customerRedeemRequestService.handlePostRedeemRequest(redeemRequestDto);
+    public ResponseEntity postRedeemRequest(@Validated @RequestBody RedeemRequestNewDto redeemRequestDto) {
+        RedeemRequestNewDto savedRedeemRequest = customerRedeemRequestService.handlePostRedeemRequest(redeemRequestDto);
         return ResponseEntity.created(URI.create(customerHostname + customerRedeemRequestPath + "/" + savedRedeemRequest.getId())).build();
     }
 
-    @GetMapping(path = "${cards.alice.customer.web.controllers.path.redeem-request.exist}")
-    public ResponseEntity<Boolean> getRedeemRequestExists(@RequestParam String id) {
-        final boolean exists = customerRedeemRequestService.exists(new RedeemRequestDto(id));
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.redeem-request}/{id}/exists")
+    public ResponseEntity<Boolean> getRedeemRequestExists(@PathVariable String id) {
+        final boolean exists = customerRedeemRequestService.exists(id);
         return ResponseEntity.ok(exists);
     }
 
     @DeleteMapping(path = "${cards.alice.customer.web.controllers.path.redeem-request}/{id}")
     public ResponseEntity deleteRedeemRequest(@PathVariable String id) {
-        customerRedeemRequestService.deleteRedeemRequest(new RedeemRequestDto(id));
+        customerRedeemRequestService.deleteRedeemRequest(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

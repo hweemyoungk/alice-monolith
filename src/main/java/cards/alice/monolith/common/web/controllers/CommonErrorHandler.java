@@ -13,10 +13,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class CommonErrorHandler {
+    @ExceptionHandler(NoSuchElementException.class)
+    ResponseEntity handleResourceNotFound(NoSuchElementException e) {
+        return ResponseEntity.notFound().build();
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     ResponseEntity handleResourceNotFound(ResourceNotFoundException e) {
         return ResponseEntity.notFound().build();

@@ -11,7 +11,6 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.Length;
 
-import java.io.Serializable;
 import java.time.OffsetDateTime;
 
 @Getter
@@ -19,7 +18,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public abstract class BaseDto<ID> implements Serializable {
+public abstract class BaseDto<ID> {
     private ID id;
     private Integer version;
     @NotBlank

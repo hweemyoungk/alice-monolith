@@ -21,10 +21,9 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-// TODO: Implement
 @Service
 @RequiredArgsConstructor
-public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestService {
+public class CustomerRedeemRequestServiceImpl {
     @Value("${cards.alice.customer.app.watch-redeem-request-duration-seconds}")
     private long watchRedeemRequestDurationSeconds;
     @Value("${cards.alice.customer.user-id}")
@@ -88,7 +87,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
         return redeemRequestDto;
     }
 
-    @Override
+    //@Override
     @Transactional
     public RedeemRequestDto handlePostRedeemRequest(RedeemRequestDto redeemRequestDtoFromCustomer) {
         RedeemRequestDto preprocessedRedeemRequestDto = preprocessNewRedeemRequestDto(redeemRequestDtoFromCustomer);
@@ -186,7 +185,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
         return targetRedeemRequestDto;
     }
 
-    @Override
+    //@Override
     public boolean exists(RedeemRequestDto redeemRequestDtoFromCustomer) {
         final Optional<RedeemRequestDto> targetRedeemRequestDto
                 = authenticatedRedeemRequestAccessor.findById(redeemRequestDtoFromCustomer.getId());
@@ -203,7 +202,7 @@ public class CustomerRedeemRequestServiceImpl implements CustomerRedeemRequestSe
         return true;
     }
 
-    @Override
+    //@Override
     public void deleteRedeemRequest(RedeemRequestDto redeemRequestDto) {
         final RedeemRequestDto targetRedeemRequestDto = authenticatedRedeemRequestAccessor.findById(redeemRequestDto.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Redeem request not found"));

@@ -1,7 +1,6 @@
 package cards.alice.monolith.customer.web.controllers;
 
 import cards.alice.monolith.common.domain.Redeem;
-import cards.alice.monolith.common.models.RedeemRequestDto;
 import cards.alice.monolith.customer.services.CustomerRedeemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +19,7 @@ public class CustomerRedeemController {
 
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.redeem.exist}")
     public ResponseEntity<Boolean> getRedeemExists(@RequestParam String redeemRequestId) {
-        final RedeemRequestDto redeemRequestDto = new RedeemRequestDto(redeemRequestId);
-        final Optional<Redeem> redeem = customerRedeemService.exists(redeemRequestDto);
+        final Optional<Redeem> redeem = customerRedeemService.existByRedeemRequestId(redeemRequestId);
         return ResponseEntity.ok(redeem.isPresent());
     }
 }

@@ -12,6 +12,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.Length;
 
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
@@ -20,7 +21,9 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class BlueprintDto extends LongDto {
+public class BlueprintDto extends LongDto implements Serializable {
+    //private static final Long serialVersionUID = 1L;
+
     @NotBlank
     @Length(max = 1000)
     private String description;

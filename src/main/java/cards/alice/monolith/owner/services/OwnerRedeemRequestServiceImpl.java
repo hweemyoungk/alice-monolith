@@ -28,10 +28,9 @@ import java.util.stream.Collectors;
 
 import static cards.alice.monolith.common.models.RedeemRequestDto.getOwnerRedeemRequestsKey;
 
-
 @Service
 @RequiredArgsConstructor
-public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService {
+public class OwnerRedeemRequestServiceImpl {
     @Value("${cards.alice.customer.app.watch-redeem-request-duration-seconds}")
     private long watchRedeemRequestDurationSeconds;
 
@@ -48,7 +47,8 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
     private final ObjectMapper objectMapper;
     private final JedisPooled jedis;
 
-    @Override
+
+    //@Override
     public Set<RedeemRequestDto> listRedeemRequests(UUID ownerId) {
         final String ownerRedeemRequestsKey = getOwnerRedeemRequestsKey(ownerId.toString());
         final Map<String, String> hash = jedis.hgetAll(ownerRedeemRequestsKey);
@@ -67,7 +67,7 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
         }).collect(Collectors.toSet());
     }
 
-    @Override
+    //@Override
     @Transactional
     @PreAuthorize("authentication.name == #redeemRequestDto.ownerId.toString()")
     public void approveRedeemRequest(RedeemRequestDto redeemRequestDto) {
@@ -116,7 +116,7 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
                 .numStampsAfter(numStampsAfter)
                 .redeemRuleId(deserializedRedeemRequestDto.getRedeemRuleId())
                 .cardId(deserializedRedeemRequestDto.getCardId())
-                .token(deserializedRedeemRequestDto.getToken())
+                //.token(deserializedRedeemRequestDto.getToken())
                 .build();
         redeemService.saveNewRedeem(redeemDtoToSave);
 
@@ -124,7 +124,7 @@ public class OwnerRedeemRequestServiceImpl implements OwnerRedeemRequestService 
         deleteRedeemRequest(deserializedRedeemRequestDto);
     }
 
-    @Override
+    //@Override
     @PreAuthorize("authentication.name == #redeemRequestDto.ownerId.toString()")
     public void deleteRedeemRequest(RedeemRequestDto redeemRequestDto) {
         authenticatedRedeemRequestAccessor.delete(redeemRequestDto, false);

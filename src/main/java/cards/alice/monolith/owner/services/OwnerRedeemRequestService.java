@@ -1,12 +1,12 @@
 package cards.alice.monolith.owner.services;
 
-import cards.alice.monolith.common.models.RedeemRequestDto;
+import cards.alice.monolith.common.models.RedeemRequestNewDto;
 
 import java.util.Set;
 import java.util.UUID;
 
 public interface OwnerRedeemRequestService {
-    Set<RedeemRequestDto> listRedeemRequests(UUID ownerId);
-    void approveRedeemRequest(RedeemRequestDto redeemRequestDto);
-    void deleteRedeemRequest(RedeemRequestDto redeemRequestDto);
+    Set<RedeemRequestNewDto> listRedeemRequests(UUID ownerId);
+    void approveRedeemRequest(String id);
+    void deleteRedeemRequestById(String id);
 }

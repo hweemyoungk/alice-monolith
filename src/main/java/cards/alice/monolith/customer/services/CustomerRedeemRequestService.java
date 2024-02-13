@@ -1,11 +1,11 @@
 package cards.alice.monolith.customer.services;
 
-import cards.alice.monolith.common.models.RedeemRequestDto;
+import cards.alice.monolith.common.models.RedeemRequestNewDto;
 
 public interface CustomerRedeemRequestService {
-    RedeemRequestDto handlePostRedeemRequest(RedeemRequestDto redeemRequestDto);
+    RedeemRequestNewDto handlePostRedeemRequest(RedeemRequestNewDto redeemRequestDtoFromCustomer);
 
-    boolean exists(RedeemRequestDto redeemRequestDto);
+    boolean exists(String id);
 
-    void deleteRedeemRequest(RedeemRequestDto redeemRequestDto);
+    void deleteRedeemRequest(String id);
 }

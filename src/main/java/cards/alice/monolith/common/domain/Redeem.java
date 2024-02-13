@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.util.UUID;
-
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,16 +21,18 @@ import java.util.UUID;
         initialValue = 1,
         allocationSize = 50
 )
-@Table(name = "redeem")
+@Table(
+        name = "redeem",
+        indexes = {@Index(columnList = "redeemRequestId")})
 public class Redeem extends LongEntity {
+    @NotNull
+    private String redeemRequestId;
     @NotNull
     @PositiveOrZero
     private Integer numStampsBefore;
     @NotNull
     @PositiveOrZero
     private Integer numStampsAfter;
-    @NotNull
-    private UUID token;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "redeem_rule_id")
     private RedeemRule redeemRule;

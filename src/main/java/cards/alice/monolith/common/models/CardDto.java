@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -21,7 +22,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class CardDto extends LongDto {
+public class CardDto extends LongDto implements Serializable {
+    //private static final Long serialVersionUID = 1L;
+
     @NotNull
     @PositiveOrZero
     private Integer numCollectedStamps;

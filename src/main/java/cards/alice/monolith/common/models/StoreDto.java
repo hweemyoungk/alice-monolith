@@ -12,6 +12,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.Length;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Set;
 import java.util.UUID;
@@ -21,7 +22,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class StoreDto extends LongDto {
+public class StoreDto extends LongDto implements Serializable {
+    //private static final Long serialVersionUID = 1L;
+
     @NotBlank
     @Length(max = 1000)
     private String description;

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.util.UUID;
+import java.io.Serializable;
 
 /**
  * DTO for {@link cards.alice.monolith.common.domain.Redeem}
@@ -20,15 +20,17 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class RedeemDto extends LongDto {
+public class RedeemDto extends LongDto implements Serializable {
+    //private static final Long serialVersionUID = 1L;
+
+    @NotNull
+    private String redeemRequestId;
     @NotNull
     @Positive
     private Integer numStampsBefore;
     @NotNull
     @PositiveOrZero
     private Integer numStampsAfter;
-    @NotNull
-    private UUID token;
     @JsonProperty("redeemRule")
     private RedeemRuleDto redeemRuleDto;
     @NotNull
