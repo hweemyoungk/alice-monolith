@@ -11,6 +11,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -21,7 +22,9 @@ import java.util.regex.Pattern;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class RedeemRequestDto {
+public class RedeemRequestDto  implements Serializable {
+    //private static final Long serialVersionUID = 1L;
+
     private static final String OWNER_REDEEM_REQUESTS_KEY_PREFIX = "redeemRequests:";
     private static final Pattern OWNER_REDEEM_REQUESTS_KEY_PREFIX_PATTERN = Pattern.compile("(?<=" + OWNER_REDEEM_REQUESTS_KEY_PREFIX + ").+");
 

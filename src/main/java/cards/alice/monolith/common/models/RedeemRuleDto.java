@@ -11,6 +11,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.Length;
 
+import java.io.Serializable;
 import java.util.Set;
 
 @Getter
@@ -18,7 +19,9 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class RedeemRuleDto extends LongDto {
+public class RedeemRuleDto extends LongDto implements Serializable {
+    //private static final Long serialVersionUID = 1L;
+
     @NotBlank
     @Length(max = 100)
     private String description;

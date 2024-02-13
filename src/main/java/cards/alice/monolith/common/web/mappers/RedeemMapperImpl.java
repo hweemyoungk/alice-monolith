@@ -30,9 +30,9 @@ public class RedeemMapperImpl implements RedeemMapper {
         redeem.createdDate(redeemDto.getCreatedDate());
         redeem.lastModifiedDate(redeemDto.getLastModifiedDate());
         redeem.isDeleted(redeemDto.getIsDeleted());
+        redeem.redeemRequestId(redeemDto.getRedeemRequestId());
         redeem.numStampsBefore(redeemDto.getNumStampsBefore());
         redeem.numStampsAfter(redeemDto.getNumStampsAfter());
-        redeem.token(redeemDto.getToken());
         redeem.redeemRule(redeemRuleRepository.getReferenceById(redeemDto.getRedeemRuleId()));
         redeem.card(cardRepository.getReferenceById(redeemDto.getCardId()));
 
@@ -53,9 +53,9 @@ public class RedeemMapperImpl implements RedeemMapper {
         redeemDto.createdDate(redeem.getCreatedDate());
         redeemDto.lastModifiedDate(redeem.getLastModifiedDate());
         redeemDto.isDeleted(redeem.getIsDeleted());
+        redeemDto.redeemRequestId(redeem.getRedeemRequestId());
         redeemDto.numStampsBefore(redeem.getNumStampsBefore());
         redeemDto.numStampsAfter(redeem.getNumStampsAfter());
-        redeemDto.token(redeem.getToken());
         redeemDto.redeemRuleDto(!PERSISTENCE_UTIL.isLoaded(redeem, "redeemRule") ?
                 null :
                 redeemRuleMapper.toDto(redeem.getRedeemRule()));
@@ -92,14 +92,14 @@ public class RedeemMapperImpl implements RedeemMapper {
         if (dto.getIsDeleted() != null) {
             entity.setIsDeleted(dto.getIsDeleted());
         }
+        if (dto.getRedeemRequestId() != null) {
+            entity.setRedeemRequestId(dto.getRedeemRequestId());
+        }
         if (dto.getNumStampsBefore() != null) {
             entity.setNumStampsBefore(dto.getNumStampsBefore());
         }
         if (dto.getNumStampsAfter() != null) {
             entity.setNumStampsAfter(dto.getNumStampsAfter());
-        }
-        if (dto.getToken() != null) {
-            entity.setToken(dto.getToken());
         }
         if (dto.getRedeemRuleId() != null) {
             entity.setRedeemRule(

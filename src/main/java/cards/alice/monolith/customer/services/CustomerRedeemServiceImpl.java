@@ -1,7 +1,6 @@
 package cards.alice.monolith.customer.services;
 
 import cards.alice.monolith.common.domain.Redeem;
-import cards.alice.monolith.common.models.RedeemRequestDto;
 import cards.alice.monolith.customer.repositories.CustomerRedeemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,7 @@ public class CustomerRedeemServiceImpl implements CustomerRedeemService {
     private final CustomerRedeemRepository redeemRepository;
 
     @Override
-    public Optional<Redeem> exists(RedeemRequestDto redeemRequestDto) {
-        return redeemRepository.findByToken(redeemRequestDto.getToken());
+    public Optional<Redeem> existByRedeemRequestId(String redeemRequestId) {
+        return redeemRepository.findByRedeemRequestId(redeemRequestId);
     }
 }

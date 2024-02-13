@@ -20,6 +20,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 @SuperBuilder
 public class StampGrantDto extends LongDto implements Serializable {
+    //private static final Long serialVersionUID = 1L;
+
     @NotNull
     @Positive
     private Integer numStamps;
