@@ -4,13 +4,14 @@ import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.BlueprintDto;
 import cards.alice.monolith.common.models.processors.DtoProcessor;
-import cards.alice.monolith.common.models.processors.RedeemRuleDtoProcessor;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.owner.repositories.OwnerBlueprintRepository;
 import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
-import org.springframework.context.annotation.Lazy;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.OffsetDateTime;
 import java.util.HashSet;
@@ -18,48 +19,75 @@ import java.util.Objects;
 import java.util.Set;
 
 @Component
+@Validated
+@RequiredArgsConstructor
 public class OwnerBlueprintDtoProcessor implements DtoProcessor<BlueprintDto, Long> {
-    private final RedeemRuleDtoProcessor redeemRuleDtoProcessor;
     private final OwnerBlueprintRepository blueprintRepository;
     private final OwnerStoreRepository storeRepository;
 
-    public OwnerBlueprintDtoProcessor(@Lazy RedeemRuleDtoProcessor redeemRuleDtoProcessor, OwnerBlueprintRepository blueprintRepository, OwnerStoreRepository storeRepository) {
-        this.redeemRuleDtoProcessor = redeemRuleDtoProcessor;
-        this.blueprintRepository = blueprintRepository;
-        this.storeRepository = storeRepository;
-    }
-
     @Override
-    public BlueprintDto preprocessForPost(BlueprintDto dto) {
+    public BlueprintDto preprocessForPost(@Valid BlueprintDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
-        // id, version, isDeleted
+        // id
+        // Should be null
+        // version
+        // Ignored in entity
+        // @NotNull isDeleted
+        // Validated by @Valid
+        // Should be false
         dto.preprocessBaseForNew();
 
-        // description, stampGrantCondDescription, numMaxStamps, numMaxRedeems, numMaxIssues
-        // Validated by postBlueprint(@Validated BlueprintDto)
+        // @NotBlank @Length(max = 30) displayName;
+        // Validated by @Valid
+        // Can be modified
 
-        // expirationDate must be after now
+        // createdDate: ignored
+
+        // lastModifiedDate: ignored
+
+        // @NotBlank @Length(max = 1000) description
+        // Validated by @Valid
+
+        // @NotBlank @Length(max = 100) stampGrantCondDescription
+        // Validated by @Valid
+
+        // @NotNull @PositiveOrZero numMaxStamps
+        // Validated by @Valid
+
+        // @NotNull @Positive numMaxRedeems
+        // Validated by @Valid
+
+        // @NotNull @Positive numMaxIssuesPerCustomer
+        // Validated by @Valid
+
+        // @NotNull @PositiveOrZero numMaxIssues
+        // Validated by @Valid
+
+        // @NotNull expirationDate
+        // Validated by @Valid
+        // Should be AFTER now
         if (dto.getExpirationDate().isBefore(OffsetDateTime.now())) {
             violationMessages.add("expirationDate already passed");
         }
 
         // bgImageId
-        // Can be null
+        // TODO: Query storage to check if file exists
 
-        // isPublishing
-        // Validated by postBlueprint(@Validated BlueprintDto)
+        // @NotNull isPublishing
+        // Validated by @Valid
 
-        // storeId must exist
+        // storeDto
+        // Ignored in preprocess
+
+        // storeId
+        // Store must exist
         storeRepository.findById(dto.getStoreId())
                 .orElseThrow(() -> new ResourceNotFoundException(Store.class, dto.getStoreId()));
 
-        // redeemRuleDtos: Set empty
-        /*if (dto.getRedeemRuleDtos() != null) {
-            final Set<RedeemRuleDto> preprocessedRedeemRules = dto.getRedeemRuleDtos().stream()
-                    .map(redeemRuleDtoProcessor::preprocessForPost).collect(Collectors.toSet());
-            dto.setRedeemRuleDtos(preprocessedRedeemRules);
-        }*/
+        // redeemRuleDtos
+        // Ignored in input
+        // TODO: Should we do this for every one-to-many field?
         dto.setRedeemRuleDtos(new HashSet<>());
 
         if (!violationMessages.isEmpty()) {
@@ -70,30 +98,54 @@ public class OwnerBlueprintDtoProcessor implements DtoProcessor<BlueprintDto, Lo
     }
 
     @Override
-    public BlueprintDto preprocessForPut(Long id, BlueprintDto dto) {
-        final Blueprint originalBlueprint = blueprintRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, id));
+    public BlueprintDto preprocessForPut(Long id, @Valid BlueprintDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
-        // id, version
-        dto.setIdVersionNull();
+        final Blueprint originalBlueprint = blueprintRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, id));
 
-        // isDeleted
-        // Validated by @Validated BlueprintDto
+        // id
+        // Should not be modified
+        dto.setId(id);
 
-        // description
-        // Validated by postBlueprint(@Validated BlueprintDto)
+        // version
+        // Ignored in entity
 
-        // Owner cannot control stampGrantCondDescription
-        dto.setStampGrantCondDescription(null);
+        // @NotBlank @Length(max = 30) displayName;
+        // Validated by @Valid
+        // Can be modified
 
-        // Owner can only increase numMaxStamps, numMaxRedeems
+        // createdDate: ignored
+
+        // lastModifiedDate: ignored
+
+        // @NotNull isDeleted
+        // Validated by @Valid
+        // Can be modified
+
+        // @NotBlank @Length(max = 1000) description
+        // Validated by @Valid
+        // Can be modified
+
+        // @NotBlank @Length(max = 100) stampGrantCondDescription
+        // Validated by @Valid
+        // CANNOT be modified
+        dto.setStampGrantCondDescription(
+                originalBlueprint.getStampGrantCondDescription());
+
+        // @NotNull @PositiveOrZero numMaxStamps
+        // Validated by @Valid
+        // Can ONLY be increased
         if (dto.getNumMaxStamps() < originalBlueprint.getNumMaxStamps()) {
             violationMessages.add(
                     "BlueprintDto.numMaxStamp(" + dto.getNumMaxStamps() + ")" +
                             " must be larger than" +
                             " current blueprint.numMaxStamp(" + originalBlueprint.getNumMaxStamps() + ")");
         }
+
+        // @NotNull @Positive numMaxRedeems
+        // Validated by @Valid
+        // Can ONLY be increased
         if (dto.getNumMaxRedeems() < originalBlueprint.getNumMaxRedeems()) {
             violationMessages.add(
                     "BlueprintDto.numMaxRedeems(" + dto.getNumMaxRedeems() + ")" +
@@ -101,26 +153,41 @@ public class OwnerBlueprintDtoProcessor implements DtoProcessor<BlueprintDto, Lo
                             " current blueprint.numMaxRedeems(" + originalBlueprint.getNumMaxRedeems() + ")");
         }
 
-        // numMaxIssues
-        // Can increase or decrease
+        // @NotNull @Positive numMaxIssuesPerCustomer
+        // Validated by @Valid
+        // Can be modified
 
-        // expirationDate must be after now
+        // @NotNull @PositiveOrZero numMaxIssues
+        // Validated by @Valid
+        // Can be modified
+
+        // @NotNull expirationDate
+        // Validated by @Valid
+        // Should be AFTER now
         if (dto.getExpirationDate().isBefore(OffsetDateTime.now())) {
             violationMessages.add("expirationDate already passed");
         }
 
         // bgImageId
-        // Can be null
+        // Can be modified
+        // TODO: Query storage to check if file exists
 
-        // isPublishing
-        // Validated by postBlueprint(@Validated BlueprintDto)
+        // @NotNull isPublishing
+        // Validated by @Valid
+        // Can be modified
 
-        // storeId cannot be modified
+        // storeDto
+        // Ignored in preprocess
+
+        // storeId
+        // CANNOT be modified
         if (!Objects.equals(originalBlueprint.getStore().getId(), dto.getStoreId())) {
             violationMessages.add("Store cannot be changed");
         }
 
-        // redeemRuleDtos: Set empty
+        // redeemRuleDtos
+        // Ignored in input
+        // TODO: Should we do this for every one-to-many field?
         dto.setRedeemRuleDtos(new HashSet<>());
 
         if (!violationMessages.isEmpty()) {

@@ -8,79 +8,131 @@ import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.owner.repositories.OwnerBlueprintRepository;
 import cards.alice.monolith.owner.repositories.OwnerRedeemRuleRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.Errors;
-import org.springframework.validation.SmartValidator;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
 @Component
+@Validated
 @RequiredArgsConstructor
 public class OwnerRedeemRuleDtoProcessor implements RedeemRuleDtoProcessor {
     private final OwnerRedeemRuleRepository redeemRuleRepository;
     private final OwnerBlueprintRepository blueprintRepository;
-    private final SmartValidator validator;
 
     @Override
-    public RedeemRuleDto preprocessForPost(RedeemRuleDto dto) {
+    public RedeemRuleDto preprocessForPost(@Valid RedeemRuleDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
-        // id, version, isDeleted
-        dto.preprocessBaseForNew();
-
-        // description, consumes
-        final Errors validationErrors = validator.validateObject(dto);
-        validationErrors.getFieldErrors().forEach(error -> violationMessages.add(error.toString()));
-        validationErrors.getGlobalErrors().forEach(error -> violationMessages.add(error.toString()));
-
-        // imageId
-        // Can be null
-        // TODO: Query storage to check if file exists
-
-        // blueprintId must exist
-        blueprintRepository.findById(dto.getBlueprintId())
+        // blueprintId
+        // Blueprint must exist
+        final Blueprint blueprint = blueprintRepository.findById(dto.getBlueprintId())
                 .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, dto.getBlueprintId()));
 
+        // id
+        // Should be null
+        // version
+        // Ignored in entity
+        // @NotNull isDeleted
+        // Validated by @Valid
+        // Should be false
+        dto.preprocessBaseForNew();
+
+        // @NotBlank @Length(max = 30) displayName
+        // Validated by @Valid
+
+        // createdDate: ignored
+
+        // lastModifiedDate: ignored
+
+        // @NotBlank @Length(max = 100) description;
+        // Validated by @Valid
+
+        // @NotNull @PositiveOrZero consumes;
+        // Validated by @Valid
+        // Should not exceed blueprint.numMaxStamps
+        if (blueprint.getNumMaxStamps() < dto.getConsumes()) {
+            violationMessages.add("Cannot consume " + dto.getConsumes() +
+                    " which is over max stamps (" + blueprint.getNumMaxStamps() +
+                    ") of blueprint");
+        }
+
+        // imageId
+        // TODO: Query storage to check if file exists
+
         // blueprintDto
-        // Ignore
+        // Ignored in input (preprocess)
 
         // redeemDtos
-        // Can be null
+        // Ignored in input (preprocess)
+
+        if (!violationMessages.isEmpty()) {
+            throw new DtoProcessingException("Failed to preprocess RedeemRuleDto", violationMessages);
+        }
 
         return dto;
     }
 
     @Override
-    public RedeemRuleDto preprocessForPut(Long id, RedeemRuleDto dto) {
+    public RedeemRuleDto preprocessForPut(Long id, @Valid RedeemRuleDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
-        // id, version
-        dto.setIdVersionNull();
-
-        // isDeleted, description, consumes
-        final Errors validationErrors = validator.validateObject(dto);
-        validationErrors.getFieldErrors().forEach(error -> violationMessages.add(error.toString()));
-        validationErrors.getGlobalErrors().forEach(error -> violationMessages.add(error.toString()));
-
-        // imageId
-        // Can be null
-        // TODO: Query storage to check if file exists
-
-        // blueprintId cannot be modified
         final RedeemRule originalRedeemRule = redeemRuleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(RedeemRule.class, id));
-        if (!Objects.equals(originalRedeemRule.getBlueprint().getId(), dto.getBlueprintId())) {
+        final Blueprint blueprint = originalRedeemRule.getBlueprint();
+
+        // id
+        // Should not be modified
+        dto.setId(id);
+
+        // version
+        // Ignored in entity
+
+        // @NotBlank @Length(max = 30) displayName
+        // Validated by @Valid
+        // Can be modified
+
+        // createdDate: ignored
+
+        // lastModifiedDate: ignored
+
+        // @NotNull isDeleted
+        // Validated by @Valid
+
+        // @NotBlank @Length(max = 100) description;
+        // Validated by @Valid
+        // Can be modified
+
+        // @NotNull @PositiveOrZero consumes;
+        // Validated by @Valid
+        // Can be modified
+        // TODO: Is it OK to modify(increase, especially) consumes?
+        // Should not exceed blueprint.numMaxStamps
+        if (blueprint.getNumMaxStamps() < dto.getConsumes()) {
+            violationMessages.add("Cannot consume " + dto.getConsumes() +
+                    " which is over max stamps (" + blueprint.getNumMaxStamps() +
+                    ") of blueprint");
+        }
+
+        // imageId
+        // Can be modified
+        // TODO: Query storage to check if file exists
+
+        // blueprintDto
+        // Ignored in input (preprocess)
+
+        // blueprintId
+        // Should not be modified
+        if (!Objects.equals(blueprint.getId(), dto.getBlueprintId())) {
             violationMessages.add("Blueprint cannot be changed");
         }
 
-        // blueprintDto
-        // Ignore
-
         // redeemDtos
-        // Can be null
+        // Ignored in input (preprocess)
 
         if (!violationMessages.isEmpty()) {
             throw new DtoProcessingException("Failed to preprocess RedeemRuleDto", violationMessages);

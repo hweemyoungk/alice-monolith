@@ -26,19 +26,20 @@ public class OwnerStampGrantServiceImpl implements OwnerStampGrantService {
     @Override
     @Transactional
     public StampGrantDto grantStampsToCard(StampGrantDto stampGrantDto) {
-        final StampGrantDto preprocessedStampGrantDto =
-                stampGrantDtoProcessor.preprocessForPost(stampGrantDto);
+        final StampGrantDto preprocessedForPost = stampGrantDtoProcessor
+                .preprocessForPost(stampGrantDto);
 
         // Grant
+        final Long cardId = preprocessedForPost.getCardId();
         final CardDto cardDto = cardMapper.toDto(
-                cardRepository.findById(preprocessedStampGrantDto.getCardId())
-                        .orElseThrow(() -> new ResourceNotFoundException(Card.class, preprocessedStampGrantDto.getCardId())));
+                cardRepository.findById(cardId)
+                        .orElseThrow(() -> new ResourceNotFoundException(Card.class, cardId)));
         cardDto.setNumCollectedStamps(
-                cardDto.getNumCollectedStamps() + preprocessedStampGrantDto.getNumStamps());
-        ownerCardService.updateCardById(cardDto.getId(), cardDto);
+                cardDto.getNumCollectedStamps() + preprocessedForPost.getNumStamps());
+        ownerCardService.updateCardById(cardId, cardDto);
 
         // Save stampGrant
         return stampGrantMapper.toDto(stampGrantRepository
-                .save(stampGrantMapper.toEntity(preprocessedStampGrantDto)));
+                .save(stampGrantMapper.toEntity(preprocessedForPost)));
     }
 }

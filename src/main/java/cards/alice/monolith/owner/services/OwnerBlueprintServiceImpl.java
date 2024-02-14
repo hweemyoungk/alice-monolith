@@ -65,9 +65,11 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     public Optional<BlueprintDto> updateBlueprintById(Long id, BlueprintDto blueprintDto) {
         // Update blueprint without redeemRules
         final Set<RedeemRuleDto> redeemRuleDtos = blueprintDto.getRedeemRuleDtos();
-        final BlueprintDto preprocessedBlueprintDto = blueprintDtoProcessor.preprocessForPut(id, blueprintDto);
-        final BlueprintDto savedBlueprintDto = patchBlueprintById(id, preprocessedBlueprintDto)
-                .orElseThrow();
+
+        final BlueprintDto preprocessedForPut = blueprintDtoProcessor
+                .preprocessForPut(id, blueprintDto);
+        final BlueprintDto savedBlueprintDto = blueprintMapper.toDto(blueprintRepository
+                .save(blueprintMapper.toEntity(preprocessedForPut)));
 
         if (redeemRuleDtos == null) {
             return Optional.of(savedBlueprintDto);

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-@Profile("dev & h2")
+@Profile("dev & h2 & bootstrap")
 @Getter
 @Setter
 @RequiredArgsConstructor
