@@ -22,7 +22,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@ActiveProfiles({"default", "dev", "common", "h2", "monolith", "oauth2_https"})
+@ActiveProfiles({"default", "dev", "common", "h2", "monolith", "oauth2_https", "bootstrap"})
 class CustomerCardServiceImplTest {
     @Value("${cards.alice.customer.user-id}")
     private UUID customerId;

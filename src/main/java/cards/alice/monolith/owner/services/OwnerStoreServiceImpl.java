@@ -14,7 +14,6 @@ import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -33,21 +32,21 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
     @Override
     @Transactional
     public StoreDto saveNewStore(StoreDto storeDto) {
-        final StoreDto preprocessedStoreDto = storeDtoProcessor.preprocessForPost(storeDto);
+        final Set<BlueprintDto> blueprintDtos = storeDto.getBlueprintDtos();
+        final StoreDto preprocessedForPost = storeDtoProcessor
+                .preprocessForPost(storeDto);
 
         // Save Store without Blueprints
-        final Store store = storeMapper.toEntity(preprocessedStoreDto);
-        store.setBlueprints(new HashSet<>());
+        final Store store = storeMapper.toEntity(preprocessedForPost);
         final StoreDto savedStoreDto = storeMapper.toDto(
                 storeRepository.save(store));
 
-        if (preprocessedStoreDto.getBlueprintDtos() == null) {
+        if (blueprintDtos == null) {
             return savedStoreDto;
         }
 
         // Save Blueprints
         // 1. Set store id: Otherwise blueprintDtoProcessor.preprocessForPost will throw
-        final Set<BlueprintDto> blueprintDtos = preprocessedStoreDto.getBlueprintDtos();
         blueprintDtos.forEach(blueprintDto -> blueprintDto.setStoreId(savedStoreDto.getId()));
 
         // Skip blueprintDtoProcessor.preprocessForPost: will be done in ownerBlueprintService.saveBlueprints
@@ -68,8 +67,10 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
     @Override
     @Transactional
     public Optional<StoreDto> updateStoreById(Long id, StoreDto storeDto) {
-        StoreDto preprocessedStoreDto = storeDtoProcessor.preprocessForPut(id, storeDto);
-        return patchStoreById(id, preprocessedStoreDto);
+        StoreDto preprocessedForPut = storeDtoProcessor.preprocessForPut(id, storeDto);
+        final StoreDto savedStoreDto = storeMapper.toDto(
+                storeRepository.save(storeMapper.toEntity(preprocessedForPut)));
+        return Optional.of(savedStoreDto);
     }
 
     @Override

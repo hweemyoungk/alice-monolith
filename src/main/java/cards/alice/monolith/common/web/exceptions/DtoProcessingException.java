@@ -23,4 +23,11 @@ public class DtoProcessingException extends RuntimeException {
         super();
         this.violationMessages = new HashSet<>();
     }
+
+    @Override
+    public String toString() {
+        return "DtoProcessingException{" + getMessage() +
+                "violationMessages=" + violationMessages +
+                '}';
+    }
 }

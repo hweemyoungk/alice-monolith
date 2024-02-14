@@ -65,15 +65,18 @@ public class OwnerRedeemRuleServiceImpl implements OwnerRedeemRuleService {
     @Override
     @Transactional
     public RedeemRuleDto saveNewRedeemRule(RedeemRuleDto redeemRuleDto) {
-        final RedeemRuleDto preprocessedToPost = redeemRuleDtoProcessor.preprocessForPost(redeemRuleDto);
-        return redeemRuleMapper.toDto(redeemRuleRepository.save(redeemRuleMapper.toEntity(preprocessedToPost)));
+        final RedeemRuleDto preprocessedForPost = redeemRuleDtoProcessor
+                .preprocessForPost(redeemRuleDto);
+        return redeemRuleMapper.toDto(redeemRuleRepository
+                .save(redeemRuleMapper.toEntity(preprocessedForPost)));
     }
 
     @Override
     @Transactional
     public Optional<RedeemRuleDto> updateRedeemRuleById(Long id, RedeemRuleDto redeemRuleDto) {
-        final RedeemRuleDto preprocessedToPut = redeemRuleDtoProcessor.preprocessForPut(redeemRuleDto.getId(), redeemRuleDto);
-        return patchRedeemRuleById(id, preprocessedToPut);
+        final RedeemRuleDto preprocessedForPut = redeemRuleDtoProcessor
+                .preprocessForPut(id, redeemRuleDto);
+        return Optional.of(redeemRuleMapper.toDto(redeemRuleRepository.save(redeemRuleMapper.toEntity(preprocessedForPut))));
     }
 
     @Override
