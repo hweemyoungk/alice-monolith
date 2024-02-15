@@ -35,12 +35,13 @@ public class CustomerRedeemRequestServiceSplitImpl implements CustomerRedeemRequ
     @Override
     @Transactional
     public RedeemRequestNewDto handlePostRedeemRequest(RedeemRequestNewDto redeemRequestDtoFromCustomer) {
-        RedeemRequestNewDto preprocessedRedeemRequestDto = redeemRequestDtoProcessor.preprocessForPost(redeemRequestDtoFromCustomer);
+        RedeemRequestNewDto preprocessedForPost = redeemRequestDtoProcessor
+                .preprocessForPost(redeemRequestDtoFromCustomer);
 
         // Query Redis
         final var savedRedeemRequestDto = new AtomicReference<RedeemRequestNewDto>();
         final Optional<RedeemRequestNewDto> oldRedeemRequestDto = getActiveRedeemRequestByCardIdAndRedeemRuleId(
-                preprocessedRedeemRequestDto.getCardId(), preprocessedRedeemRequestDto.getRedeemRuleId());
+                preprocessedForPost.getCardId(), preprocessedForPost.getRedeemRuleId());
         oldRedeemRequestDto.ifPresentOrElse(targetRedeemRequestDto -> {
             // refresh TTL
             targetRedeemRequestDto.setTtlSeconds(watchRedeemRequestDurationSeconds);
@@ -49,9 +50,9 @@ public class CustomerRedeemRequestServiceSplitImpl implements CustomerRedeemRequ
             savedRedeemRequestDto.set(targetRedeemRequestDto);
         }, () -> {
             // Create brand new
-            final String newId = postRedeemRequest(preprocessedRedeemRequestDto);
-            preprocessedRedeemRequestDto.setId(newId);
-            savedRedeemRequestDto.set(preprocessedRedeemRequestDto);
+            final String newId = postRedeemRequest(preprocessedForPost);
+            preprocessedForPost.setId(newId);
+            savedRedeemRequestDto.set(preprocessedForPost);
         });
 
         return savedRedeemRequestDto.get();

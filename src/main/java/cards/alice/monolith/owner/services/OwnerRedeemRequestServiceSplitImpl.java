@@ -1,12 +1,14 @@
 package cards.alice.monolith.owner.services;
 
 import cards.alice.monolith.common.domain.Card;
+import cards.alice.monolith.common.domain.LongEntity;
 import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.CardDto;
 import cards.alice.monolith.common.models.RedeemDto;
 import cards.alice.monolith.common.models.RedeemRequestNewDto;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.common.web.mappers.CardMapper;
+import cards.alice.monolith.common.web.mappers.RedeemRuleMapper;
 import cards.alice.monolith.owner.repositories.OwnerCardRepository;
 import cards.alice.monolith.owner.repositories.OwnerRedeemRuleRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,17 +38,34 @@ public class OwnerRedeemRequestServiceSplitImpl implements OwnerRedeemRequestSer
 
     private final OwnerRedeemService redeemService;
     private final OwnerCardService cardService;
+
     private final CardMapper cardMapper;
+    private final RedeemRuleMapper redeemRuleMapper;
 
     private final RestTemplate restTemplate;
 
+    /**
+     * Every RedeemRequestDto has <i>non-null</i> redeemRuleDto.blueprintDto.storeDto.
+     * @param ownerId
+     */
     @Override
     public Set<RedeemRequestNewDto> listRedeemRequests(UUID ownerId) {
         final String url = redeemRequestServiceUrl + redeemRequestListPath + "?ownerId={ownerId}";
         final var requestEntity = RequestEntity.get(url, ownerId).build();
         final var responseType = new ParameterizedTypeReference<Set<RedeemRequestNewDto>>() {
         };
-        return restTemplate.exchange(requestEntity, responseType).getBody();
+        final Set<RedeemRequestNewDto> redeemRequestDtos = restTemplate.exchange(requestEntity, responseType).getBody();
+        if (redeemRequestDtos == null) {
+            return new HashSet<>();
+        }
+        final Set<Long> redeemRuleIds = redeemRequestDtos.stream().map(RedeemRequestNewDto::getRedeemRuleId).collect(Collectors.toSet());
+        final Set<RedeemRule> redeemRules = redeemRuleRepository.findByBlueprint_IdAndIdIn(null, redeemRuleIds);
+        final Map<Long, RedeemRule> redeemRuleMap = redeemRules.stream().collect(Collectors.toMap(LongEntity::getId, redeemRule -> redeemRule));
+        redeemRequestDtos.forEach(redeemRequestDto -> {
+            RedeemRule targetRedeemRule = redeemRuleMap.get(redeemRequestDto.getRedeemRuleId());
+            redeemRequestDto.setRedeemRuleDto(redeemRuleMapper.toDto(targetRedeemRule));
+        });
+        return redeemRequestDtos;
     }
 
     @Override

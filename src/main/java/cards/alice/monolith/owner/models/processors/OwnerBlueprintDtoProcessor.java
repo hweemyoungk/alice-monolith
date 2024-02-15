@@ -82,8 +82,12 @@ public class OwnerBlueprintDtoProcessor implements DtoProcessor<BlueprintDto, Lo
 
         // storeId
         // Store must exist
-        storeRepository.findById(dto.getStoreId())
+        final Store originalStore = storeRepository.findById(dto.getStoreId())
                 .orElseThrow(() -> new ResourceNotFoundException(Store.class, dto.getStoreId()));
+        // Owner cannot create blueprint of inactive store
+        if (originalStore.getIsInactive()) {
+            violationMessages.add("Owner cannot create blueprint of inactive store");
+        }
 
         // redeemRuleDtos
         // Ignored in input
@@ -104,6 +108,11 @@ public class OwnerBlueprintDtoProcessor implements DtoProcessor<BlueprintDto, Lo
         final Blueprint originalBlueprint = blueprintRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, id));
 
+        // Owner cannot modify expired blueprint
+        if (originalBlueprint.getExpirationDate().isBefore(OffsetDateTime.now())) {
+            violationMessages.add("Owner cannot modify expired blueprint");
+        }
+
         // id
         // Should not be modified
         dto.setId(id);
@@ -121,7 +130,10 @@ public class OwnerBlueprintDtoProcessor implements DtoProcessor<BlueprintDto, Lo
 
         // @NotNull isDeleted
         // Validated by @Valid
-        // Can be modified
+        // Owner cannot soft-delete
+        if (dto.getIsDeleted()) {
+            violationMessages.add("Owner cannot soft-delete blueprint");
+        }
 
         // @NotBlank @Length(max = 1000) description
         // Validated by @Valid

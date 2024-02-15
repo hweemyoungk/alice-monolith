@@ -105,6 +105,11 @@ public class OwnerStoreDtoProcessor implements StoreDtoProcessor {
         final Store originalStore = storeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(Store.class, id));
 
+        // Owner cannot modify closed store
+        if (originalStore.getIsClosed()) {
+            violationMessages.add("Cannot modify store that is already closed");
+        }
+
         // id
         // Should not be modified
         dto.setId(id);
@@ -122,7 +127,10 @@ public class OwnerStoreDtoProcessor implements StoreDtoProcessor {
 
         // @NotNull isDeleted
         // Validated by @Valid
-        // Can be modified
+        // Owner cannot soft-delete store
+        if (dto.getIsDeleted()) {
+            violationMessages.add("Owner cannot soft-delete store");
+        }
 
         // @NotBlank @Length(max = 1000) description;
         // Validated by @Valid

@@ -27,8 +27,8 @@ public class CustomerCardServiceImpl implements CustomerCardService {
     @Override
     @Transactional
     public CardDto saveNewCard(CardDto cardDto) {
-        final CardDto preprocessedCardDto = cardProcessor.preprocessForPost(cardDto);
-        final Card card = cardMapper.toEntity(preprocessedCardDto);
+        final CardDto preprocessedForPost = cardProcessor.preprocessForPost(cardDto);
+        final Card card = cardMapper.toEntity(preprocessedForPost);
         return cardMapper.toDto(
                 cardRepository.save(card));
     }
@@ -43,8 +43,9 @@ public class CustomerCardServiceImpl implements CustomerCardService {
     @Override
     @Transactional
     public Optional<CardDto> updateCardById(Long id, CardDto cardDto) {
-        final CardDto preprocessedCardDto = cardProcessor.preprocessForPut(id, cardDto);
-        return patchCardById(id, preprocessedCardDto);
+        final CardDto preprocessedForPut = cardProcessor.preprocessForPut(id, cardDto);
+        return Optional.of(cardMapper.toDto(cardRepository
+                .save(cardMapper.toEntity(preprocessedForPut))));
     }
 
     @Override

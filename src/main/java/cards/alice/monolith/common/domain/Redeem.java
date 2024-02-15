@@ -23,7 +23,7 @@ import lombok.experimental.SuperBuilder;
 )
 @Table(
         name = "redeem",
-        indexes = {@Index(columnList = "redeemRequestId")})
+        indexes = @Index(columnList = "redeemRequestId", unique = true))
 public class Redeem extends LongEntity {
     @NotNull
     private String redeemRequestId;

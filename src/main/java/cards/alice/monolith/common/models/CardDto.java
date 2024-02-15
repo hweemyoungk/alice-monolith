@@ -26,6 +26,12 @@ public class CardDto extends LongDto implements Serializable {
     //private static final Long serialVersionUID = 1L;
 
     @NotNull
+    private Boolean isDiscarded;
+    @NotNull
+    private Boolean isUsedOut;
+    @NotNull
+    private Boolean isInactive;
+    @NotNull
     @PositiveOrZero
     private Integer numCollectedStamps;
     @NotNull
@@ -34,7 +40,6 @@ public class CardDto extends LongDto implements Serializable {
     /**
      * Retrieves value from {@link cards.alice.monolith.common.domain.Blueprint Card.blueprint}.
      */
-    @NotNull
     private OffsetDateTime expirationDate;
     @NotNull
     private Boolean isFavorite;
@@ -42,12 +47,6 @@ public class CardDto extends LongDto implements Serializable {
     @PositiveOrZero
     private Integer numRedeemed;
     private String bgImageId;
-    @NotNull
-    private Boolean isDiscarded;
-    @NotNull
-    private Boolean isUsedOut;
-    @NotNull
-    private Boolean isInactive;
     @NotNull
     private UUID customerId;
     @JsonProperty("blueprint")

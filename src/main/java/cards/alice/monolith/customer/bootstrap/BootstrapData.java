@@ -235,6 +235,21 @@ public class BootstrapData implements CommandLineRunner {
                 .store(entityManager.getReference(Store.class, storeId))
                 .build();
         blueprintRepository.saveAndFlush(blueprint2);
+
+        Blueprint blueprint3 = Blueprint.builder()
+                .displayName("Blueprint 3")
+                .description("This is demo blueprint 3.")
+                .stampGrantCondDescription("3 stamps per $3")
+                .numMaxStamps(20)
+                .numMaxRedeems(6)
+                .numMaxIssuesPerCustomer(3)
+                .numMaxIssues(100)
+                .expirationDate(OffsetDateTime.now().plusMonths(2))
+                .bgImageId(null)
+                .isPublishing(true)
+                .store(entityManager.getReference(Store.class, storeId))
+                .build();
+        blueprintRepository.saveAndFlush(blueprint3);
     }
 
     void populateRedeemRules(){

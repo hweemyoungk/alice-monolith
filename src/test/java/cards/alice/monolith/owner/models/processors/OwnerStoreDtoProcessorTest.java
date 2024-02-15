@@ -157,6 +157,25 @@ class OwnerStoreDtoProcessorTest {
     }
 
     @Test
+    void preprocessForPutTryModifyClosedStore() {
+        originalStore.setIsClosed(true);
+        Store saved = storeRepository.save(originalStore);
+        StoreDto dto = storeMapper.toDto(saved);
+        assertThrows(DtoProcessingException.class, () -> {
+            storeDtoProcessor.preprocessForPut(dto.getId(), dto);
+        });
+    }
+
+    @Test
+    void preprocessForPutTrySoftDeleteStore() {
+        StoreDto dto = storeMapper.toDto(originalStore);
+        dto.setIsDeleted(true);
+        assertThrows(DtoProcessingException.class, () -> {
+            storeDtoProcessor.preprocessForPut(dto.getId(), dto);
+        });
+    }
+
+    @Test
     void preprocessForPutTrySetIsClosedFalse() {
         originalStore.setIsClosed(true);
         Store saved = storeRepository.save(originalStore);

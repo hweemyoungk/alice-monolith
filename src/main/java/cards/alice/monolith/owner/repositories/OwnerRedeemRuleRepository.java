@@ -13,6 +13,7 @@ import java.util.Set;
 public interface OwnerRedeemRuleRepository extends RedeemRuleRepository {
     /**
      * Fetches parent blueprint and store.
+     *
      * @param id must not be {@literal null}.
      * @return
      */
