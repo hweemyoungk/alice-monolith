@@ -16,7 +16,6 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-// TODO: Reconstruct with Spring Redis
 @Getter
 @Setter
 @NoArgsConstructor

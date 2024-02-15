@@ -1,6 +1,8 @@
 package cards.alice.monolith.owner.models.processors;
 
+import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.StampGrantDto;
+import cards.alice.monolith.common.repositories.CardRepository;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -22,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class OwnerStampGrantDtoProcessorTest {
     @Autowired
     OwnerStampGrantDtoProcessor stampGrantDtoProcessor;
+    @Autowired
+    CardRepository cardRepository;
 
     @Test
     @Transactional
@@ -134,6 +138,25 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(2)
                 .build();
         assertThrows(Throwable.class, () -> {
+            stampGrantDtoProcessor.preprocessForPost(dto);
+        });
+    }
+
+    @Test
+    @Transactional
+    void preprocessForPostCardInactive() {
+        Card card = cardRepository.findById(1L).orElseThrow();
+        card.setIsInactive(true);
+        cardRepository.save(card);
+        StampGrantDto dto = StampGrantDto.builder()
+                .id(-1L)
+                .version(-1)
+                .isDeleted(true)
+                .displayName("Dummy Display Name")
+                .cardId(1L)
+                .numStamps(2)
+                .build();
+        assertThrows(DtoProcessingException.class, () -> {
             stampGrantDtoProcessor.preprocessForPost(dto);
         });
     }

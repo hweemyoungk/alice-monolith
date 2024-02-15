@@ -226,6 +226,17 @@ class OwnerRedeemRuleDtoProcessorTest {
     @Test
     @Transactional
     @Rollback
+    void preprocessForPutTrySoftDelete() {
+        RedeemRuleDto dto = redeemRuleMapper.toDto(originalRedeemRule);
+        dto.setIsDeleted(true);
+        assertThrows(DtoProcessingException.class, () -> {
+            redeemRuleDtoProcessor.preprocessForPut(dto.getId(), dto);
+        });
+    }
+
+    @Test
+    @Transactional
+    @Rollback
     void preprocessForPutLongDescription() {
         RedeemRuleDto dto = redeemRuleMapper.toDto(originalRedeemRule);
         dto.setDescription("""

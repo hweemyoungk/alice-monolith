@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -32,6 +33,10 @@ public class OwnerRedeemRuleDtoProcessor implements RedeemRuleDtoProcessor {
         // Blueprint must exist
         final Blueprint blueprint = blueprintRepository.findById(dto.getBlueprintId())
                 .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, dto.getBlueprintId()));
+        // Owner cannot create redeem rule of expired blueprint
+        if (blueprint.getExpirationDate().isBefore(OffsetDateTime.now())) {
+            violationMessages.add("Owner cannot create redeem rule of expired blueprint");
+        }
 
         // id
         // Should be null
@@ -44,6 +49,7 @@ public class OwnerRedeemRuleDtoProcessor implements RedeemRuleDtoProcessor {
 
         // @NotBlank @Length(max = 30) displayName
         // Validated by @Valid
+        // Can be modified
 
         // createdDate: ignored
 
@@ -102,6 +108,10 @@ public class OwnerRedeemRuleDtoProcessor implements RedeemRuleDtoProcessor {
 
         // @NotNull isDeleted
         // Validated by @Valid
+        // Owner cannot soft-delete
+        if (dto.getIsDeleted()) {
+            violationMessages.add("Owner cannot soft-delete redeem rule");
+        }
 
         // @NotBlank @Length(max = 100) description;
         // Validated by @Valid

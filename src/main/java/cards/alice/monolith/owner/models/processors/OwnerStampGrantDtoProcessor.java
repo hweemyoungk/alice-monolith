@@ -46,6 +46,10 @@ public class OwnerStampGrantDtoProcessor implements DtoProcessor<StampGrantDto, 
         // : Owner should own card.blueprint.store
         final Card card = cardRepository.findById(dto.getCardId())
                 .orElseThrow(() -> new ResourceNotFoundException(Card.class, dto.getCardId()));
+        // Card must be active
+        if (card.getIsInactive()) {
+            violationMessages.add("Card must be active");
+        }
 
         // @NotNull @Positive numStamps;
         // Validated by @Valid

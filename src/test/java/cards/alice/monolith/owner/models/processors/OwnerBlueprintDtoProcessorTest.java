@@ -307,18 +307,55 @@ class OwnerBlueprintDtoProcessorTest {
 
     @Test
     @Transactional
+    void preprocessForPostStoreInactive() {
+        Store originalStore = storeRepository.findById(1L).orElseThrow();
+        originalStore.setIsInactive(true);
+        storeRepository.save(originalStore);
+
+        BlueprintDto dto = BlueprintDto.builder()
+                .id(-1L)
+                .version(-1)
+                .displayName("Dummy Display Name")
+                .isDeleted(true)
+                .description("This is dummy description.")
+                .stampGrantCondDescription("This is dummy stamp grant description.")
+                .numMaxStamps(10)
+                .numMaxRedeems(1)
+                .numMaxIssuesPerCustomer(1)
+                .numMaxIssues(0)
+                .expirationDate(OffsetDateTime.now().plusDays(1L))
+                .bgImageId(null)
+                .isPublishing(true)
+                .storeDto(null)
+                .storeId(1L)
+                .redeemRuleDtos(null)
+                .build();
+        assertThrows(DtoProcessingException.class, () -> {
+            blueprintDtoProcessor.preprocessForPost(dto);
+        });
+    }
+
+    @Test
+    @Transactional
     void preprocessForPut() {
         BlueprintDto dto = blueprintMapper.toDto(originalBlueprint);
         assertDoesNotThrow(() -> {
             blueprintDtoProcessor.preprocessForPut(dto.getId(), dto);
         });
-        //assertThrows(ConstraintViolationException.class, () -> {
-        //    blueprintDtoProcessor.preprocessForPut(dto.getId(), dto);
-        //});
-        //assertThrows(DtoProcessingException.class, () -> {
-        //    blueprintDtoProcessor.preprocessForPut(dto.getId(), dto);
-        //});
     }
+
+    @Test
+    @Transactional
+    void preprocessForPutTryModifyExpiredBlueprint() {
+        originalBlueprint.setExpirationDate(OffsetDateTime.now().minusSeconds(1L));
+        blueprintRepository.save(originalBlueprint);
+        BlueprintDto dto = blueprintMapper.toDto(originalBlueprint);
+        dto.setExpirationDate(OffsetDateTime.now());
+        assertThrows(DtoProcessingException.class, () -> {
+            blueprintDtoProcessor.preprocessForPut(dto.getId(), dto);
+        });
+    }
+
 
     @Test
     @Transactional
@@ -326,6 +363,16 @@ class OwnerBlueprintDtoProcessorTest {
         BlueprintDto dto = blueprintMapper.toDto(originalBlueprint);
         dto.setDisplayName("Dummy Display Name Dummy Display Name Dummy Display Name Dummy Display Name ");
         assertThrows(ConstraintViolationException.class, () -> {
+            blueprintDtoProcessor.preprocessForPut(dto.getId(), dto);
+        });
+    }
+
+    @Test
+    @Transactional
+    void preprocessForPutTrySoftDelete() {
+        BlueprintDto dto = blueprintMapper.toDto(originalBlueprint);
+        dto.setIsDeleted(true);
+        assertThrows(DtoProcessingException.class, () -> {
             blueprintDtoProcessor.preprocessForPut(dto.getId(), dto);
         });
     }

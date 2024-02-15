@@ -30,5 +30,5 @@ public interface CustomerCardRepository extends CardRepository {
 
     @Override
     @PostAuthorize("returnObject.isEmpty() ? true : authentication.name == returnObject.get().customerId.toString()")
-    Optional<Card> findById(Long aLong);
+    Optional<Card> findById(Long id);
 }
