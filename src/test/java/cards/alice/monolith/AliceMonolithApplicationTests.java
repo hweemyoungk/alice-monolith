@@ -5,7 +5,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-@ActiveProfiles({"default", "monolith", "local"})
+@ActiveProfiles({"default"})
+//@ActiveProfiles({"local"})
 class AliceMonolithApplicationTests {
 
     @Test

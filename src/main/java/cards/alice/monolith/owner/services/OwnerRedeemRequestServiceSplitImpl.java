@@ -46,6 +46,7 @@ public class OwnerRedeemRequestServiceSplitImpl implements OwnerRedeemRequestSer
 
     /**
      * Every RedeemRequestDto has <i>non-null</i> redeemRuleDto.blueprintDto.storeDto.
+     *
      * @param ownerId
      */
     @Override
@@ -55,9 +56,10 @@ public class OwnerRedeemRequestServiceSplitImpl implements OwnerRedeemRequestSer
         final var responseType = new ParameterizedTypeReference<Set<RedeemRequestNewDto>>() {
         };
         final Set<RedeemRequestNewDto> redeemRequestDtos = restTemplate.exchange(requestEntity, responseType).getBody();
-        if (redeemRequestDtos == null) {
+        if (redeemRequestDtos == null || redeemRequestDtos.isEmpty()) {
             return new HashSet<>();
         }
+
         final Set<Long> redeemRuleIds = redeemRequestDtos.stream().map(RedeemRequestNewDto::getRedeemRuleId).collect(Collectors.toSet());
         final Set<RedeemRule> redeemRules = redeemRuleRepository.findByBlueprint_IdAndIdIn(null, redeemRuleIds);
         final Map<Long, RedeemRule> redeemRuleMap = redeemRules.stream().collect(Collectors.toMap(LongEntity::getId, redeemRule -> redeemRule));

@@ -19,7 +19,8 @@ COPY --from=builder /application/snapshot-dependencies/ ./
 COPY --from=builder /application/application/ ./
 
 RUN keytool -importcert -trustcacerts -noprompt -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit -alias carolcardscert -file BOOT-INF/classes/keystore/carol.cards.crt
+# For amazoncorretto:17, replace with following:
 # RUN keytool -importcert -trustcacerts -noprompt -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit -alias carolcardscert -file BOOT-INF/classes/keystore/carol.cards.crt
 
-ENV JAVA_OPTS "-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=default,monolith,local"
+ENV JAVA_OPTS "-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=default,localk8s"
 ENTRYPOINT exec java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher

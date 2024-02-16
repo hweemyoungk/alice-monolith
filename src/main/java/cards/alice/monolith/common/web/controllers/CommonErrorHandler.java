@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,11 @@ public class CommonErrorHandler {
                     return errorMap;
                 }).collect(Collectors.toList());
         return ResponseEntity.badRequest().body(errorList);
+    }
+
+    @ExceptionHandler(ConnectException.class)
+    ResponseEntity handleConnectionRefused(ConnectException e) {
+        return ResponseEntity.internalServerError().build();
     }
 
 /*
