@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @WithMockUser(
         username = "de36b13b-2397-445e-89cd-8e817e0f441e",
         roles = {"owner"})
-@ActiveProfiles({"default", "common", "dev", "monolith", "h2", "oauth2_https", "bootstrap"})
+@ActiveProfiles({"default", "local", "bootstrap"})
 class OwnerStampGrantDtoProcessorTest {
     @Autowired
     OwnerStampGrantDtoProcessor stampGrantDtoProcessor;

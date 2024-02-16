@@ -66,6 +66,6 @@ public class Blueprint extends LongEntity {
     })
     private Set<Card> cards;*/
     @ManyToOne(optional = false)
-    @JoinColumn(name = "store_id", nullable = false)
+    @JoinColumn(name = "store_id")
     private Store store;
 }
