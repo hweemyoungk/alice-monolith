@@ -10,6 +10,7 @@ import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Optional;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
         final BlueprintDto savedBlueprintDto = blueprintMapper.toDto(
                 blueprintRepository.save(blueprint));
 
-        if (redeemRuleDtos == null) {
+        if (CollectionUtils.isEmpty(redeemRuleDtos)) {
             return savedBlueprintDto;
         }
 

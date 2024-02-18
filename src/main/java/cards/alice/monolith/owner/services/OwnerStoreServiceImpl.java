@@ -9,6 +9,7 @@ import cards.alice.monolith.common.web.mappers.StoreMapper;
 import cards.alice.monolith.owner.models.processors.OwnerStoreDtoProcessor;
 import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Persistence;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Service;
@@ -49,8 +50,6 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
         // 1. Set store id: Otherwise blueprintDtoProcessor.preprocessForPost will throw
         blueprintDtos.forEach(blueprintDto -> blueprintDto.setStoreId(savedStoreDto.getId()));
 
-        // Skip blueprintDtoProcessor.preprocessForPost: will be done in ownerBlueprintService.saveBlueprints
-
         // 2. Save
         final Set<BlueprintDto> savedBlueprintDtos = ownerBlueprintService.saveBlueprints(blueprintDtos);
 
@@ -68,9 +67,13 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
     @Transactional
     public Optional<StoreDto> updateStoreById(Long id, StoreDto storeDto) {
         StoreDto preprocessedForPut = storeDtoProcessor.preprocessForPut(id, storeDto);
-        final StoreDto savedStoreDto = storeMapper.toDto(
-                storeRepository.save(storeMapper.toEntity(preprocessedForPut)));
+        Store savedStore = storeRepository.save(storeMapper.toEntity(preprocessedForPut));
+        if (Persistence.getPersistenceUtil().isLoaded(savedStore, "blueprints")) {
+            savedStore.getBlueprints().forEach(this::detachStore);
+        }
+        final StoreDto savedStoreDto = storeMapper.toDto(savedStore);
         return Optional.of(savedStoreDto);
+
     }
 
     @Override
@@ -130,4 +133,14 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
         em.detach(manyToOneBlueprint);
         redeemRule.setBlueprint(em.getReference(Blueprint.class, manyToOneBlueprint.getId()));
     }
+
+    /*private void detachBlueprints(Store store) {
+        final var oneToManyBlueprints = store.getBlueprints();
+        final Set<Blueprint> blueprintReferences = oneToManyBlueprints.stream().map(blueprint -> {
+            final Long blueprintId = blueprint.getId();
+            em.detach(blueprint);
+            return em.getReference(Blueprint.class, blueprintId);
+        }).collect(Collectors.toSet());
+        store.setBlueprints(blueprintReferences);
+    }*/
 }
