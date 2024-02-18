@@ -35,6 +35,10 @@ public class CustomerBlueprintController {
         return ResponseEntity.ok(blueprintDtos);
     }
 
+    /**
+     * Queries number of TOTAL issue of target blueprint.<br>
+     * (Not number of issues of individual cutomer)
+     */
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.blueprint.num-issues}")
     public ResponseEntity<Long> getNumIssues(@NotNull @RequestParam Long blueprintId) {
         final Long numIssues = customerBlueprintService.getNumIssues(blueprintId);

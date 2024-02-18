@@ -23,6 +23,9 @@ public class CustomerStoreController {
         return ResponseEntity.ok(storeDto.orElseThrow(() -> new ResourceNotFoundException(Store.class, id)));
     }
 
+    /**
+     * Currently, called nowhere.
+     */
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.store.list}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<Set<StoreDto>> listStores(
             @RequestParam(required = false) UUID ownerId,

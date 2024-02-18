@@ -13,6 +13,9 @@ public class OwnerRedeemServiceImpl implements OwnerRedeemService {
     private final RedeemRepository redeemRepository;
     private final RedeemMapper redeemMapper;
 
+    /**
+     * Currently, the only usage is in <code>OwnerRedeemRequestService.approveRedeemRequest</code>.
+     */
     @Override
     public RedeemDto saveNewRedeem(RedeemDto redeemDto) {
         redeemDto.setIdVersionNull();

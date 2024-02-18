@@ -57,6 +57,9 @@ public class CustomerCardController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    /**
+     * Currently, the only usage is in <code>customer_apis.reloadCustomerModels(customerId, null)</code>.
+     */
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.list}", produces = "application/json;charset=UTF-8")
     @PreAuthorize("#customerId != null ? authentication.name == #customerId.toString() : true")
     public ResponseEntity<Set<CardDto>> listCards(@RequestParam(required = false) UUID customerId, @RequestParam(required = false) List<Long> ids) {

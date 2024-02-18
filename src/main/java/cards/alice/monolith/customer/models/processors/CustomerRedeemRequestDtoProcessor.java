@@ -5,10 +5,10 @@ import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.RedeemRequestNewDto;
 import cards.alice.monolith.common.models.processors.RedeemRequestDtoProcessor;
-import cards.alice.monolith.common.repositories.RedeemRuleRepository;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.customer.repositories.CustomerCardRepository;
+import cards.alice.monolith.customer.repositories.CustomerRedeemRuleRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +28,7 @@ public class CustomerRedeemRequestDtoProcessor implements RedeemRequestDtoProces
     private long watchRedeemRequestDurationSeconds;
 
     private final CustomerCardRepository cardRepository;
-    private final RedeemRuleRepository redeemRuleRepository;
+    private final CustomerRedeemRuleRepository redeemRuleRepository;
 
     @Override
     public RedeemRequestNewDto preprocessForPost(@Valid RedeemRequestNewDto dto) {
