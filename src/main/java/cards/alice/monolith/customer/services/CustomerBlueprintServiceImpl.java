@@ -20,12 +20,6 @@ public class CustomerBlueprintServiceImpl implements CustomerBlueprintService {
     private final BlueprintMapper blueprintMapper;
 
     @Override
-    public BlueprintDto authorizedGetBlueprintById(Long id) {
-        return blueprintMapper.toDto(
-                blueprintRepository.findById(id).orElse(null));
-    }
-
-    @Override
     public Optional<BlueprintDto> getBlueprintById(Long id) {
         return Optional.ofNullable(blueprintMapper.toDto(
                 blueprintRepository.findById(id).orElse(null)));

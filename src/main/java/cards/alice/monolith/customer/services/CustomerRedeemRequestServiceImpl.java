@@ -4,10 +4,10 @@ import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.RedeemRequestDto;
-import cards.alice.monolith.common.repositories.RedeemRuleRepository;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.customer.repositories.CustomerCardRepository;
+import cards.alice.monolith.customer.repositories.CustomerRedeemRuleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class CustomerRedeemRequestServiceImpl {
     private UUID customerId;
 
     private final CustomerCardRepository cardRepository;
-    private final RedeemRuleRepository redeemRuleRepository;
+    private final CustomerRedeemRuleRepository redeemRuleRepository;
     private final CustomerAuthenticatedRedeemRequestAccessor authenticatedRedeemRequestAccessor;
     private final ObjectMapper objectMapper;
     private final JedisPooled jedis;
