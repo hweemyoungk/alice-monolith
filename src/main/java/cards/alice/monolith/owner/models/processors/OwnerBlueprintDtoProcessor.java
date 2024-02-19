@@ -3,30 +3,107 @@ package cards.alice.monolith.owner.models.processors;
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.BlueprintDto;
-import cards.alice.monolith.common.models.processors.DtoProcessor;
+import cards.alice.monolith.common.models.MembershipDto;
+import cards.alice.monolith.common.models.OwnerMembershipDto;
+import cards.alice.monolith.common.models.processors.BlueprintDtoProcessor;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.owner.repositories.OwnerBlueprintRepository;
 import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Validated
 @RequiredArgsConstructor
-public class OwnerBlueprintDtoProcessor implements DtoProcessor<BlueprintDto, Long> {
+public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
     private final OwnerBlueprintRepository blueprintRepository;
     private final OwnerStoreRepository storeRepository;
+    private final Map<String, OwnerMembershipDto> ownerMembershipMap;
 
     @Override
-    public BlueprintDto preprocessForPost(@Valid BlueprintDto dto) {
+    public Collection<BlueprintDto> preprocessForPost(Collection<BlueprintDto> dtos) {
+        checkBoundToSingleStore(dtos);
+        return super.preprocessForPost(dtos);
+    }
+
+    private void checkBoundToSingleStore(Collection<BlueprintDto> dtos) {
+        final Set<Long> ids = dtos.stream().map(BlueprintDto::getStoreId).collect(Collectors.toSet());
+        if (ids.contains(null) || ids.size() != 1) {
+            throw new DtoProcessingException("Failed to preprocess BlueprintDtos",
+                    Set.of("BlueprintDtos bound to multiple stores: " + ids));
+        }
+    }
+
+    @Override
+    protected void checkMembershipForPost(Collection<BlueprintDto> dtos) {
+        final Set<String> violationMessages = new HashSet<>();
+        final UUID ownerId = UUID.fromString(SecurityContextHolder.getContext()
+                .getAuthentication().getName());
+        final OwnerMembershipDto highestOwnerMembership = (OwnerMembershipDto) MembershipDto
+                .highestPriority(OwnerMembershipDto
+                        .getCurrentOwnerMemberships(ownerMembershipMap));
+
+        final Optional<BlueprintDto> sampleDto = dtos.stream().findAny();
+        if (sampleDto.isEmpty()) {
+            violationMessages.add("No BlueprintDto provided");
+            throw new DtoProcessingException("Failed to check membership for BlueprintDtos", violationMessages);
+        }
+
+        final Long storeId = sampleDto.get().getStoreId();
+
+        // @Min(-1) numMaxAccumulatedTotalStores;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentTotalStores;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentActiveStores;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentTotalBlueprintsPerStore;
+        // NOT includes DELETED blueprints
+        if (highestOwnerMembership.getNumMaxCurrentTotalBlueprintsPerStore() != -1) {
+            long numCurrentTotalPerStore = blueprintRepository.exclusiveCountByStore_IdAndStore_OwnerIdAndIsDeleted(
+                    storeId, ownerId, Boolean.FALSE);
+            if (highestOwnerMembership.getNumMaxCurrentTotalBlueprintsPerStore() < numCurrentTotalPerStore + dtos.size()) {
+                violationMessages.add("Exceeded maximum current total blueprints of store.");
+            }
+        }
+
+        // @Min(-1) numMaxCurrentActiveBlueprintsPerStore;
+        // Apply ONLY when creating ACTIVE blueprint
+        final List<BlueprintDto> publishingDtos = dtos.stream().filter(BlueprintDto::getIsPublishing).toList();
+        // NOT includes DELETED nor INACTIVE blueprints
+        if (!publishingDtos.isEmpty()
+                && highestOwnerMembership.getNumMaxCurrentActiveBlueprintsPerStore() != -1) {
+            long numCurrentTotalPerStore = blueprintRepository.exclusiveCountByStore_IdAndStore_OwnerIdAndIsDeletedAndIsPublishing(
+                    storeId, ownerId, Boolean.FALSE, Boolean.TRUE);
+            if (highestOwnerMembership.getNumMaxCurrentTotalBlueprintsPerStore() < numCurrentTotalPerStore + publishingDtos.size()) {
+                violationMessages.add("Exceeded maximum current total blueprints of store.");
+            }
+        }
+
+        // @Min(-1) numMaxCurrentTotalRedeemRulesPerBlueprint;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentActiveRedeemRulesPerBlueprint;
+        // Not relevant
+
+        if (!violationMessages.isEmpty()) {
+            throw new DtoProcessingException("Failed to check membership for BlueprintDtos", violationMessages);
+        }
+    }
+
+    @Override
+    protected BlueprintDto preprocessForPost(BlueprintDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
         // id

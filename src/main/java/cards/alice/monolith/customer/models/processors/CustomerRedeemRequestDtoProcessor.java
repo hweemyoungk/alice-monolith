@@ -9,13 +9,13 @@ import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.customer.repositories.CustomerCardRepository;
 import cards.alice.monolith.customer.repositories.CustomerRedeemRuleRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -23,7 +23,7 @@ import java.util.Set;
 @Component
 @Validated
 @RequiredArgsConstructor
-public class CustomerRedeemRequestDtoProcessor implements RedeemRequestDtoProcessor {
+public class CustomerRedeemRequestDtoProcessor extends RedeemRequestDtoProcessor {
     @Value("${cards.alice.customer.app.watch-redeem-request-duration-seconds}")
     private long watchRedeemRequestDurationSeconds;
 
@@ -31,7 +31,12 @@ public class CustomerRedeemRequestDtoProcessor implements RedeemRequestDtoProces
     private final CustomerRedeemRuleRepository redeemRuleRepository;
 
     @Override
-    public RedeemRequestNewDto preprocessForPost(@Valid RedeemRequestNewDto dto) {
+    protected void checkMembershipForPost(Collection<RedeemRequestNewDto> dtos) {
+        // NO-OP: Currently, RedeemRequest is not constrained by membership.
+    }
+
+    @Override
+    protected RedeemRequestNewDto preprocessForPost(RedeemRequestNewDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
         // id

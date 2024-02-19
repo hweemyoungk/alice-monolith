@@ -22,10 +22,15 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Currently, CustomerRedeemRequestDtoProcessor#checkMembershipForPost is NO-OP.<br>
+ * So the only inner test target is CustomerRedeemRequestDtoProcessor#preprocessForPost,<br>
+ * which can just be tested by CustomerRedeemRequestDtoProcessor+preprocessForPostSingle.
+ */
 @SpringBootTest
 @WithMockUser(
         username = "de36b13b-2397-445e-89cd-8e817e0f441e",
-        roles = {"owner"})
+        roles = {"customer-alpha"})
 @ActiveProfiles({"default", "local", "bootstrap"})
 class CustomerRedeemRequestDtoProcessorTest {
     private final UUID uuid = UUID.fromString("de36b13b-2397-445e-89cd-8e817e0f441e");
@@ -64,40 +69,40 @@ class CustomerRedeemRequestDtoProcessorTest {
 
     @Test
     @Transactional
-    void preprocessForPost() {
+    void preprocessForPostSingle() {
         RedeemRequestNewDto dto = legalDto();
         assertDoesNotThrow(() -> {
-            redeemRequestDtoProcessor.preprocessForPost(dto);
+            redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         });
         //assertThrows(ConstraintViolationException.class, () -> {
-        //    redeemRequestDtoProcessor.preprocessForPost(dto);
+        //    redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         //});
         //assertThrows(ResourceNotFoundException.class, () -> {
-        //    redeemRequestDtoProcessor.preprocessForPost(dto);
+        //    redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         //});
         //assertThrows(DtoProcessingException.class, () -> {
-        //    redeemRequestDtoProcessor.preprocessForPost(dto);
+        //    redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         //});
         //assertThrows(Throwable.class, () -> {
-        //    redeemRequestDtoProcessor.preprocessForPost(dto);
+        //    redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         //});
     }
 
     @Test
     @Transactional
-    void preprocessForPostCardNotFound() {
+    void preprocessForPostSingleCardNotFound() {
         RedeemRequestNewDto dto = legalDto();
 
         cardRepository.deleteById(dto.getCardId());
 
         assertThrows(ResourceNotFoundException.class, () -> {
-            redeemRequestDtoProcessor.preprocessForPost(dto);
+            redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostCardNotOwned() {
+    void preprocessForPostSingleCardNotOwned() {
         RedeemRequestNewDto dto = legalDto();
 
         Card card = cardRepository.findById(dto.getCardId()).orElseThrow();
@@ -105,24 +110,24 @@ class CustomerRedeemRequestDtoProcessorTest {
         cardRepository.save(card);
 
         assertThrows(AccessDeniedException.class, () -> {
-            redeemRequestDtoProcessor.preprocessForPost(dto);
+            redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostRedeemRuleNotFound() {
+    void preprocessForPostSingleRedeemRuleNotFound() {
         RedeemRequestNewDto dto = legalDto();
         redeemRuleRepository.deleteById(dto.getRedeemRuleId());
 
         assertThrows(ResourceNotFoundException.class, () -> {
-            redeemRequestDtoProcessor.preprocessForPost(dto);
+            redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostBlueprintNotPublishing() {
+    void preprocessForPostSingleBlueprintNotPublishing() {
         RedeemRequestNewDto dto = legalDto();
         Blueprint blueprint = cardRepository.findById(dto.getCardId()).orElseThrow()
                 .getBlueprint();
@@ -130,17 +135,17 @@ class CustomerRedeemRequestDtoProcessorTest {
         blueprintRepository.save(blueprint);
 
         assertThrows(DtoProcessingException.class, () -> {
-            redeemRequestDtoProcessor.preprocessForPost(dto);
+            redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostBlueprintMismatch() {
+    void preprocessForPostSingleBlueprintMismatch() {
         final Card cardOfOtherBlueprint = Card.builder()
                 .displayName("My First Card")
                 .numCollectedStamps(0)
-                .numGoalStamps(0)
+                .numGoalStamps(1)
                 .isFavorite(true)
                 .numRedeemed(0)
                 .customerId(uuid)
@@ -150,30 +155,30 @@ class CustomerRedeemRequestDtoProcessorTest {
                 .isUsedOut(false)
                 .isInactive(false)
                 .build();
-        final Card saved = cardRepository.save(cardOfOtherBlueprint);
+        final Card savedCardOfOtherBlueprint = cardRepository.save(cardOfOtherBlueprint);
 
         RedeemRequestNewDto dto = legalDto();
-        dto.setCardId(saved.getId());
+        dto.setCardId(savedCardOfOtherBlueprint.getId());
         assertThrows(DtoProcessingException.class, () -> {
-            redeemRequestDtoProcessor.preprocessForPost(dto);
+            redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostUnknownCustomerId() {
+    void preprocessForPostSingleUnknownCustomerId() {
         RedeemRequestNewDto dto = legalDto();
         dto.setCustomerId(UUID.randomUUID());
         assertThrows(DtoProcessingException.class, () -> {
-            redeemRequestDtoProcessor.preprocessForPost(dto);
+            redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostNotDefaultValues() {
+    void preprocessForPostSingleNotDefaultValues() {
         RedeemRequestNewDto dto = legalDto();
-        RedeemRequestNewDto preprocessedForPost = redeemRequestDtoProcessor.preprocessForPost(dto);
+        RedeemRequestNewDto preprocessedForPost = redeemRequestDtoProcessor.preprocessForPostSingle(dto);
         assertNull(preprocessedForPost.getId());
         assertFalse(preprocessedForPost.getIsDeleted());
         assertEquals(preprocessedForPost.getTtlSeconds(), watchRedeemRequestDurationSeconds);

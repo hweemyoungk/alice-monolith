@@ -3,6 +3,8 @@ package cards.alice.monolith.owner.models.processors;
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.BlueprintDto;
+import cards.alice.monolith.common.models.MembershipDto;
+import cards.alice.monolith.common.models.OwnerMembershipDto;
 import cards.alice.monolith.common.repositories.BlueprintRepository;
 import cards.alice.monolith.common.repositories.StoreRepository;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
@@ -12,6 +14,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -19,14 +22,17 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
 
 @SpringBootTest
 @WithMockUser(
         username = "de36b13b-2397-445e-89cd-8e817e0f441e",
-        roles = {"owner"})
+        roles = {"owner-alpha"})
 @ActiveProfiles({"default", "local", "bootstrap"})
 class OwnerBlueprintDtoProcessorTest {
     @Autowired
@@ -70,10 +76,8 @@ class OwnerBlueprintDtoProcessorTest {
         originalBlueprint = null;
     }
 
-    @Test
-    @Transactional
-    void preprocessForPost() {
-        BlueprintDto dto = BlueprintDto.builder()
+    BlueprintDto legalDto() {
+        return BlueprintDto.builder()
                 .id(-1L)
                 .version(-1)
                 .displayName("Dummy Display Name")
@@ -91,14 +95,133 @@ class OwnerBlueprintDtoProcessorTest {
                 .storeId(1L)
                 .redeemRuleDtos(null)
                 .build();
-        assertDoesNotThrow(() -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
-        });
     }
 
     @Test
     @Transactional
-    void preprocessForPostLongDisplayName() {
+    void preprocessForPost() {
+        BlueprintDto dto1 = legalDto();
+        BlueprintDto dto2 = legalDto();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    OwnerMembershipDto.builder()
+                            .version(0)
+                            .displayName("owner-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalStores(-1)
+                            .numMaxCurrentTotalStores(-1)
+                            .numMaxCurrentActiveStores(-1)
+                            .numMaxCurrentTotalBlueprintsPerStore(-1)
+                            .numMaxCurrentActiveBlueprintsPerStore(-1)
+                            .numMaxCurrentTotalRedeemRulesPerBlueprint(-1)
+                            .numMaxCurrentActiveRedeemRulesPerBlueprint(-1)
+                            .build()
+            );
+            assertDoesNotThrow(() -> {
+                blueprintDtoProcessor.preprocessForPost(List.of(dto1, dto2));
+            });
+        }
+    }
+
+    @Test
+    void preprocessForPostBoundToMultipleStores() {
+        BlueprintDto dto1 = legalDto();
+        dto1.setStoreId(1L);
+        BlueprintDto dto2 = legalDto();
+        dto2.setStoreId(2L);
+        assertThrows(DtoProcessingException.class, () -> {
+            blueprintDtoProcessor.preprocessForPost(List.of(dto1, dto2));
+        });
+    }
+
+    @Test
+    void preprocessForPostExceedsNumMaxAccumulatedTotalStores() {
+        BlueprintDto dto = legalDto();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    OwnerMembershipDto.builder()
+                            .version(0)
+                            .displayName("owner-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalStores(-1)
+                            .numMaxCurrentTotalStores(-1)
+                            .numMaxCurrentActiveStores(-1)
+                            .numMaxCurrentTotalBlueprintsPerStore(0)
+                            .numMaxCurrentActiveBlueprintsPerStore(-1)
+                            .numMaxCurrentTotalRedeemRulesPerBlueprint(-1)
+                            .numMaxCurrentActiveRedeemRulesPerBlueprint(-1)
+                            .build()
+            );
+            assertThrows(DtoProcessingException.class, () -> {
+                blueprintDtoProcessor.preprocessForPost(List.of(dto));
+            });
+        }
+    }
+
+    @Test
+    void preprocessForPostExceedsNumMaxCurrentActiveBlueprintsPerStore() {
+        BlueprintDto dto = legalDto();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    OwnerMembershipDto.builder()
+                            .version(0)
+                            .displayName("owner-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalStores(-1)
+                            .numMaxCurrentTotalStores(-1)
+                            .numMaxCurrentActiveStores(-1)
+                            .numMaxCurrentTotalBlueprintsPerStore(-1)
+                            .numMaxCurrentActiveBlueprintsPerStore(0)
+                            .numMaxCurrentTotalRedeemRulesPerBlueprint(-1)
+                            .numMaxCurrentActiveRedeemRulesPerBlueprint(-1)
+                            .build()
+            );
+            assertThrows(DtoProcessingException.class, () -> {
+                blueprintDtoProcessor.preprocessForPost(List.of(dto));
+            });
+        }
+    }
+
+    @Test
+    @Transactional
+    void preprocessForPostSingle() {
+        BlueprintDto dto = legalDto();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    OwnerMembershipDto.builder()
+                            .version(0)
+                            .displayName("owner-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalStores(-1)
+                            .numMaxCurrentTotalStores(-1)
+                            .numMaxCurrentActiveStores(-1)
+                            .numMaxCurrentTotalBlueprintsPerStore(-1)
+                            .numMaxCurrentActiveBlueprintsPerStore(-1)
+                            .numMaxCurrentTotalRedeemRulesPerBlueprint(-1)
+                            .numMaxCurrentActiveRedeemRulesPerBlueprint(-1)
+                            .build()
+            );
+            assertDoesNotThrow(() -> {
+                blueprintDtoProcessor.preprocessForPostSingle(dto);
+            });
+        }
+    }
+
+    @Test
+    @Transactional
+    void preprocessForPostSingleLongDisplayName() {
         BlueprintDto dto = BlueprintDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -118,14 +241,14 @@ class OwnerBlueprintDtoProcessorTest {
                 .redeemRuleDtos(null)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
+            blueprintDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
 
     @Test
     @Transactional
-    void preprocessForPostNegativeNumMaxIssues() {
+    void preprocessForPostSingleNegativeNumMaxIssues() {
         BlueprintDto dto = BlueprintDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -145,13 +268,13 @@ class OwnerBlueprintDtoProcessorTest {
                 .redeemRuleDtos(null)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
+            blueprintDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostNegativeNumMaxStamps() {
+    void preprocessForPostSingleNegativeNumMaxStamps() {
         BlueprintDto dto = BlueprintDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -171,13 +294,13 @@ class OwnerBlueprintDtoProcessorTest {
                 .redeemRuleDtos(null)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
+            blueprintDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostZeroNumMaxRedeems() {
+    void preprocessForPostSingleZeroNumMaxRedeems() {
         BlueprintDto dto = BlueprintDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -197,13 +320,13 @@ class OwnerBlueprintDtoProcessorTest {
                 .redeemRuleDtos(null)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
+            blueprintDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostZeroNumMaxIssuesPerCustomer() {
+    void preprocessForPostSingleZeroNumMaxIssuesPerCustomer() {
         BlueprintDto dto = BlueprintDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -223,13 +346,13 @@ class OwnerBlueprintDtoProcessorTest {
                 .redeemRuleDtos(null)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
+            blueprintDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostExpired() {
+    void preprocessForPostSingleExpired() {
         BlueprintDto dto = BlueprintDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -249,13 +372,13 @@ class OwnerBlueprintDtoProcessorTest {
                 .redeemRuleDtos(null)
                 .build();
         assertThrows(DtoProcessingException.class, () -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
+            blueprintDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostNullIsPublishing() {
+    void preprocessForPostSingleNullIsPublishing() {
         BlueprintDto dto = BlueprintDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -275,13 +398,13 @@ class OwnerBlueprintDtoProcessorTest {
                 .redeemRuleDtos(null)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
+            blueprintDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostStoreNotFound() {
+    void preprocessForPostSingleStoreNotFound() {
         BlueprintDto dto = BlueprintDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -301,13 +424,13 @@ class OwnerBlueprintDtoProcessorTest {
                 .redeemRuleDtos(null)
                 .build();
         assertThrows(ResourceNotFoundException.class, () -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
+            blueprintDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostStoreInactive() {
+    void preprocessForPostSingleStoreInactive() {
         Store originalStore = storeRepository.findById(1L).orElseThrow();
         originalStore.setIsInactive(true);
         storeRepository.save(originalStore);
@@ -331,7 +454,7 @@ class OwnerBlueprintDtoProcessorTest {
                 .redeemRuleDtos(null)
                 .build();
         assertThrows(DtoProcessingException.class, () -> {
-            blueprintDtoProcessor.preprocessForPost(dto);
+            blueprintDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 

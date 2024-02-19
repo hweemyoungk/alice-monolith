@@ -2,6 +2,8 @@ package cards.alice.monolith.customer.repositories;
 
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.repositories.CardRepository;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
@@ -57,6 +59,17 @@ public interface CustomerCardRepository extends CardRepository {
 
     @Override
     @PostAuthorize("returnObject.isEmpty() ? true : authentication.name == returnObject.get().customerId.toString()")
-    @Query("select c from Card c where c.id = :id and c.isDeleted = false")
+    @Query("""
+            select c from Card c
+            where c.id = :id
+            and c.isDeleted = false""")
     Optional<Card> findById(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @PostAuthorize("returnObject.isEmpty() ? true : authentication.name == returnObject.get().customerId.toString()")
+    @Query("""
+            select c from Card c
+            where c.id = :id
+            and c.isDeleted = false""")
+    Optional<Card> exclusiveLockById(@Param("id") Long id);
 }

@@ -4,15 +4,12 @@ import cards.alice.monolith.common.domain.RedeemRule;
 import cards.alice.monolith.common.models.RedeemRuleDto;
 import cards.alice.monolith.common.web.mappers.RedeemRuleMapper;
 import cards.alice.monolith.owner.models.processors.OwnerRedeemRuleDtoProcessor;
-import cards.alice.monolith.owner.repositories.OwnerBlueprintRepository;
 import cards.alice.monolith.owner.repositories.OwnerRedeemRuleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -21,7 +18,6 @@ import java.util.stream.Collectors;
 public class OwnerRedeemRuleServiceImpl implements OwnerRedeemRuleService {
     private final OwnerRedeemRuleRepository redeemRuleRepository;
     private final RedeemRuleMapper redeemRuleMapper;
-    private final OwnerBlueprintRepository blueprintRepository;
     private final OwnerRedeemRuleDtoProcessor redeemRuleDtoProcessor;
 
     @Override
@@ -34,9 +30,6 @@ public class OwnerRedeemRuleServiceImpl implements OwnerRedeemRuleService {
     public Set<RedeemRuleDto> listRedeemRules(Long blueprintId, Set<Long> ids) {
         final Set<RedeemRule> redeemRules;
         if (ids == null) {
-            //final Blueprint blueprint = blueprintRepository.findById(blueprintId)
-            //        .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, blueprintId));
-            //redeemRules = blueprint.getRedeemRules();
             redeemRules = redeemRuleRepository.findByBlueprint_Id(blueprintId);
         } else {
             redeemRules = redeemRuleRepository.findByBlueprint_IdAndIdIn(blueprintId, ids);
@@ -51,22 +44,45 @@ public class OwnerRedeemRuleServiceImpl implements OwnerRedeemRuleService {
     @Override
     @Transactional
     public Set<RedeemRuleDto> saveRedeemRules(Set<RedeemRuleDto> redeemRuleDtos) {
-        return redeemRuleDtos.stream().map(redeemRuleDto -> {
-            if (redeemRuleDto.getId() == null) {
+        // Split to PUT and POST
+        var redeemRuleDtosForPost = new ArrayList<RedeemRuleDto>();
+        var redeemRuleDtosForPut = new ArrayList<RedeemRuleDto>();
+        redeemRuleDtos.forEach(dto -> {
+            if (dto.getId() == null) {
                 // New: Post
-                return saveNewRedeemRule(redeemRuleDto);
+                redeemRuleDtosForPost.add(dto);
+                return;
             }
-            // Modifying: Put
-            return updateRedeemRuleById(redeemRuleDto.getId(), redeemRuleDto)
-                    .orElse(null);
-        }).filter(Objects::nonNull).collect(Collectors.toSet());
+            redeemRuleDtosForPut.add(dto);
+        });
+
+        final HashSet<RedeemRuleDto> mergedRedeemRuleDtos = new HashSet<>();
+
+        // Save new
+        if (!redeemRuleDtosForPost.isEmpty()) {
+            var savedNewRedeemRuleDtos = saveNewRedeemRules(redeemRuleDtosForPost);
+            mergedRedeemRuleDtos.addAll(savedNewRedeemRuleDtos);
+        }
+
+        // Modify old
+        var modifiedRedeemRuleDtos = redeemRuleDtosForPut.stream().map(dto -> updateRedeemRuleById(dto.getId(), dto).orElse(null)).toList();
+        mergedRedeemRuleDtos.addAll(modifiedRedeemRuleDtos);
+
+        mergedRedeemRuleDtos.remove(null);
+        return mergedRedeemRuleDtos;
+    }
+
+    public List<RedeemRuleDto> saveNewRedeemRules(List<RedeemRuleDto> redeemRuleDtos) {
+        var preprocessedForPost = redeemRuleDtoProcessor.preprocessForPost(redeemRuleDtos);
+        return redeemRuleRepository.saveAll(preprocessedForPost.stream().map(redeemRuleMapper::toEntity).toList())
+                .stream().map(redeemRuleMapper::toDto).toList();
     }
 
     @Override
     @Transactional
     public RedeemRuleDto saveNewRedeemRule(RedeemRuleDto redeemRuleDto) {
         final RedeemRuleDto preprocessedForPost = redeemRuleDtoProcessor
-                .preprocessForPost(redeemRuleDto);
+                .preprocessForPostSingle(redeemRuleDto);
         return redeemRuleMapper.toDto(redeemRuleRepository
                 .save(redeemRuleMapper.toEntity(preprocessedForPost)));
     }

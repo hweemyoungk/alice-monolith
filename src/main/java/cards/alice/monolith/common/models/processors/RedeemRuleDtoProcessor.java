@@ -1,6 +1,8 @@
 package cards.alice.monolith.common.models.processors;
 
 import cards.alice.monolith.common.models.RedeemRuleDto;
+import org.springframework.validation.annotation.Validated;
 
-public interface RedeemRuleDtoProcessor extends DtoProcessor<RedeemRuleDto, Long> {
+@Validated
+public abstract class RedeemRuleDtoProcessor extends CommonDtoProcessor<RedeemRuleDto, Long> {
 }

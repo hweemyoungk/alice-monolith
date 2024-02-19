@@ -1,6 +1,8 @@
 package cards.alice.monolith.common.models.processors;
 
 import cards.alice.monolith.common.models.StoreDto;
+import org.springframework.validation.annotation.Validated;
 
-public interface StoreDtoProcessor extends DtoProcessor<StoreDto, Long> {
+@Validated
+public abstract class StoreDtoProcessor extends CommonDtoProcessor<StoreDto, Long> {
 }

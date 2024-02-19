@@ -2,6 +2,8 @@ package cards.alice.monolith.owner.models.processors;
 
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.RedeemRule;
+import cards.alice.monolith.common.models.MembershipDto;
+import cards.alice.monolith.common.models.OwnerMembershipDto;
 import cards.alice.monolith.common.models.RedeemDto;
 import cards.alice.monolith.common.models.RedeemRuleDto;
 import cards.alice.monolith.common.repositories.BlueprintRepository;
@@ -13,6 +15,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -21,15 +24,18 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.SmartValidator;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
 
 @SpringBootTest
 @WithMockUser(
         username = "de36b13b-2397-445e-89cd-8e817e0f441e",
-        roles = {"owner"})
+        roles = {"owner-alpha"})
 @ActiveProfiles({"default", "local", "bootstrap"})
 class OwnerRedeemRuleDtoProcessorTest {
     @Autowired
@@ -70,12 +76,9 @@ class OwnerRedeemRuleDtoProcessorTest {
         originalRedeemRule = null;
     }
 
-    @Test
-    @Transactional
-    @Rollback
-    void preprocessForPost() {
+    private RedeemRuleDto legalDto() {
         RedeemDto redeemDto = RedeemDto.builder().build();
-        RedeemRuleDto dto = RedeemRuleDto.builder()
+        return RedeemRuleDto.builder()
                 .displayName("Dummy Display Name")
                 .isDeleted(false)
                 .description("This is dummy description.")
@@ -83,15 +86,108 @@ class OwnerRedeemRuleDtoProcessorTest {
                 .blueprintId(1L)
                 .redeemDtos(Set.of(redeemDto))
                 .build();
-        assertDoesNotThrow(() -> {
-            redeemRuleDtoProcessor.preprocessForPost(dto);
+    }
+
+    @Test
+    @Transactional
+    void preprocessForPost() {
+        RedeemRuleDto dto1 = legalDto();
+        RedeemRuleDto dto2 = legalDto();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    OwnerMembershipDto.builder()
+                            .version(0)
+                            .displayName("owner-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalStores(-1)
+                            .numMaxCurrentTotalStores(-1)
+                            .numMaxCurrentActiveStores(-1)
+                            .numMaxCurrentTotalBlueprintsPerStore(-1)
+                            .numMaxCurrentActiveBlueprintsPerStore(-1)
+                            .numMaxCurrentTotalRedeemRulesPerBlueprint(-1)
+                            .numMaxCurrentActiveRedeemRulesPerBlueprint(-1)
+                            .build()
+            );
+            assertDoesNotThrow(() -> {
+                redeemRuleDtoProcessor.preprocessForPost(List.of(dto1, dto2));
+            });
+        }
+    }
+
+    @Test
+    void preprocessForPostBoundToMultipleStores() {
+        RedeemRuleDto dto1 = legalDto();
+        dto1.setBlueprintId(1L);
+        RedeemRuleDto dto2 = legalDto();
+        dto2.setBlueprintId(2L);
+        assertThrows(DtoProcessingException.class, () -> {
+            redeemRuleDtoProcessor.preprocessForPost(List.of(dto1, dto2));
         });
+    }
+
+    @Test
+    void preprocessForPostExceedsNumMaxAccumulatedTotalStores() {
+        RedeemRuleDto dto = legalDto();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    OwnerMembershipDto.builder()
+                            .version(0)
+                            .displayName("owner-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalStores(-1)
+                            .numMaxCurrentTotalStores(-1)
+                            .numMaxCurrentActiveStores(-1)
+                            .numMaxCurrentTotalBlueprintsPerStore(-1)
+                            .numMaxCurrentActiveBlueprintsPerStore(-1)
+                            .numMaxCurrentTotalRedeemRulesPerBlueprint(0)
+                            .numMaxCurrentActiveRedeemRulesPerBlueprint(-1)
+                            .build()
+            );
+            assertThrows(DtoProcessingException.class, () -> {
+                redeemRuleDtoProcessor.preprocessForPost(List.of(dto));
+            });
+        }
     }
 
     @Test
     @Transactional
     @Rollback
-    void preprocessForPostLongDisplayName() {
+    void preprocessForPostSingle() {
+        RedeemRuleDto dto = legalDto();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    OwnerMembershipDto.builder()
+                            .version(0)
+                            .displayName("owner-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalStores(-1)
+                            .numMaxCurrentTotalStores(-1)
+                            .numMaxCurrentActiveStores(-1)
+                            .numMaxCurrentTotalBlueprintsPerStore(-1)
+                            .numMaxCurrentActiveBlueprintsPerStore(-1)
+                            .numMaxCurrentTotalRedeemRulesPerBlueprint(-1)
+                            .numMaxCurrentActiveRedeemRulesPerBlueprint(-1)
+                            .build()
+            );
+            assertDoesNotThrow(() -> {
+                redeemRuleDtoProcessor.preprocessForPostSingle(dto);
+            });
+        }
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void preprocessForPostSingleLongDisplayName() {
         RedeemRuleDto dto = RedeemRuleDto.builder()
                 .displayName("Dummy Display Name Dummy Display Name Dummy Display Name ")
                 .isDeleted(false)
@@ -100,14 +196,14 @@ class OwnerRedeemRuleDtoProcessorTest {
                 .blueprintId(1L)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            redeemRuleDtoProcessor.preprocessForPost(dto);
+            redeemRuleDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
     @Rollback
-    void preprocessForPostNullDeleted() {
+    void preprocessForPostSingleNullDeleted() {
         RedeemRuleDto dto = RedeemRuleDto.builder()
                 .displayName("Dummy Display Name")
                 .isDeleted(null)
@@ -116,14 +212,14 @@ class OwnerRedeemRuleDtoProcessorTest {
                 .blueprintId(1L)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            redeemRuleDtoProcessor.preprocessForPost(dto);
+            redeemRuleDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
     @Rollback
-    void preprocessForPostLongDescription() {
+    void preprocessForPostSingleLongDescription() {
         RedeemRuleDto dto = RedeemRuleDto.builder()
                 .displayName("Dummy Display Name")
                 .isDeleted(false)
@@ -139,14 +235,14 @@ class OwnerRedeemRuleDtoProcessorTest {
                 .blueprintId(1L)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            redeemRuleDtoProcessor.preprocessForPost(dto);
+            redeemRuleDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
     @Rollback
-    void preprocessForPostNegativeConsumes() {
+    void preprocessForPostSingleNegativeConsumes() {
         RedeemRuleDto dto = RedeemRuleDto.builder()
                 .displayName("Dummy Display Name")
                 .isDeleted(false)
@@ -155,14 +251,14 @@ class OwnerRedeemRuleDtoProcessorTest {
                 .blueprintId(1L)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            redeemRuleDtoProcessor.preprocessForPost(dto);
+            redeemRuleDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
     @Rollback
-    void preprocessForPostConsumesOverMaxStamp() {
+    void preprocessForPostSingleConsumesOverMaxStamp() {
         RedeemRuleDto dto = RedeemRuleDto.builder()
                 .displayName("Dummy Display Name")
                 .isDeleted(false)
@@ -171,14 +267,14 @@ class OwnerRedeemRuleDtoProcessorTest {
                 .blueprintId(1L)
                 .build();
         assertThrows(DtoProcessingException.class, () -> {
-            redeemRuleDtoProcessor.preprocessForPost(dto);
+            redeemRuleDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
     @Rollback
-    void preprocessForPostBlueprintNotFound() {
+    void preprocessForPostSingleBlueprintNotFound() {
         RedeemRuleDto dto = RedeemRuleDto.builder()
                 .displayName("Dummy Display Name")
                 .isDeleted(false)
@@ -187,7 +283,7 @@ class OwnerRedeemRuleDtoProcessorTest {
                 .blueprintId(10L)
                 .build();
         assertThrows(ResourceNotFoundException.class, () -> {
-            redeemRuleDtoProcessor.preprocessForPost(dto);
+            redeemRuleDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 

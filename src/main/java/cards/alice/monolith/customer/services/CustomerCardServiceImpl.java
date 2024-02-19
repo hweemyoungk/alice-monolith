@@ -10,9 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -27,7 +25,7 @@ public class CustomerCardServiceImpl implements CustomerCardService {
     @Override
     @Transactional
     public CardDto saveNewCard(CardDto cardDto) {
-        final CardDto preprocessedForPost = cardProcessor.preprocessForPost(cardDto);
+        final CardDto preprocessedForPost = cardProcessor.preprocessForPostSingle(cardDto);
         final Card card = cardMapper.toEntity(preprocessedForPost);
         return cardMapper.toDto(
                 cardRepository.save(card));

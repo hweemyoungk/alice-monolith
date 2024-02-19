@@ -3,14 +3,18 @@ package cards.alice.monolith.customer.models.processors;
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.CardDto;
+import cards.alice.monolith.common.models.CustomerMembershipDto;
+import cards.alice.monolith.common.models.MembershipDto;
 import cards.alice.monolith.common.repositories.BlueprintRepository;
 import cards.alice.monolith.common.repositories.CardRepository;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.common.web.mappers.CardMapper;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -18,15 +22,21 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mockStatic;
 
 @SpringBootTest
 @WithMockUser(
         username = "de36b13b-2397-445e-89cd-8e817e0f441e",
-        roles = {"owner"})
+        roles = {"customer-alpha"})
 @ActiveProfiles({"default", "local", "bootstrap"})
+@Transactional
 class CustomerCardDtoProcessorTest {
     @Autowired
     CustomerCardDtoProcessor cardDtoProcessor;
@@ -67,8 +77,119 @@ class CustomerCardDtoProcessorTest {
         originalCard = null;
     }
 
+    CardDto legalDto() {
+        return CardDto.builder()
+                .id(-1L)
+                .version(-1)
+                .displayName("Dummy Display Name")
+                .isDeleted(true)
+                .numCollectedStamps(blueprint.getNumMaxStamps()) // blueprint: 50
+                .numGoalStamps(blueprint.getNumMaxStamps())
+                .expirationDate(OffsetDateTime.now().minusSeconds(1L))
+                .isFavorite(false)
+                .numRedeemed(blueprint.getNumMaxRedeems() - 1) // blueprint: 5
+                .isDiscarded(false)
+                .isUsedOut(false)
+                .isInactive(false)
+                .customerId(UUID.fromString("de36b13b-2397-445e-89cd-8e817e0f441e"))
+                .blueprintId(1L)
+                .build();
+    }
+
     @Test
     void preprocessForPost() {
+        CardDto dto1 = legalDto();
+        CardDto dto2 = legalDto();
+        assertDoesNotThrow(() -> {
+            cardDtoProcessor.preprocessForPost(List.of(dto1, dto2));
+        });
+    }
+
+    @Test
+    void preprocessForPostNullDtos() {
+        assertThrows(ConstraintViolationException.class, () -> {
+            cardDtoProcessor.preprocessForPost((Collection<CardDto>) null);
+        });
+    }
+
+    @Test
+    void preprocessForPostEmptyDtos() {
+        assertThrows(ConstraintViolationException.class, () -> {
+            cardDtoProcessor.preprocessForPost(new HashSet<>());
+        });
+    }
+
+    // Validated by preprocessForPost(@NotEmpty @Valid Collection<CardDto> dtos)
+    /*@Test
+    void preprocessForPostNullBlueprintId() {
+        CardDto dto1 = legalDto();
+        dto1.setBlueprintId(null);
+        CardDto dto2 = legalDto();
+        dto2.setBlueprintId(2L);
+        assertThrows(DtoProcessingException.class, () -> {
+            cardDtoProcessor.preprocessForPost(List.of(dto1, dto2));
+        });
+    }*/
+
+    @Test
+    void preprocessForPostBoundToMultipleBlueprints() {
+        CardDto dto1 = legalDto();
+        dto1.setBlueprintId(1L);
+        CardDto dto2 = legalDto();
+        dto2.setBlueprintId(2L);
+        assertThrows(DtoProcessingException.class, () -> {
+            cardDtoProcessor.preprocessForPost(List.of(dto1, dto2));
+        });
+    }
+
+    @Test
+    void preprocessForPostExceedsNumMaxAccumulatedTotalCards() {
+        CardDto dto = legalDto();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    CustomerMembershipDto.builder()
+                            .version(0)
+                            .displayName("customer-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalCards(0)
+                            .numMaxCurrentTotalCards(-1)
+                            .numMaxCurrentActiveCards(-1)
+                            .build()
+            );
+            assertThrows(DtoProcessingException.class, () -> {
+                cardDtoProcessor.preprocessForPost(List.of(dto));
+            });
+        }
+    }
+
+    @Test
+    void preprocessForPostExceedsNumMaxMaxCurrentTotalCards() {
+        CardDto dto = legalDto();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    CustomerMembershipDto.builder()
+                            .version(0)
+                            .displayName("customer-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalCards(-1)
+                            .numMaxCurrentTotalCards(0)
+                            .numMaxCurrentActiveCards(-1)
+                            .build()
+            );
+            assertThrows(DtoProcessingException.class, () -> {
+                cardDtoProcessor.preprocessForPost(List.of(dto));
+            });
+        }
+    }
+
+    @Test
+    void preprocessForPostExceedsNumMaxCurrentActiveCards() {
         CardDto dto = CardDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -85,13 +206,59 @@ class CustomerCardDtoProcessorTest {
                 .customerId(UUID.fromString("de36b13b-2397-445e-89cd-8e817e0f441e"))
                 .blueprintId(1L)
                 .build();
+        try (MockedStatic<MembershipDto> mockedStaticMembershipDto = mockStatic(MembershipDto.class)) {
+            mockedStaticMembershipDto.when(() -> MembershipDto.highestPriority(any())).thenReturn(
+                    CustomerMembershipDto.builder()
+                            .version(0)
+                            .displayName("customer-alpha")
+                            .createdDate(null)
+                            .lastModifiedDate(null)
+                            .isDeleted(Boolean.FALSE)
+                            .priority(1)
+                            .numMaxAccumulatedTotalCards(-1)
+                            .numMaxCurrentTotalCards(-1)
+                            .numMaxCurrentActiveCards(0)
+                            .build()
+            );
+            assertThrows(DtoProcessingException.class, () -> {
+                cardDtoProcessor.preprocessForPost(List.of(dto));
+            });
+        }
+    }
+
+    @Test
+    void preprocessForPostSingle() {
+        CardDto dto = legalDto();
         assertDoesNotThrow(() -> {
-            cardDtoProcessor.preprocessForPost(dto);
+            cardDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
-    void preprocessForPostBlueprintNotFound() {
+    void preprocessForPostSingleNullIsDiscarded() {
+        CardDto dto = CardDto.builder()
+                .id(-1L)
+                .version(-1)
+                .displayName("Dummy Display Name")
+                .isDeleted(true)
+                .numCollectedStamps(blueprint.getNumMaxStamps()) // blueprint: 50
+                .numGoalStamps(blueprint.getNumMaxStamps())
+                .expirationDate(OffsetDateTime.now().minusSeconds(1L))
+                .isFavorite(false)
+                .numRedeemed(blueprint.getNumMaxRedeems() - 1) // blueprint: 5
+                .isDiscarded(null)
+                .isUsedOut(false)
+                .isInactive(false)
+                .customerId(UUID.fromString("de36b13b-2397-445e-89cd-8e817e0f441e"))
+                .blueprintId(1L)
+                .build();
+        assertThrows(ConstraintViolationException.class, () -> {
+            cardDtoProcessor.preprocessForPostSingle(dto);
+        });
+    }
+
+    @Test
+    void preprocessForPostSingleBlueprintNotFound() {
         CardDto dto = CardDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -109,12 +276,12 @@ class CustomerCardDtoProcessorTest {
                 .blueprintId(10L)
                 .build();
         assertThrows(ResourceNotFoundException.class, () -> {
-            cardDtoProcessor.preprocessForPost(dto);
+            cardDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
-    void preprocessForPostNotDefaultValues() {
+    void preprocessForPostSingleNotDefaultValues() {
         CardDto dto = CardDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -131,7 +298,7 @@ class CustomerCardDtoProcessorTest {
                 .customerId(UUID.fromString("de36b13b-2397-445e-89cd-8e817e0f441e"))
                 .blueprintId(1L)
                 .build();
-        CardDto preprocessedForPost = cardDtoProcessor.preprocessForPost(dto);
+        CardDto preprocessedForPost = cardDtoProcessor.preprocessForPostSingle(dto);
         assertFalse(preprocessedForPost.getIsDeleted());
         assertFalse(preprocessedForPost.getIsDiscarded());
         assertFalse(preprocessedForPost.getIsUsedOut());
@@ -141,7 +308,7 @@ class CustomerCardDtoProcessorTest {
     }
 
     @Test
-    void preprocessForPostTooMuchNumGoalStamps() {
+    void preprocessForPostSingleTooMuchNumGoalStamps() {
         CardDto dto = CardDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -158,12 +325,12 @@ class CustomerCardDtoProcessorTest {
                 .customerId(UUID.fromString("de36b13b-2397-445e-89cd-8e817e0f441e"))
                 .blueprintId(1L)
                 .build();
-        CardDto preprocessedForPost = cardDtoProcessor.preprocessForPost(dto);
+        CardDto preprocessedForPost = cardDtoProcessor.preprocessForPostSingle(dto);
         assertEquals(blueprint.getNumMaxStamps(), preprocessedForPost.getNumGoalStamps());
     }
 
     @Test
-    void preprocessForPostUnknownCustomerId() {
+    void preprocessForPostSingleUnknownCustomerId() {
         CardDto dto = CardDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -181,7 +348,7 @@ class CustomerCardDtoProcessorTest {
                 .blueprintId(1L)
                 .build();
         assertThrows(DtoProcessingException.class, () -> {
-            cardDtoProcessor.preprocessForPost(dto);
+            cardDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 

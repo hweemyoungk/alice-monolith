@@ -3,30 +3,99 @@ package cards.alice.monolith.customer.models.processors;
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.CardDto;
+import cards.alice.monolith.common.models.CustomerMembershipDto;
+import cards.alice.monolith.common.models.MembershipDto;
 import cards.alice.monolith.common.models.processors.CardDtoProcessor;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.customer.repositories.CustomerBlueprintRepository;
 import cards.alice.monolith.customer.repositories.CustomerCardRepository;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Validated
 @RequiredArgsConstructor
-public class CustomerCardDtoProcessor implements CardDtoProcessor {
+public class CustomerCardDtoProcessor extends CardDtoProcessor {
     private final CustomerCardRepository customerCardRepository;
     private final CustomerBlueprintRepository customerBlueprintRepository;
+    private final Map<String, CustomerMembershipDto> customerMembershipMap;
+
+    /**
+     * Every CardDto must have the SAME blueprint id.
+     */
+    @Override
+    public Collection<CardDto> preprocessForPost(@NotEmpty @Valid Collection<CardDto> dtos) {
+        checkBoundToSingleBlueprint(dtos);
+        return super.preprocessForPost(dtos);
+    }
+
+    private void checkBoundToSingleBlueprint(Collection<CardDto> dtos) {
+        final Set<Long> ids = dtos.stream().map(CardDto::getBlueprintId).collect(Collectors.toSet());
+        if (ids.contains(null) || ids.size() != 1) {
+            throw new DtoProcessingException("Failed to preprocess CardDtos",
+                    Set.of("CardDtos bound to multiple blueprints: " + ids));
+        }
+    }
 
     @Override
-    public CardDto preprocessForPost(@Valid CardDto dto) {
+    protected void checkMembershipForPost(Collection<CardDto> dtos) {
+        final Set<String> violationMessages = new HashSet<>();
+        final UUID customerId = UUID.fromString(SecurityContextHolder.getContext()
+                .getAuthentication().getName());
+        final CustomerMembershipDto highestCustomerMembership = (CustomerMembershipDto) MembershipDto
+                .highestPriority(CustomerMembershipDto
+                        .getCurrentCustomerMemberships(customerMembershipMap));
+
+        final Optional<CardDto> sampleDto = dtos.stream().findAny();
+        if (sampleDto.isEmpty()) {
+            violationMessages.add("No CardDto provided");
+            throw new DtoProcessingException("Failed to check membership for CardDtos", violationMessages);
+        }
+
+        // @Min(-1) numMaxAccumulatedTotalCards;
+        // Includes DELETED cards
+        if (highestCustomerMembership.getNumMaxAccumulatedTotalCards() != -1) {
+            long numAccumulatedTotal = customerCardRepository.exclusiveCountByCustomerId(customerId);
+            if (highestCustomerMembership.getNumMaxAccumulatedTotalCards() < numAccumulatedTotal + dtos.size()) {
+                violationMessages.add("Exceeded maximum accumulated total cards.");
+            }
+        }
+
+        // @Min(-1) numMaxCurrentTotalCards;
+        // NOT includes DELETED cards
+        if (highestCustomerMembership.getNumMaxCurrentTotalCards() != -1) {
+            long numCurrentTotal = customerCardRepository.exclusiveCountByCustomerIdAndIsDeleted(
+                    customerId, Boolean.FALSE);
+            if (highestCustomerMembership.getNumMaxCurrentTotalCards() < numCurrentTotal + dtos.size()) {
+                violationMessages.add("Exceeded maximum current total cards.");
+            }
+        }
+
+        // @Min(-1) numMaxCurrentActiveCards;
+        // NOT includes DELETED nor INACTIVE cards
+        if (highestCustomerMembership.getNumMaxCurrentActiveCards() != -1) {
+            long numCurrentActive = customerCardRepository.exclusiveCountByCustomerIdAndIsDeletedAndIsInactive(
+                    customerId, Boolean.FALSE, Boolean.FALSE);
+            if (highestCustomerMembership.getNumMaxCurrentActiveCards() < numCurrentActive + dtos.size()) {
+                violationMessages.add("Exceeded maximum current active cards.");
+            }
+        }
+
+        if (!violationMessages.isEmpty()) {
+            throw new DtoProcessingException("Failed to check membership for CardDtos", violationMessages);
+        }
+    }
+
+    @Override
+    protected CardDto preprocessForPost(CardDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
         // @NotNull @Positive blueprintId;
@@ -116,7 +185,7 @@ public class CustomerCardDtoProcessor implements CardDtoProcessor {
     public CardDto preprocessForPut(Long id, @Valid CardDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
-        final Card originalCard = customerCardRepository.findById(id)
+        final Card originalCard = customerCardRepository.exclusiveLockById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(Card.class, id));
         final Blueprint blueprint = originalCard.getBlueprint();
 

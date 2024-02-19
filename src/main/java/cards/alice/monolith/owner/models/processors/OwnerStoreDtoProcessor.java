@@ -1,6 +1,8 @@
 package cards.alice.monolith.owner.models.processors;
 
 import cards.alice.monolith.common.domain.Store;
+import cards.alice.monolith.common.models.MembershipDto;
+import cards.alice.monolith.common.models.OwnerMembershipDto;
 import cards.alice.monolith.common.models.StoreDto;
 import cards.alice.monolith.common.models.processors.StoreDtoProcessor;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
@@ -12,17 +14,79 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Component
 @Validated
 @RequiredArgsConstructor
-public class OwnerStoreDtoProcessor implements StoreDtoProcessor {
+public class OwnerStoreDtoProcessor extends StoreDtoProcessor {
     private final OwnerStoreRepository storeRepository;
+    private final Map<String, OwnerMembershipDto> ownerMembershipMap;
+
+    protected void checkMembershipForPost(Collection<StoreDto> dtos) {
+        final Set<String> violationMessages = new HashSet<>();
+
+        final UUID ownerId = UUID.fromString(SecurityContextHolder.getContext()
+                .getAuthentication().getName());
+        final OwnerMembershipDto highestOwnerMembership = (OwnerMembershipDto) MembershipDto
+                .highestPriority(OwnerMembershipDto
+                        .getCurrentOwnerMemberships(ownerMembershipMap));
+
+        final Optional<StoreDto> sampleDto = dtos.stream().findAny();
+        if (sampleDto.isEmpty()) {
+            violationMessages.add("No StoreDto provided");
+            throw new DtoProcessingException("Failed to check membership for StoreDtos", violationMessages);
+        }
+
+        // @Min(-1) numMaxAccumulatedTotalStores;
+        // Includes DELETED stores
+        if (highestOwnerMembership.getNumMaxAccumulatedTotalStores() != -1) {
+            long numMaxAccumulatedTotal = storeRepository.exclusiveCountByOwnerId(ownerId);
+            if (highestOwnerMembership.getNumMaxAccumulatedTotalStores() < numMaxAccumulatedTotal + dtos.size()) {
+                violationMessages.add("Exceeded maximum accumulated total stores.");
+            }
+        }
+
+        // @Min(-1) numMaxCurrentTotalStores;
+        // NOT includes DELETED stores
+        if (highestOwnerMembership.getNumMaxCurrentTotalStores() != -1) {
+            long numMaxCurrentTotal = storeRepository.exclusiveCountByOwnerIdAndIsDeleted(
+                    ownerId, Boolean.FALSE);
+            if (highestOwnerMembership.getNumMaxCurrentTotalStores() < numMaxCurrentTotal + dtos.size()) {
+                violationMessages.add("Exceeded maximum current total stores.");
+            }
+        }
+
+
+        // @Min(-1) numMaxCurrentActiveStores;
+        // NOT includes DELETED nor INACTIVE stores
+        if (highestOwnerMembership.getNumMaxCurrentActiveStores() != -1) {
+            long numMaxCurrentActive = storeRepository.exclusiveCountByOwnerIdAndIsDeletedAndIsInactive(
+                    ownerId, Boolean.FALSE, Boolean.FALSE);
+            if (highestOwnerMembership.getNumMaxCurrentActiveStores() < numMaxCurrentActive + dtos.size()) {
+                violationMessages.add("Exceeded maximum current active stores.");
+            }
+        }
+
+        // @Min(-1) numMaxCurrentTotalBlueprintsPerStore;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentActiveBlueprintsPerStore;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentTotalRedeemRulesPerBlueprint;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentActiveRedeemRulesPerBlueprint;
+        // Not relevant
+
+        if (!violationMessages.isEmpty()) {
+            throw new DtoProcessingException("Failed to check membership for StoreDtos", violationMessages);
+        }
+    }
 
     @Override
-    public StoreDto preprocessForPost(@Valid StoreDto dto) {
+    protected StoreDto preprocessForPost(StoreDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
         // id

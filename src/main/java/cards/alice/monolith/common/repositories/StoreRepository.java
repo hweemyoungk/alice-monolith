@@ -20,4 +20,31 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
             where (:ownerId is null or s.ownerId = :ownerId)
             and s.id in :ids""")
     Set<Store> findByOwnerIdAndIdIn(@Param("ownerId") @Nullable UUID ownerId, @Param("ids") @NonNull Collection<Long> ids);
+
+    @Query(value = """
+            select count(0) from (
+            select 0 from store as s
+            where s.owner_id = :ownerId
+            for update)""",
+            nativeQuery = true)
+    long exclusiveCountByOwnerId(@Param("ownerId") @NonNull UUID ownerId);
+
+    @Query(value = """
+            select count(0) from (
+            select 0 from store as s
+            where s.owner_id = :ownerId
+            and s.is_deleted = :isDeleted
+            for update)""",
+            nativeQuery = true)
+    long exclusiveCountByOwnerIdAndIsDeleted(@Param("ownerId") @NonNull UUID ownerId, @Param("isDeleted") @NonNull Boolean isDeleted);
+
+    @Query(value = """
+            select count(0) from (
+            select 0 from store as s
+            where s.owner_id = :ownerId
+            and s.is_deleted = :isDeleted
+            and s.is_inactive = :isInactive
+            for update)""",
+            nativeQuery = true)
+    long exclusiveCountByOwnerIdAndIsDeletedAndIsInactive(@Param("ownerId") @NonNull UUID ownerId, @Param("isDeleted") @NonNull Boolean isDeleted, @Param("isInactive") @NonNull Boolean isInactive);
 }
