@@ -27,7 +27,7 @@ public class OwnerStampGrantServiceImpl implements OwnerStampGrantService {
     @Transactional
     public StampGrantDto grantStampsToCard(StampGrantDto stampGrantDto) {
         final StampGrantDto preprocessedForPost = stampGrantDtoProcessor
-                .preprocessForPost(stampGrantDto);
+                .preprocessForPostSingle(stampGrantDto);
 
         // Grant
         final Long cardId = preprocessedForPost.getCardId();

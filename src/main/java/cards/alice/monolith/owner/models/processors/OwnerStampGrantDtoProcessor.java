@@ -2,7 +2,7 @@ package cards.alice.monolith.owner.models.processors;
 
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.StampGrantDto;
-import cards.alice.monolith.common.models.processors.DtoProcessor;
+import cards.alice.monolith.common.models.processors.StampGrantDtoProcessor;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.owner.repositories.OwnerCardRepository;
@@ -11,17 +11,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 @Component
 @Validated
 @RequiredArgsConstructor
-public class OwnerStampGrantDtoProcessor implements DtoProcessor<StampGrantDto, Long> {
+public class OwnerStampGrantDtoProcessor extends StampGrantDtoProcessor {
     private final OwnerCardRepository cardRepository;
 
     @Override
-    public StampGrantDto preprocessForPost(@Valid StampGrantDto dto) {
+    protected void checkMembershipForPost(Collection<StampGrantDto> dtos) {
+        // NO-OP: Currently, StampGrant is not constrained by membership.
+    }
+
+    @Override
+    protected StampGrantDto preprocessForPost(StampGrantDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
         // id

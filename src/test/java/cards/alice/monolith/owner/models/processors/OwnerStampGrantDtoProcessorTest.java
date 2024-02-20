@@ -16,10 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Currently, OwnerStampGrantDtoProcessor#checkMembershipForPost is NO-OP.<br>
+ * So the only inner test target is OwnerStampGrantDtoProcessor#preprocessForPost,<br>
+ * which can just be tested by OwnerStampGrantDtoProcessor+preprocessForPostSingle.
+ */
 @SpringBootTest
 @WithMockUser(
         username = "de36b13b-2397-445e-89cd-8e817e0f441e",
-        roles = {"owner"})
+        roles = {"owner-alpha"})
 @ActiveProfiles({"default", "local", "bootstrap"})
 class OwnerStampGrantDtoProcessorTest {
     @Autowired
@@ -29,7 +34,7 @@ class OwnerStampGrantDtoProcessorTest {
 
     @Test
     @Transactional
-    void preprocessForPost() {
+    void preprocessForPostSingle() {
         StampGrantDto dto = StampGrantDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -39,13 +44,13 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(2)
                 .build();
         assertDoesNotThrow(() -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostNullIsDeleted() {
+    void preprocessForPostSingleNullIsDeleted() {
         StampGrantDto dto = StampGrantDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -55,13 +60,13 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(2)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostNullDisplayName() {
+    void preprocessForPostSingleNullDisplayName() {
         StampGrantDto dto = StampGrantDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -71,13 +76,13 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(2)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostBlankDisplayName() {
+    void preprocessForPostSingleBlankDisplayName() {
         StampGrantDto dto = StampGrantDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -87,13 +92,13 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(2)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostLongDisplayName() {
+    void preprocessForPostSingleLongDisplayName() {
         StampGrantDto dto = StampGrantDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -103,13 +108,13 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(2)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostCardNotFound() {
+    void preprocessForPostSingleCardNotFound() {
         StampGrantDto dto = StampGrantDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -119,7 +124,7 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(2)
                 .build();
         assertThrows(ResourceNotFoundException.class, () -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
@@ -128,7 +133,7 @@ class OwnerStampGrantDtoProcessorTest {
     @WithMockUser(
             username = "notexist-2397-445e-89cd-8e817e0f441e",
             roles = {"owner"})
-    void preprocessForPostUnauthorized() {
+    void preprocessForPostSingleUnauthorized() {
         StampGrantDto dto = StampGrantDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -138,13 +143,13 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(2)
                 .build();
         assertThrows(Throwable.class, () -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostCardInactive() {
+    void preprocessForPostSingleCardInactive() {
         Card card = cardRepository.findById(1L).orElseThrow();
         card.setIsInactive(true);
         cardRepository.save(card);
@@ -157,13 +162,13 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(2)
                 .build();
         assertThrows(DtoProcessingException.class, () -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostZeroGrant() {
+    void preprocessForPostSingleZeroGrant() {
         StampGrantDto dto = StampGrantDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -173,13 +178,13 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(0)
                 .build();
         assertThrows(ConstraintViolationException.class, () -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 
     @Test
     @Transactional
-    void preprocessForPostTooMuchGrant() {
+    void preprocessForPostSingleTooMuchGrant() {
         StampGrantDto dto = StampGrantDto.builder()
                 .id(-1L)
                 .version(-1)
@@ -189,7 +194,7 @@ class OwnerStampGrantDtoProcessorTest {
                 .numStamps(3)
                 .build();
         assertThrows(DtoProcessingException.class, () -> {
-            stampGrantDtoProcessor.preprocessForPost(dto);
+            stampGrantDtoProcessor.preprocessForPostSingle(dto);
         });
     }
 

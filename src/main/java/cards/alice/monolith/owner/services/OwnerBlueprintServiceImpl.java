@@ -32,7 +32,9 @@ public class OwnerBlueprintServiceImpl implements OwnerBlueprintService {
     public BlueprintDto saveNewBlueprint(BlueprintDto blueprintDto) {
         // Save blueprint without redeemRules
         final Set<RedeemRuleDto> redeemRuleDtos = blueprintDto.getRedeemRuleDtos();
-        final BlueprintDto preprocessedBlueprintDto = blueprintDtoProcessor.preprocessForPost(blueprintDto);
+
+        final BlueprintDto preprocessedBlueprintDto = blueprintDtoProcessor
+                .preprocessForPostSingle(blueprintDto);
         final Blueprint blueprint = blueprintMapper.toEntity(preprocessedBlueprintDto);
         final BlueprintDto savedBlueprintDto = blueprintMapper.toDto(
                 blueprintRepository.save(blueprint));

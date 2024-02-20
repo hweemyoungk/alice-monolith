@@ -35,7 +35,7 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
     public StoreDto saveNewStore(StoreDto storeDto) {
         final Set<BlueprintDto> blueprintDtos = storeDto.getBlueprintDtos();
         final StoreDto preprocessedForPost = storeDtoProcessor
-                .preprocessForPost(storeDto);
+                .preprocessForPostSingle(storeDto);
 
         // Save Store without Blueprints
         final Store store = storeMapper.toEntity(preprocessedForPost);

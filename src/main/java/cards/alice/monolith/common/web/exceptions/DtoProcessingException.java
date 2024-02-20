@@ -1,11 +1,13 @@
 package cards.alice.monolith.common.web.exceptions;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Getter
+@Setter
 public class DtoProcessingException extends RuntimeException {
     private final Set<String> violationMessages;
 

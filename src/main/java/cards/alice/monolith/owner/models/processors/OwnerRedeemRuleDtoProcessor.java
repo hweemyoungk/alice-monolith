@@ -2,6 +2,8 @@ package cards.alice.monolith.owner.models.processors;
 
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.RedeemRule;
+import cards.alice.monolith.common.models.MembershipDto;
+import cards.alice.monolith.common.models.OwnerMembershipDto;
 import cards.alice.monolith.common.models.RedeemRuleDto;
 import cards.alice.monolith.common.models.processors.RedeemRuleDtoProcessor;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
@@ -9,24 +11,90 @@ import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.owner.repositories.OwnerBlueprintRepository;
 import cards.alice.monolith.owner.repositories.OwnerRedeemRuleRepository;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Validated
 @RequiredArgsConstructor
-public class OwnerRedeemRuleDtoProcessor implements RedeemRuleDtoProcessor {
+public class OwnerRedeemRuleDtoProcessor extends RedeemRuleDtoProcessor {
     private final OwnerRedeemRuleRepository redeemRuleRepository;
     private final OwnerBlueprintRepository blueprintRepository;
+    private final Map<String, OwnerMembershipDto> ownerMembershipMap;
 
     @Override
-    public RedeemRuleDto preprocessForPost(@Valid RedeemRuleDto dto) {
+    public Collection<RedeemRuleDto> preprocessForPost(@NotEmpty @Valid Collection<RedeemRuleDto> dtos) {
+        checkBoundToSingleBlueprint(dtos);
+        return super.preprocessForPost(dtos);
+    }
+
+    private void checkBoundToSingleBlueprint(Collection<RedeemRuleDto> dtos) {
+        final Set<Long> ids = dtos.stream().map(RedeemRuleDto::getBlueprintId).collect(Collectors.toSet());
+        if (ids.contains(null) || ids.size() != 1) {
+            throw new DtoProcessingException("Failed to preprocess RedeemRuleDtos",
+                    Set.of("RedeemRuleDtos bound to multiple blueprints: " + ids));
+        }
+    }
+
+    @Override
+    protected void checkMembershipForPost(Collection<RedeemRuleDto> dtos) {
+        final Set<String> violationMessages = new HashSet<>();
+        final UUID ownerId = UUID.fromString(SecurityContextHolder.getContext()
+                .getAuthentication().getName());
+        final OwnerMembershipDto highestOwnerMembership = (OwnerMembershipDto) MembershipDto
+                .highestPriority(OwnerMembershipDto
+                        .getCurrentOwnerMemberships(ownerMembershipMap));
+
+        final Optional<RedeemRuleDto> sampleDto = dtos.stream().findAny();
+        if (sampleDto.isEmpty()) {
+            violationMessages.add("No RedeemRuleDto provided");
+            throw new DtoProcessingException("Failed to check membership for RedeemRuleDtos", violationMessages);
+        }
+
+        final Long blueprintId = sampleDto.get().getBlueprintId();
+
+        // @Min(-1) numMaxAccumulatedTotalStores;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentTotalStores;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentActiveStores;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentTotalBlueprintsPerStore;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentActiveBlueprintsPerStore;
+        // Not relevant
+
+        // @Min(-1) numMaxCurrentTotalRedeemRulesPerBlueprint;
+        // NOT includes DELETED redeemRules
+        if (highestOwnerMembership.getNumMaxCurrentTotalRedeemRulesPerBlueprint() != -1) {
+            long numCurrentTotalPerBlueprint = redeemRuleRepository.exclusiveCountByBlueprint_IdAndBlueprint_Store_OwnerIdAndIsDeleted(
+                    blueprintId, ownerId, Boolean.FALSE);
+            if (highestOwnerMembership.getNumMaxCurrentTotalRedeemRulesPerBlueprint() < numCurrentTotalPerBlueprint + dtos.size()) {
+                violationMessages.add("Exceeded maximum current total redeem rules of blueprint.");
+            }
+        }
+
+        // @Min(-1) numMaxCurrentActiveRedeemRulesPerBlueprint;
+        // Currently, there's no active/inactive redeem rules.
+
+        if (!violationMessages.isEmpty()) {
+            throw new DtoProcessingException("Failed to check membership for RedeemRuleDtos", violationMessages);
+        }
+    }
+
+    @Override
+    protected RedeemRuleDto preprocessForPost(RedeemRuleDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
         // blueprintId
@@ -75,6 +143,8 @@ public class OwnerRedeemRuleDtoProcessor implements RedeemRuleDtoProcessor {
 
         // redeemDtos
         // Ignored in input (preprocess)
+
+        // TODO: Isn't there concurrency issue when we implement and use bulk-check membership?
 
         if (!violationMessages.isEmpty()) {
             throw new DtoProcessingException("Failed to preprocess RedeemRuleDto", violationMessages);

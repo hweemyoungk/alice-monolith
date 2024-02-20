@@ -36,7 +36,7 @@ public class CustomerRedeemRequestServiceSplitImpl implements CustomerRedeemRequ
     @Transactional
     public RedeemRequestNewDto handlePostRedeemRequest(RedeemRequestNewDto redeemRequestDtoFromCustomer) {
         RedeemRequestNewDto preprocessedForPost = redeemRequestDtoProcessor
-                .preprocessForPost(redeemRequestDtoFromCustomer);
+                .preprocessForPostSingle(redeemRequestDtoFromCustomer);
 
         // Query Redis
         final var savedRedeemRequestDto = new AtomicReference<RedeemRequestNewDto>();
