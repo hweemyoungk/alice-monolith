@@ -11,21 +11,21 @@ import org.springframework.context.annotation.Configuration;
 public class KeycloakClientConfig {
     @Value("${cards.alice.auth.keycloak-url}")
     private String serverUrl;
-    @Value("${cards.alice.auth.realm-name}")
-    private String realm;
-    @Value("${cards.alice.auth.client-id}")
-    private String clientId;
-    @Value("${cards.alice.auth.client-secret}")
-    private String clientSecret;
+    @Value("${cards.alice.auth.admin-username}")
+    private String adminUsername;
+    @Value("${cards.alice.auth.admin-password}")
+    private String adminPassword;
+
 
     @Bean
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
-                .realm(realm)
-                .clientId(clientId)
-                .clientSecret(clientSecret)
-                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
+                .realm("master")
+                .clientId("admin-cli")
+                .username(adminUsername)
+                .password(adminPassword)
+                .grantType(OAuth2Constants.PASSWORD)
                 .build();
     }
 }

@@ -54,7 +54,7 @@ public class OAuth2SecurityConfig {
                 .addFilterAfter(new EmailVerifiedFilter(), BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/**").authenticated()
                         .requestMatchers("/customer/**").hasRole("customer")
                         .requestMatchers("/owner/**").hasRole("owner")
                 )

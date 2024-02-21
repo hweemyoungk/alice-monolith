@@ -1,11 +1,14 @@
 package cards.alice.monolith.common.web.controllers;
 
+import cards.alice.monolith.common.web.exceptions.CustomValidationException;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,6 +30,21 @@ public class CommonErrorHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     ResponseEntity handleResourceNotFound(ResourceNotFoundException e) {
         return ResponseEntity.notFound().build();
+    }
+
+    @ExceptionHandler(CustomValidationException.class)
+    ResponseEntity handleCustomValidationException(CustomValidationException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationServiceException.class)
+    ResponseEntity handleAuthenticationServiceException(AuthenticationServiceException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+
+    @ExceptionHandler(DtoProcessingException.class)
+    ResponseEntity handleDtoProcessingException(DtoProcessingException e) {
+        return ResponseEntity.badRequest().body(e.getViolationMessages());
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
@@ -76,10 +94,5 @@ public class CommonErrorHandler {
                     return errorMap;
                 }).collect(Collectors.toList());
         return ResponseEntity.badRequest().body(errorList);
-    }
-
-    @ExceptionHandler(DtoProcessingException.class)
-    ResponseEntity handleBeanValidationViolations(DtoProcessingException e) {
-        return ResponseEntity.badRequest().body(e.getViolationMessages());
     }
 }
