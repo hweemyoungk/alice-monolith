@@ -34,7 +34,6 @@ public class UserAuthServiceImpl implements UserAuthService {
 
     private final AdminResourceService adminResourceService;
 
-
     @Override
     @Transactional
     public void softDeleteUserById(UUID userId) {

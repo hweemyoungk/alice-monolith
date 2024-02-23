@@ -40,4 +40,9 @@ public class RedeemRule extends LongEntity {
     private Blueprint blueprint;
     @OneToMany(mappedBy = "redeemRule")
     private Set<Redeem> redeems;
+
+    @PreRemove
+    private void cascadeSetNull() {
+        getRedeems().forEach(redeem -> redeem.setRedeemRule(null));
+    }
 }

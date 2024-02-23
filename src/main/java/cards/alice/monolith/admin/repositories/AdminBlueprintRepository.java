@@ -13,6 +13,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AdminBlueprintRepository extends BlueprintRepository {
+    @Transactional
+    @Modifying
+    @Query("delete from Blueprint b where b.isDeleted = :isDeleted and b.lastModifiedDate < :lastModifiedDate")
+    int deleteByIsDeletedAndLastModifiedDateBefore(@NonNull Boolean isDeleted, @NonNull OffsetDateTime lastModifiedDate);
     @Query("""
             select b from Blueprint b
             where b.isDeleted = :isDeleted

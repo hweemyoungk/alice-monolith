@@ -30,9 +30,25 @@ public class StagedUser extends LongEntity {
     @NotNull
     private UUID userId;
 
-    @OneToMany(mappedBy = "customerId")
+    @OneToMany
+    @JoinColumn(
+            name = "customerId",
+            referencedColumnName = "userId")
     private Set<Card> cards;
 
-    @OneToMany(mappedBy = "ownerId")
+    @OneToMany
+    @JoinColumn(
+            name = "ownerId",
+            referencedColumnName = "userId")
     private Set<Store> stores;
+
+    @PreRemove
+    private void cascadeSetNull() {
+        getCards().forEach(card -> {
+            card.setCustomerId(null);
+        });
+        getStores().forEach(store -> {
+            store.setOwnerId(null);
+        });
+    }
 }

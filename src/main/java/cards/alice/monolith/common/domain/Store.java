@@ -74,4 +74,9 @@ public class Store extends LongEntity {
     private UUID ownerId;
     @OneToMany(mappedBy = "store")
     private Set<Blueprint> blueprints;
+
+    @PreRemove
+    private void cascadeSetNull() {
+        getBlueprints().forEach(blueprint -> blueprint.setStore(null));
+    }
 }

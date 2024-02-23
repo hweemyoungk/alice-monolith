@@ -2,6 +2,7 @@ package cards.alice.monolith.common.web.controllers;
 
 import cards.alice.monolith.common.web.exceptions.CustomValidationException;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
+import cards.alice.monolith.common.web.exceptions.JobClassNotFoundException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -94,5 +95,10 @@ public class CommonErrorHandler {
                     return errorMap;
                 }).collect(Collectors.toList());
         return ResponseEntity.badRequest().body(errorList);
+    }
+
+    @ExceptionHandler(JobClassNotFoundException.class)
+    ResponseEntity handleJobClassNotFoundException(JobClassNotFoundException e) {
+        return ResponseEntity.badRequest().body(e);
     }
 }

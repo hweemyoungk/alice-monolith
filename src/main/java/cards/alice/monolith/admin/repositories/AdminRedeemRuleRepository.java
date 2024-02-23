@@ -7,9 +7,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public interface AdminRedeemRuleRepository extends RedeemRuleRepository {
+    @Transactional
+    @Modifying
+    @Query("delete from RedeemRule r where r.isDeleted = :isDeleted and r.lastModifiedDate < :lastModifiedDate")
+    int deleteByIsDeletedAndLastModifiedDateBefore(@NonNull Boolean isDeleted, @NonNull OffsetDateTime lastModifiedDate);
+
     @Transactional
     @Modifying
     @Query("""
@@ -17,5 +23,4 @@ public interface AdminRedeemRuleRepository extends RedeemRuleRepository {
             where r.blueprint.store.id in (
             select s.id from Store s where s.ownerId = :ownerId)""")
     int updateIsDeletedByBlueprint_Store_OwnerId(@NonNull @Param("isDeleted") Boolean isDeleted, @NonNull @Param("ownerId") UUID ownerId);
-
 }
