@@ -2,6 +2,8 @@ package cards.alice.monolith.owner.repositories;
 
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.repositories.BlueprintRepository;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
@@ -24,6 +26,14 @@ public interface OwnerBlueprintRepository extends BlueprintRepository {
             where b.id = :id
             and b.isDeleted = false""")
     Optional<Blueprint> findById(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @PostAuthorize("returnObject.empty ? true : authentication.name == returnObject.get().store.ownerId.toString()")
+    @Query("""
+            select b from Blueprint b
+            where b.id = :id
+            and b.isDeleted = false""")
+    Optional<Blueprint> exclusiveFindById(@Param("id") Long id);
 
     @Override
     @PostFilter("authentication.name == filterObject.store.ownerId.toString()")

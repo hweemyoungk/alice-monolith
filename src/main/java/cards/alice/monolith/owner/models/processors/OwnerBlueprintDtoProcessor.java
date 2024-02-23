@@ -45,6 +45,7 @@ public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
     @Override
     protected void checkMembershipForPost(Collection<BlueprintDto> dtos) {
         final Set<String> violationMessages = new HashSet<>();
+
         final UUID ownerId = UUID.fromString(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
         final OwnerMembershipDto highestOwnerMembership = (OwnerMembershipDto) MembershipDto
@@ -159,7 +160,8 @@ public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
 
         // storeId
         // Store must exist
-        final Store originalStore = storeRepository.findById(dto.getStoreId())
+        // Exclusive lock: blueprint count could be updated
+        final Store originalStore = storeRepository.exclusiveFindById(dto.getStoreId())
                 .orElseThrow(() -> new ResourceNotFoundException(Store.class, dto.getStoreId()));
         // Owner cannot create blueprint of inactive store
         if (originalStore.getIsInactive()) {
@@ -182,7 +184,8 @@ public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
     public BlueprintDto preprocessForPut(Long id, @Valid BlueprintDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
-        final Blueprint originalBlueprint = blueprintRepository.findById(id)
+        // Exclusive lock: is modification target
+        final Blueprint originalBlueprint = blueprintRepository.exclusiveFindById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, id));
 
         // Owner cannot modify expired blueprint

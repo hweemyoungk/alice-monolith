@@ -50,7 +50,8 @@ public class OwnerStampGrantDtoProcessor extends StampGrantDtoProcessor {
         // Card must exist
         // OwnerCardRepository authenticates
         // : Owner should own card.blueprint.store
-        final Card card = cardRepository.findById(dto.getCardId())
+        // Shared lock: must not be modified
+        final Card card = cardRepository.sharedFindById(dto.getCardId())
                 .orElseThrow(() -> new ResourceNotFoundException(Card.class, dto.getCardId()));
         // Card must be active
         if (card.getIsInactive()) {

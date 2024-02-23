@@ -22,13 +22,13 @@ public class AdminResourceServiceImpl implements AdminResourceService {
     @Transactional
     public void softDeleteOwnerResources(UUID ownerId) {
         // 1. Store
-        adminStoreRepository.updateIsDeletedByOwnerId(Boolean.TRUE, ownerId);
+        adminStoreRepository.exclusiveUpdateIsDeletedByOwnerId(Boolean.TRUE, ownerId);
 
         // 2. Blueprint
-        adminBlueprintRepository.updateIsDeletedByStore_OwnerId(Boolean.TRUE, ownerId);
+        adminBlueprintRepository.exclusiveUpdateIsDeletedByStore_OwnerId(Boolean.TRUE, ownerId);
 
         // 3. RedeemRule
-        adminRedeemRuleRepository.updateIsDeletedByBlueprint_Store_OwnerId(Boolean.TRUE, ownerId);
+        adminRedeemRuleRepository.exclusiveUpdateIsDeletedByBlueprint_Store_OwnerId(Boolean.TRUE, ownerId);
 
         // 4. Card
         // NO-OP
@@ -42,7 +42,7 @@ public class AdminResourceServiceImpl implements AdminResourceService {
     @Transactional
     public void softDeleteCustomerResources(UUID customerId) {
         // 1. Card
-        adminCardRepository.updateIsDeletedByCustomerId(Boolean.TRUE, customerId);
+        adminCardRepository.exclusiveUpdateIsDeletedByCustomerId(Boolean.TRUE, customerId);
 
         // 2. Redeem
         // NO-OP

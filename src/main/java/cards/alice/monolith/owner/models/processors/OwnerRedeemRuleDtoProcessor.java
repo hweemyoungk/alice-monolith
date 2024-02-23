@@ -99,7 +99,8 @@ public class OwnerRedeemRuleDtoProcessor extends RedeemRuleDtoProcessor {
 
         // blueprintId
         // Blueprint must exist
-        final Blueprint blueprint = blueprintRepository.findById(dto.getBlueprintId())
+        // Exclusive lock: redeem rule count could be updated
+        final Blueprint blueprint = blueprintRepository.exclusiveFindById(dto.getBlueprintId())
                 .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, dto.getBlueprintId()));
         // Owner cannot create redeem rule of expired blueprint
         if (blueprint.getExpirationDate().isBefore(OffsetDateTime.now())) {
@@ -144,8 +145,6 @@ public class OwnerRedeemRuleDtoProcessor extends RedeemRuleDtoProcessor {
         // redeemDtos
         // Ignored in input (preprocess)
 
-        // TODO: Isn't there concurrency issue when we implement and use bulk-check membership?
-
         if (!violationMessages.isEmpty()) {
             throw new DtoProcessingException("Failed to preprocess RedeemRuleDto", violationMessages);
         }
@@ -157,7 +156,8 @@ public class OwnerRedeemRuleDtoProcessor extends RedeemRuleDtoProcessor {
     public RedeemRuleDto preprocessForPut(Long id, @Valid RedeemRuleDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
-        final RedeemRule originalRedeemRule = redeemRuleRepository.findById(id)
+        // Exclusive lock: is modification target
+        final RedeemRule originalRedeemRule = redeemRuleRepository.exclusiveFindById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(RedeemRule.class, id));
         final Blueprint blueprint = originalRedeemRule.getBlueprint();
 

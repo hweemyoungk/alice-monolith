@@ -1,6 +1,8 @@
 package cards.alice.monolith.admin.repositories;
 
 import cards.alice.monolith.common.repositories.CardRepository;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,8 +17,10 @@ public interface AdminCardRepository extends CardRepository {
     @Modifying
     @Query("delete from Card c where c.isDeleted = :isDeleted and c.lastModifiedDate < :lastModifiedDate")
     int deleteByIsDeletedAndLastModifiedDateBefore(@NonNull Boolean isDeleted, @NonNull OffsetDateTime lastModifiedDate);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Transactional
     @Modifying
     @Query("update Card c set c.isDeleted = :isDeleted where c.customerId = :customerId")
-    int updateIsDeletedByCustomerId(@NonNull @Param("isDeleted") Boolean isDeleted, @NonNull @Param("customerId") UUID customerId);
+    int exclusiveUpdateIsDeletedByCustomerId(@NonNull @Param("isDeleted") Boolean isDeleted, @NonNull @Param("customerId") UUID customerId);
 }

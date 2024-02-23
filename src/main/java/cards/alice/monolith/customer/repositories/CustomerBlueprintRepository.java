@@ -31,7 +31,7 @@ public interface CustomerBlueprintRepository extends BlueprintRepository {
             where b.id = :id
             and b.isPublishing = true
             and b.isDeleted = false""")
-    Optional<Blueprint> exclusiveLockById(@Param("id") Long id);
+    Optional<Blueprint> exclusiveFindById(@Param("id") Long id);
 
     @Override
     @Query("""
