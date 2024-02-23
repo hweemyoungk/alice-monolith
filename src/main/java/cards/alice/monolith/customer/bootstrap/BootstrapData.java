@@ -1,13 +1,7 @@
 package cards.alice.monolith.customer.bootstrap;
 
-import cards.alice.monolith.common.domain.Blueprint;
-import cards.alice.monolith.common.domain.Card;
-import cards.alice.monolith.common.domain.RedeemRule;
-import cards.alice.monolith.common.domain.Store;
-import cards.alice.monolith.common.repositories.BlueprintRepository;
-import cards.alice.monolith.common.repositories.CardRepository;
-import cards.alice.monolith.common.repositories.RedeemRuleRepository;
-import cards.alice.monolith.common.repositories.StoreRepository;
+import cards.alice.monolith.common.domain.*;
+import cards.alice.monolith.common.repositories.*;
 import jakarta.persistence.EntityManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +37,7 @@ public class BootstrapData implements CommandLineRunner {
     private final CardRepository cardRepository;
     private final RedeemRuleRepository redeemRuleRepository;
     private final EntityManager entityManager;
+    private final StagedUserRepository stagedUserRepository;
 
     @Override
     public void run(String... args) {
@@ -56,6 +51,17 @@ public class BootstrapData implements CommandLineRunner {
         populateRedeemRules();
         // Modify Blueprint
         modifyBlueprint();
+        // StagedUser
+        populatedDeletedStagedUser();
+    }
+
+    private void populatedDeletedStagedUser() {
+        StagedUser deletedStagedUser = StagedUser.builder()
+                .displayName("test staged user")
+                .isDeleted(Boolean.TRUE)
+                .userId(ownerId)
+                .build();
+        stagedUserRepository.saveAndFlush(deletedStagedUser);
     }
 
     private void modifyBlueprint() {

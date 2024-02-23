@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Set;
 import java.util.UUID;
 
 @SuperBuilder
@@ -49,4 +50,14 @@ public class Card extends LongEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blueprint_id")
     private Blueprint blueprint;
+    @OneToMany(mappedBy = "card")
+    private Set<StampGrant> stampGrants;
+    @OneToMany(mappedBy = "card")
+    private Set<Redeem> redeems;
+
+    @PreRemove
+    private void cascadeSetNull() {
+        getStampGrants().forEach(stampGrant -> stampGrant.setCard(null));
+        getRedeems().forEach(redeem -> redeem.setCard(null));
+    }
 }

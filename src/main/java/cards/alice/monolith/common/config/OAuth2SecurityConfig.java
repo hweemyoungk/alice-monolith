@@ -46,7 +46,6 @@ public class OAuth2SecurityConfig {
                 })
                 .csrf(configurer -> configurer
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                        // .ignoringRequestMatchers("/csrfNotRequiredPath/*")) // TODO Configure ignoringRequestMatchers
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // Frontend app script should access cookies
                         .ignoringRequestMatchers("/h2-console/**")
                 )
@@ -54,6 +53,7 @@ public class OAuth2SecurityConfig {
                 .addFilterAfter(new EmailVerifiedFilter(), BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("admin")
                         .requestMatchers("/auth/**").authenticated()
                         .requestMatchers("/customer/**").hasRole("customer")
                         .requestMatchers("/owner/**").hasRole("owner")

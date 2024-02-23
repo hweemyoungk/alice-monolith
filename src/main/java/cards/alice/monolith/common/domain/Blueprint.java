@@ -55,17 +55,17 @@ public class Blueprint extends LongEntity {
     private String bgImageId;
     @NotNull
     private Boolean isPublishing;
-    @OneToMany(mappedBy = "blueprint")
-    private Set<RedeemRule> redeemRules;
-    /*@OneToMany(
-            mappedBy = "blueprint", cascade = {
-            CascadeType.PERSIST,
-            CascadeType.MERGE,
-            CascadeType.REFRESH,
-            CascadeType.DETACH
-    })
-    private Set<Card> cards;*/
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "store_id")
     private Store store;
+    @OneToMany(mappedBy = "blueprint")
+    private Set<RedeemRule> redeemRules;
+    @OneToMany(mappedBy = "blueprint")
+    private Set<Card> cards;
+
+    @PreRemove
+    private void cascadeSetNull() {
+        getRedeemRules().forEach(redeemRule -> redeemRule.setBlueprint(null));
+        getCards().forEach(card -> card.setBlueprint(null));
+    }
 }
