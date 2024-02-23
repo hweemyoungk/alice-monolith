@@ -77,6 +77,9 @@ public class Store extends LongEntity {
 
     @PreRemove
     private void cascadeSetNull() {
-        getBlueprints().forEach(blueprint -> blueprint.setStore(null));
+        Set<Blueprint> blueprints1 = getBlueprints();
+        if (blueprints1 != null) {
+            blueprints1.forEach(blueprint -> blueprint.setStore(null));
+        }
     }
 }

@@ -65,7 +65,13 @@ public class Blueprint extends LongEntity {
 
     @PreRemove
     private void cascadeSetNull() {
-        getRedeemRules().forEach(redeemRule -> redeemRule.setBlueprint(null));
-        getCards().forEach(card -> card.setBlueprint(null));
+        Set<RedeemRule> redeemRules1 = getRedeemRules();
+        if (redeemRules1 != null) {
+            redeemRules1.forEach(redeemRule -> redeemRule.setBlueprint(null));
+        }
+        Set<Card> cards1 = getCards();
+        if (cards1 != null) {
+            cards1.forEach(card -> card.setBlueprint(null));
+        }
     }
 }

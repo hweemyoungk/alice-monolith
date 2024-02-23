@@ -44,11 +44,13 @@ public class StagedUser extends LongEntity {
 
     @PreRemove
     private void cascadeSetNull() {
-        getCards().forEach(card -> {
-            card.setCustomerId(null);
-        });
-        getStores().forEach(store -> {
-            store.setOwnerId(null);
-        });
+        Set<Card> cards1 = getCards();
+        if (cards1 != null) {
+            cards1.forEach(card -> card.setCustomerId(null));
+        }
+        Set<Store> stores1 = getStores();
+        if (stores1 != null) {
+            stores1.forEach(store -> store.setOwnerId(null));
+        }
     }
 }

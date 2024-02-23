@@ -101,7 +101,8 @@ public class CustomerCardDtoProcessor extends CardDtoProcessor {
         // @NotNull @Positive blueprintId;
         // Validated by @Valid
         // Blueprint must exist
-        final Blueprint blueprint = customerBlueprintRepository.findById(dto.getBlueprintId())
+        // Exclusive lock: card count could be updated
+        final Blueprint blueprint = customerBlueprintRepository.exclusiveFindById(dto.getBlueprintId())
                 .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, dto.getBlueprintId()));
         // CustomerBlueprintRepository verifies
         // : Blueprint must be publishing
@@ -185,7 +186,8 @@ public class CustomerCardDtoProcessor extends CardDtoProcessor {
     public CardDto preprocessForPut(Long id, @Valid CardDto dto) {
         final Set<String> violationMessages = new HashSet<>();
 
-        final Card originalCard = customerCardRepository.exclusiveLockById(id)
+        // Exclusive lock: is modification target
+        final Card originalCard = customerCardRepository.exclusiveFindById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(Card.class, id));
         final Blueprint blueprint = originalCard.getBlueprint();
 

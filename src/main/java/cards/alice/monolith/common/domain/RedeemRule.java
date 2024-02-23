@@ -43,6 +43,9 @@ public class RedeemRule extends LongEntity {
 
     @PreRemove
     private void cascadeSetNull() {
-        getRedeems().forEach(redeem -> redeem.setRedeemRule(null));
+        Set<Redeem> redeems1 = getRedeems();
+        if (redeems1 != null) {
+            redeems1.forEach(redeem -> redeem.setRedeemRule(null));
+        }
     }
 }

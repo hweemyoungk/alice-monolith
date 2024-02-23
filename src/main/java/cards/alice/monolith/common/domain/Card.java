@@ -57,7 +57,13 @@ public class Card extends LongEntity {
 
     @PreRemove
     private void cascadeSetNull() {
-        getStampGrants().forEach(stampGrant -> stampGrant.setCard(null));
-        getRedeems().forEach(redeem -> redeem.setCard(null));
+        Set<StampGrant> stampGrants1 = getStampGrants();
+        if (stampGrants1 != null) {
+            stampGrants1.forEach(stampGrant -> stampGrant.setCard(null));
+        }
+        Set<Redeem> redeems1 = getRedeems();
+        if (redeems1 != null) {
+            redeems1.forEach(redeem -> redeem.setCard(null));
+        }
     }
 }

@@ -166,7 +166,8 @@ public class OwnerStoreDtoProcessor extends StoreDtoProcessor {
 
         // OwnerStoreRepository authenticates
         // : Owner should own store
-        final Store originalStore = storeRepository.findById(id)
+        // Exclusive lock: is modification target
+        final Store originalStore = storeRepository.exclusiveFindById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(Store.class, id));
 
         // Owner cannot modify closed store

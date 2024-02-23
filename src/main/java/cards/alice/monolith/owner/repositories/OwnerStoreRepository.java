@@ -2,6 +2,8 @@ package cards.alice.monolith.owner.repositories;
 
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.repositories.StoreRepository;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
@@ -27,6 +29,14 @@ public interface OwnerStoreRepository extends StoreRepository {
             where s.id = :id
             and s.isDeleted = false""")
     Optional<Store> findById(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @PostAuthorize("returnObject.empty ? true : authentication.name == returnObject.get().ownerId.toString()")
+    @Query("""
+            select s from Store s
+            where s.id = :id
+            and s.isDeleted = false""")
+    Optional<Store> exclusiveFindById(@Param("id") Long id);
 
     @Override
     @PreAuthorize("authentication.name == #ownerId.toString()")

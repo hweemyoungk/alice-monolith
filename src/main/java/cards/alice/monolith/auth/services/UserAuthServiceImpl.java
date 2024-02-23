@@ -102,14 +102,16 @@ public class UserAuthServiceImpl implements UserAuthService {
 
         // 1. Store
         // Every store must be inactive (closed).
+        // Querying illegal rows, so lock is not needed.
         var activeStores = adminStoreRepository
-                .findByIsDeletedAndIsInactiveAndOwnerId(Boolean.FALSE, Boolean.TRUE, ownerId);
+                .findByIsDeletedAndIsInactiveAndOwnerId(Boolean.FALSE, Boolean.FALSE, ownerId);
         if (!activeStores.isEmpty()) {
             violationMessages.add("Owner owns active stores: " + activeStores.stream().map(BaseEntity::getDisplayName).toList());
         }
 
         // 2. Blueprint
         // Every blueprint must be inactive (expired).
+        // Querying illegal rows, so lock is not needed.
         var activeBlueprints = adminBlueprintRepository.findByIsDeletedAndExpirationDateAfterAndStore_OwnerId(
                 Boolean.FALSE, OffsetDateTime.now(), ownerId);
         if (!activeBlueprints.isEmpty()) {

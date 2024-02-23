@@ -71,5 +71,5 @@ public interface CustomerCardRepository extends CardRepository {
             select c from Card c
             where c.id = :id
             and c.isDeleted = false""")
-    Optional<Card> exclusiveLockById(@Param("id") Long id);
+    Optional<Card> exclusiveFindById(@Param("id") Long id);
 }
