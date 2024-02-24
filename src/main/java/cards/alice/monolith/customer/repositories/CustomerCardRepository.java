@@ -22,6 +22,25 @@ import java.util.UUID;
  * Every card.customerId must match current user.
  */
 public interface CustomerCardRepository extends CardRepository {
+    @PreAuthorize("authentication.name == #customerId.toString()")
+    @Query("select count(c) from Card c where c.customerId = :customerId")
+    long countByCustomerId(@Param("customerId") @NonNull UUID customerId);
+
+    @PreAuthorize("authentication.name == #customerId.toString()")
+    @Query("""
+            select count(c) from Card c
+            where c.isDeleted = :isDeleted
+            and c.customerId = :customerId""")
+    long countByIsDeletedAndCustomerId(@Param("isDeleted") @NonNull Boolean isDeleted, @Param("customerId") @NonNull UUID customerId);
+
+    @PreAuthorize("authentication.name == #customerId.toString()")
+    @Query("""
+            select count(c) from Card c
+            where c.isDeleted = :isDeleted
+            and c.isInactive = :isInactive
+            and c.customerId = :customerId""")
+    long countByIsDeletedAndIsInactiveAndCustomerId(@Param("isDeleted") @NonNull Boolean isDeleted, @Param("isInactive") @NonNull Boolean isInactive, @Param("customerId") @NonNull UUID customerId);
+
     @PreAuthorize("#customerId == null ? true : authentication.name == #customerId.toString()")
     @Query("""
             select c from Card c
