@@ -22,4 +22,10 @@ public interface CustomerCardService {
     Set<CardDto> listCards(UUID customerId, Set<Long> ids);
 
     Long getNumIssues(UUID customerId, Long blueprintId);
+
+    Long getNumAccumulatedTotalCards(UUID customerId);
+
+    Long getNumCurrentTotalCards(UUID customerId);
+
+    Long getNumCurrentActiveCards(UUID customerId);
 }

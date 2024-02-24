@@ -70,11 +70,31 @@ public class CustomerCardController {
         return ResponseEntity.ok(cardDtos);
     }
 
-    // Tested
     @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.num-issues}")
     @PreAuthorize("authentication.name == #customerId.toString()")
     public ResponseEntity<Long> getNumIssues(@NotNull @RequestParam UUID customerId, @NotNull @RequestParam Long blueprintId) {
-        final Long numIssues = customerCardService.getNumIssues(customerId, blueprintId);
-        return ResponseEntity.ok(numIssues);
+        final Long numAccumulatedTotalCards = customerCardService.getNumIssues(customerId, blueprintId);
+        return ResponseEntity.ok(numAccumulatedTotalCards);
+    }
+
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.num-accumulated-total-cards}")
+    @PreAuthorize("authentication.name == #customerId.toString()")
+    public ResponseEntity<Long> getNumAccumulatedTotalCards(@NotNull @RequestParam UUID customerId) {
+        final Long numAccumulatedTotalCards = customerCardService.getNumAccumulatedTotalCards(customerId);
+        return ResponseEntity.ok(numAccumulatedTotalCards);
+    }
+
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.num-current-total-cards}")
+    @PreAuthorize("authentication.name == #customerId.toString()")
+    public ResponseEntity<Long> getNumCurrentTotalCards(@NotNull @RequestParam UUID customerId) {
+        final Long numCurrentTotalCards = customerCardService.getNumCurrentTotalCards(customerId);
+        return ResponseEntity.ok(numCurrentTotalCards);
+    }
+
+    @GetMapping(path = "${cards.alice.customer.web.controllers.path.card.num-current-active-cards}")
+    @PreAuthorize("authentication.name == #customerId.toString()")
+    public ResponseEntity<Long> getNumCurrentActiveCards(@NotNull @RequestParam UUID customerId) {
+        final Long numCurrentActiveCards = customerCardService.getNumCurrentActiveCards(customerId);
+        return ResponseEntity.ok(numCurrentActiveCards);
     }
 }

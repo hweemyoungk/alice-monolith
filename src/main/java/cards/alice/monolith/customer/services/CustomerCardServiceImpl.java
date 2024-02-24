@@ -91,4 +91,20 @@ public class CustomerCardServiceImpl implements CustomerCardService {
     public Long getNumIssues(UUID customerId, Long blueprintId) {
         return cardRepository.countByCustomerIdAndBlueprint_Id(customerId, blueprintId);
     }
+
+    @Override
+    public Long getNumAccumulatedTotalCards(UUID customerId) {
+        return cardRepository.countByCustomerId(customerId);
+    }
+
+    @Override
+    public Long getNumCurrentTotalCards(UUID customerId) {
+        return cardRepository.countByIsDeletedAndCustomerId(Boolean.FALSE, customerId);
+    }
+
+    @Override
+    public Long getNumCurrentActiveCards(UUID customerId) {
+        return cardRepository.countByIsDeletedAndIsInactiveAndCustomerId(
+                Boolean.FALSE, Boolean.FALSE, customerId);
+    }
 }
