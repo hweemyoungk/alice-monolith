@@ -31,7 +31,7 @@ import static cards.alice.monolith.common.models.RedeemRequestDto.getOwnerRedeem
 @Service
 @RequiredArgsConstructor
 public class OwnerRedeemRequestServiceImpl {
-    @Value("${cards.alice.customer.app.watch-redeem-request-duration-seconds}")
+    @Value("${cards.alice.customer.redeem-request.watch-redeem-request-duration-seconds}")
     private long watchRedeemRequestDurationSeconds;
 
     private final OwnerRedeemRuleRepository redeemRuleRepository;

@@ -2,8 +2,6 @@ package cards.alice.monolith.admin.repositories;
 
 import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.repositories.BlueprintRepository;
-import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,12 +25,11 @@ public interface AdminBlueprintRepository extends BlueprintRepository {
             and b.store.ownerId = :ownerId""")
     List<Blueprint> findByIsDeletedAndExpirationDateAfterAndStore_OwnerId(@Param("isDeleted") @NonNull Boolean isDeleted, @Param("expirationDate") @NonNull OffsetDateTime expirationDate, @Param("ownerId") @NonNull UUID ownerId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Transactional
     @Modifying
     @Query("""
             update Blueprint b set b.isDeleted = :isDeleted
             where b.store.id in (
             select s.id from Store s where s.ownerId = :ownerId)""")
-    int exclusiveUpdateIsDeletedByStore_OwnerId(@NonNull @Param("isDeleted") Boolean isDeleted, @NonNull @Param("ownerId") UUID ownerId);
+    int updateIsDeletedByStore_OwnerId(@NonNull @Param("isDeleted") Boolean isDeleted, @NonNull @Param("ownerId") UUID ownerId);
 }

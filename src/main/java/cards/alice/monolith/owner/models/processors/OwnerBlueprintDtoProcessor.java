@@ -12,6 +12,7 @@ import cards.alice.monolith.owner.repositories.OwnerBlueprintRepository;
 import cards.alice.monolith.owner.repositories.OwnerStoreRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -24,6 +25,8 @@ import java.util.stream.Collectors;
 @Validated
 @RequiredArgsConstructor
 public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
+    @Value("${cards.alice.owner.blueprint.modify-blueprint-exp-date-min-remaining-from-now-in-days}")
+    private long modifyBlueprintExpDateMinRemainingFromNowInDays;
     private final OwnerBlueprintRepository blueprintRepository;
     private final OwnerStoreRepository storeRepository;
     private final Map<String, OwnerMembershipDto> ownerMembershipMap;
@@ -256,8 +259,11 @@ public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
         // @NotNull expirationDate
         // Validated by @Valid
         // Should be AFTER now
-        if (dto.getExpirationDate().isBefore(OffsetDateTime.now())) {
-            violationMessages.add("expirationDate already passed");
+        OffsetDateTime curExpirationDate = originalBlueprint.getExpirationDate();
+        OffsetDateTime sevenDaysAfterNow = OffsetDateTime.now().plusDays(modifyBlueprintExpDateMinRemainingFromNowInDays);
+        OffsetDateTime firstDateTime = curExpirationDate.isBefore(sevenDaysAfterNow) ? curExpirationDate : sevenDaysAfterNow;
+        if (dto.getExpirationDate().isBefore(firstDateTime)) {
+            violationMessages.add("expirationDate must be after " + firstDateTime);
         }
 
         // bgImageId

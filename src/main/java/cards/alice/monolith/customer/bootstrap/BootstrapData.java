@@ -43,16 +43,16 @@ public class BootstrapData implements CommandLineRunner {
     public void run(String... args) {
         // Store
         populateStore();
-        // Blueprint
-        populateBlueprint();
-        // Card
-        populateCard();
-        // RedeemRule
-        populateRedeemRules();
-        // Modify Blueprint
-        modifyBlueprint();
-        // StagedUser
-        populatedDeletedStagedUser();
+//        // Blueprint
+//        populateBlueprint();
+//        // Card
+//        populateCard();
+//        // RedeemRule
+//        populateRedeemRules();
+//        // Modify Blueprint
+//        modifyBlueprint();
+//        // StagedUser
+//        populatedDeletedStagedUser();
     }
 
     private void populatedDeletedStagedUser() {
@@ -218,7 +218,7 @@ public class BootstrapData implements CommandLineRunner {
                 .numMaxRedeems(5)
                 .numMaxIssuesPerCustomer(10)
                 .numMaxIssues(0)
-                .expirationDate(OffsetDateTime.now().plusMonths(1))
+                .expirationDate(OffsetDateTime.now().minusMonths(1))
                 .bgImageId(null)
                 .isPublishing(true)
                 .store(entityManager.getReference(Store.class, storeId))
@@ -249,7 +249,7 @@ public class BootstrapData implements CommandLineRunner {
                 .numMaxStamps(20)
                 .numMaxRedeems(6)
                 .numMaxIssuesPerCustomer(3)
-                .numMaxIssues(100)
+                .numMaxIssues(1)
                 .expirationDate(OffsetDateTime.now().plusMonths(2))
                 .bgImageId(null)
                 .isPublishing(true)

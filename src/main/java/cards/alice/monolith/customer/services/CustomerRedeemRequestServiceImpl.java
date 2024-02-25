@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class CustomerRedeemRequestServiceImpl {
-    @Value("${cards.alice.customer.app.watch-redeem-request-duration-seconds}")
+    @Value("${cards.alice.customer.redeem-request.watch-redeem-request-duration-seconds}")
     private long watchRedeemRequestDurationSeconds;
     @Value("${cards.alice.customer.user-id}")
     private UUID customerId;

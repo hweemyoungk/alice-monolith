@@ -570,9 +570,21 @@ class OwnerBlueprintDtoProcessorTest {
 
     @Test
     @Transactional
-    void preprocessForPutExpired() {
+    void preprocessForPutExpBeforeCur() {
         BlueprintDto dto = blueprintMapper.toDto(originalBlueprint);
         dto.setExpirationDate(OffsetDateTime.now().minusSeconds(1L));
+        assertThrows(DtoProcessingException.class, () -> {
+            blueprintDtoProcessor.preprocessForPut(dto.getId(), dto);
+        });
+    }
+
+    @Test
+    @Transactional
+    void preprocessForPutExpBeforeRetention() {
+        originalBlueprint.setExpirationDate(OffsetDateTime.now().plusDays(8));
+        Blueprint saved = blueprintRepository.save(originalBlueprint);
+        BlueprintDto dto = blueprintMapper.toDto(saved);
+        dto.setExpirationDate(OffsetDateTime.now().plusDays(6));
         assertThrows(DtoProcessingException.class, () -> {
             blueprintDtoProcessor.preprocessForPut(dto.getId(), dto);
         });

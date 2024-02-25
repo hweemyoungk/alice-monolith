@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles({"default", "local", "bootstrap"})
 class CustomerRedeemRequestDtoProcessorTest {
     private final UUID uuid = UUID.fromString("de36b13b-2397-445e-89cd-8e817e0f441e");
-    @Value("${cards.alice.customer.app.watch-redeem-request-duration-seconds}")
+    @Value("${cards.alice.customer.redeem-request.watch-redeem-request-duration-seconds}")
     private long watchRedeemRequestDurationSeconds;
 
     @Autowired

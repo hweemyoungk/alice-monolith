@@ -25,7 +25,7 @@ public class CustomerRedeemRequestServiceSplitImpl implements CustomerRedeemRequ
     private String redeemRequestPath;
     @Value("${cards.alice.redeemrequest.web.controllers.path.customer.redeem-request.list}")
     private String redeemRequestListPath;
-    @Value("${cards.alice.customer.app.watch-redeem-request-duration-seconds}")
+    @Value("${cards.alice.customer.redeem-request.watch-redeem-request-duration-seconds}")
     private long watchRedeemRequestDurationSeconds;
 
     private final CustomerRedeemRequestDtoProcessor redeemRequestDtoProcessor;

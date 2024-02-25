@@ -22,6 +22,25 @@ import java.util.UUID;
  * and where store.ownerId matches current user.
  */
 public interface OwnerStoreRepository extends StoreRepository {
+    @PreAuthorize("authentication.name == #ownerId.toString()")
+    @Query("select count(s) from Store s where s.ownerId = :ownerId")
+    long countByOwnerId(@Param("ownerId") @NonNull UUID ownerId);
+
+    @PreAuthorize("authentication.name == #ownerId.toString()")
+    @Query("""
+            select count(s) from Store s
+            where s.isDeleted = :isDeleted
+            and s.ownerId = :ownerId""")
+    long countByIsDeletedAndOwnerId(@Param("isDeleted") @NonNull Boolean isDeleted, @Param("ownerId") @NonNull UUID ownerId);
+
+    @PreAuthorize("authentication.name == #ownerId.toString()")
+    @Query("""
+            select count(s) from Store s
+            where s.isDeleted = :isDeleted
+            and s.isInactive = :isInactive
+            and s.ownerId = :ownerId""")
+    long countByIsDeletedAndIsInactiveAndOwnerId(@Param("isDeleted") @NonNull Boolean isDeleted, @Param("isInactive") @NonNull Boolean isInactive, @Param("ownerId") @NonNull UUID ownerId);
+
     @Override
     @PostAuthorize("returnObject.empty ? true : authentication.name == returnObject.get().ownerId.toString()")
     @Query("""

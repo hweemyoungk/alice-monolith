@@ -1,5 +1,6 @@
 package cards.alice.monolith.owner.models.processors;
 
+import cards.alice.monolith.common.domain.BaseEntity;
 import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.MembershipDto;
 import cards.alice.monolith.common.models.OwnerMembershipDto;
@@ -14,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Component
@@ -226,6 +228,15 @@ public class OwnerStoreDtoProcessor extends StoreDtoProcessor {
         // CANNOT shift from TRUE to FALSE
         if (originalStore.getIsClosed() && !dto.getIsClosed()) {
             violationMessages.add("Cannot re-open store that is already closed");
+        }
+        // To close store, all blueprints must be expired.
+        if (dto.getIsClosed()) {
+            var now = OffsetDateTime.now();
+            var activeBlueprints = originalStore.getBlueprints().stream().filter(blueprint -> blueprint.getExpirationDate().isAfter(now)).toList();
+            if (!activeBlueprints.isEmpty()) {
+                violationMessages.add("Cannot close store with active blueprints: " + activeBlueprints.stream()
+                        .map(BaseEntity::getDisplayName).toList());
+            }
         }
 
         // @NotNull isInactive;

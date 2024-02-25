@@ -41,12 +41,17 @@ public class UserAuthServiceImpl implements UserAuthService {
         validateSoftDeleteUser(userId);
 
         // 1. Save StagedUser
-        var softDeletedUser = StagedUser.builder()
-                .displayName("User staged for soft-delete")
-                .isDeleted(Boolean.TRUE)
-                .userId(userId)
-                .build();
-        adminStagedUserRepository.save(softDeletedUser);
+        adminStagedUserRepository.findByUserIdAndIsDeleted(userId, null).ifPresentOrElse(stagedUser -> {
+            stagedUser.setIsDeleted(Boolean.TRUE);
+            adminStagedUserRepository.save(stagedUser);
+        }, () -> {
+            var softDeletedUser = StagedUser.builder()
+                    .displayName("User staged for soft-delete")
+                    .isDeleted(Boolean.TRUE)
+                    .userId(userId)
+                    .build();
+            adminStagedUserRepository.save(softDeletedUser);
+        });
 
         // 2. Soft-delete resources
         softDeleteUserResources(userId);
@@ -79,12 +84,13 @@ public class UserAuthServiceImpl implements UserAuthService {
 
         final List<String> violationMessages = new ArrayList<>();
 
+        // TODO: Do we really need this?
         // 1. Check user has already been staged.
-        adminStagedUserRepository.findByUserIdAndIsDeleted(userId, Boolean.TRUE).ifPresent(
+        /*adminStagedUserRepository.findByUserIdAndIsDeleted(userId, Boolean.TRUE).ifPresent(
                 stagedUser -> {
                     violationMessages.add("User already staged for delete");
                 }
-        );
+        );*/
 
         // 2. As owner
         violationMessages.addAll(validateSoftDeleteOwner(userId));
