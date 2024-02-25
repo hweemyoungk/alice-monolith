@@ -47,13 +47,15 @@ public class Store extends LongEntity {
     @NotBlank
     @Length(max = 1000)
     private String description;
-    @NotBlank
+    @NotNull
+    private Boolean isClosed;
+    @NotNull
+    private Boolean isInactive;
+
     @Length(max = 7)
     private String zipcode;
-    @NotBlank
     @Length(max = 120)
     private String address;
-    @NotBlank
     @Length(max = 15)
     private String phone;
     @Column(precision = 10, scale = 7)
@@ -64,14 +66,12 @@ public class Store extends LongEntity {
     @DecimalMin("-180.0")
     @DecimalMax("180.0")
     private BigDecimal lng;
-    @NotNull
-    private Boolean isClosed;
-    @NotNull
-    private Boolean isInactive;
-    private String bgImageId;
-    private String profileImageId;
+
     @NotNull
     private UUID ownerId;
+    private String bgImageId;
+    private String profileImageId;
+
     @OneToMany(mappedBy = "store")
     private Set<Blueprint> blueprints;
 

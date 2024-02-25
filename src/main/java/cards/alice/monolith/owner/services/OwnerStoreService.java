@@ -18,4 +18,10 @@ public interface OwnerStoreService {
     Set<StoreDto> listStores(UUID ownerId, Set<Long> ids);
 
     Optional<StoreDto> closeStoreById(Long id);
+
+    Long getNumAccumulatedTotalStores(UUID ownerId);
+
+    Long getNumCurrentTotalStores(UUID ownerId);
+
+    Long getNumCurrentActiveStores(UUID ownerId);
 }

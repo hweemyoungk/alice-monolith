@@ -28,31 +28,29 @@ public class StoreDto extends LongDto implements Serializable {
     @NotBlank
     @Length(max = 1000)
     private String description;
-    @NotBlank
-    @Length(max = 7)
-    private String zipcode;
-    @NotBlank
-    @Length(max = 120)
-    private String address;
-    @NotBlank
-    @Length(max = 15)
-    private String phone;
-    @DecimalMin("-90.0")
-    @DecimalMax("90.0")
-    @NotNull
-    private BigDecimal lat;
-    @DecimalMin("-180.0")
-    @DecimalMax("180.0")
-    @NotNull
-    private BigDecimal lng;
     @NotNull
     private Boolean isClosed;
     @NotNull
     private Boolean isInactive;
-    private String bgImageId;
-    private String profileImageId;
+
+    @Length(max = 7)
+    private String zipcode;
+    @Length(max = 120)
+    private String address;
+    @Length(max = 15)
+    private String phone;
+    @DecimalMin("-90.0")
+    @DecimalMax("90.0")
+    private BigDecimal lat;
+    @DecimalMin("-180.0")
+    @DecimalMax("180.0")
+    private BigDecimal lng;
+
     @NotNull
     private UUID ownerId;
+    private String bgImageId;
+    private String profileImageId;
+
     @JsonProperty("blueprints")
     private Set<BlueprintDto> blueprintDtos;
 }

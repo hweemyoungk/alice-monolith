@@ -4,6 +4,7 @@ import cards.alice.monolith.common.domain.Store;
 import cards.alice.monolith.common.models.StoreDto;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
 import cards.alice.monolith.owner.services.OwnerStoreService;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -49,7 +50,7 @@ public class OwnerStoreController {
     }
 
     @DeleteMapping(path = "${cards.alice.owner.web.controllers.path.store}/{id}")
-    public ResponseEntity discardCard(@PathVariable Long id) {
+    public ResponseEntity closeStore(@PathVariable Long id) {
         final Optional<StoreDto> storeDto = ownerStoreService.closeStoreById(id);
         storeDto.orElseThrow(() -> new ResourceNotFoundException(Store.class, id));
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
@@ -65,5 +66,26 @@ public class OwnerStoreController {
         }
         final Set<StoreDto> storeDtos = ownerStoreService.listStores(ownerId, ids == null ? null : new HashSet<>(ids));
         return ResponseEntity.ok(storeDtos);
+    }
+
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.store.num-accumulated-total-stores}")
+    @PreAuthorize("authentication.name == #ownerId.toString()")
+    public ResponseEntity<Long> getNumAccumulatedTotalStores(@NotNull @RequestParam UUID ownerId) {
+        final Long numAccumulatedTotalStores = ownerStoreService.getNumAccumulatedTotalStores(ownerId);
+        return ResponseEntity.ok(numAccumulatedTotalStores);
+    }
+
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.store.num-current-total-stores}")
+    @PreAuthorize("authentication.name == #ownerId.toString()")
+    public ResponseEntity<Long> getNumCurrentTotalStores(@NotNull @RequestParam UUID ownerId) {
+        final Long numCurrentTotalStores = ownerStoreService.getNumCurrentTotalStores(ownerId);
+        return ResponseEntity.ok(numCurrentTotalStores);
+    }
+
+    @GetMapping(path = "${cards.alice.owner.web.controllers.path.store.num-current-active-stores}")
+    @PreAuthorize("authentication.name == #ownerId.toString()")
+    public ResponseEntity<Long> getNumCurrentActiveStores(@NotNull @RequestParam UUID ownerId) {
+        final Long numCurrentActiveStores = ownerStoreService.getNumCurrentActiveStores(ownerId);
+        return ResponseEntity.ok(numCurrentActiveStores);
     }
 }

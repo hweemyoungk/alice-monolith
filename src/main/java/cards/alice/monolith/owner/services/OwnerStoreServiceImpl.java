@@ -68,7 +68,7 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
     public Optional<StoreDto> updateStoreById(Long id, StoreDto storeDto) {
         StoreDto preprocessedForPut = storeDtoProcessor.preprocessForPut(id, storeDto);
         Store savedStore = storeRepository.save(storeMapper.toEntity(preprocessedForPut));
-        if (Persistence.getPersistenceUtil().isLoaded(savedStore, "blueprints")) {
+        if (Persistence.getPersistenceUtil().isLoaded(savedStore, "blueprints") && savedStore.getBlueprints() != null) {
             savedStore.getBlueprints().forEach(this::detachStore);
         }
         final StoreDto savedStoreDto = storeMapper.toDto(savedStore);
@@ -83,11 +83,14 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
         final var atomicReference = new AtomicReference<Optional<StoreDto>>();
         store.ifPresentOrElse(
                 srcStore -> {
+                    em.detach(srcStore);
                     final Store patchedStore = storeMapper.partialUpdate(storeDto, srcStore);
                     patchedStore.setBlueprints(null); // I fucking don't know why store is eagerly fetching blueprints...
-                    final Store savedStore = storeRepository.save(patchedStore); // Neither fucking know why persists children...
-                    final StoreDto savedStoreDto = storeMapper.toDto(savedStore);
-                    atomicReference.set(Optional.of(savedStoreDto));
+                    // final Store savedStore = storeRepository.save(patchedStore); // Neither fucking know why persists children...
+                    // final StoreDto savedStoreDto = storeMapper.toDto(savedStore);
+                    StoreDto patchedStoreDto = storeMapper.toDto(patchedStore);
+                    var updatedStoreDto = updateStoreById(id, patchedStoreDto).orElseThrow();
+                    atomicReference.set(Optional.of(updatedStoreDto));
                 },
                 () -> {
                     atomicReference.set(Optional.empty());
@@ -120,6 +123,22 @@ public class OwnerStoreServiceImpl implements OwnerStoreService {
                 .isInactive(true)
                 .build();
         return patchStoreById(id, storeDto);
+    }
+
+    @Override
+    public Long getNumAccumulatedTotalStores(UUID ownerId) {
+        return storeRepository.countByOwnerId(ownerId);
+    }
+
+    @Override
+    public Long getNumCurrentTotalStores(UUID ownerId) {
+        return storeRepository.countByIsDeletedAndOwnerId(Boolean.FALSE, ownerId);
+    }
+
+    @Override
+    public Long getNumCurrentActiveStores(UUID ownerId) {
+        return storeRepository.countByIsDeletedAndIsInactiveAndOwnerId(
+                Boolean.FALSE, Boolean.FALSE, ownerId);
     }
 
     private void detachStore(Blueprint blueprint) {
