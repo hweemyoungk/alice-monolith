@@ -118,12 +118,15 @@ public class UserAuthServiceImpl implements UserAuthService {
         // 2. Blueprint
         // Every blueprint must be inactive (expired).
         // Querying illegal rows, so lock is not needed.
+        // Ignored: better proceed with active blueprints when there's no active stores...
+        /*
         var activeBlueprints = adminBlueprintRepository.findByIsDeletedAndExpirationDateAfterAndStore_OwnerId(
                 Boolean.FALSE, OffsetDateTime.now(), ownerId);
         if (!activeBlueprints.isEmpty()) {
             violationMessages.add("Owner owns active blueprints: " + activeBlueprints.stream()
                     .map(blueprint -> blueprint.getDisplayName() + " of store " + blueprint.getStore().getDisplayName()).toList());
         }
+        */
 
         // 3. RedeemRule
         // NO-OP
