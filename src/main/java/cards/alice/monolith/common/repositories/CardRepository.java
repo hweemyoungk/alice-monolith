@@ -15,7 +15,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             where c.customer_id = :customerId
             and c.is_deleted = :isDeleted
             and c.is_inactive = :isInactive
-            for update)""",
+            for update) as sq""",
             nativeQuery = true)
     long exclusiveCountByCustomerIdAndIsDeletedAndIsInactive(@Param("customerId") @NonNull UUID customerId, @Param("isDeleted") @NonNull Boolean isDeleted, @Param("isInactive") @NonNull Boolean isInactive);
 
@@ -24,7 +24,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             select 0 from card as c
             where c.customer_id = :customerId
             and c.is_deleted = :isDeleted
-            for update)""",
+            for update) as sq""",
             nativeQuery = true)
     long exclusiveCountByCustomerIdAndIsDeleted(@Param("customerId") @NonNull UUID customerId, @Param("isDeleted") @NonNull Boolean isDeleted);
 
@@ -32,7 +32,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
             select count(0) from (
             select 0 from card as c
             where c.customer_id = :customerId
-            for update)""",
+            for update) as sq""",
             nativeQuery = true)
     long exclusiveCountByCustomerId(@Param("customerId") @NonNull UUID customerId);
 }

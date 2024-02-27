@@ -24,7 +24,7 @@ public interface RedeemRuleRepository extends JpaRepository<RedeemRule, Long> {
             where b.id = :id
             and s.owner_id = :ownerId
             and r.is_deleted = :isDeleted
-            for update)""",
+            for update) as sq""",
             nativeQuery = true)
     long exclusiveCountByBlueprint_IdAndBlueprint_Store_OwnerIdAndIsDeleted(@Param("id") @NonNull Long id, @Param("ownerId") @NonNull UUID ownerId, @Param("isDeleted") @NonNull Boolean isDeleted);
 

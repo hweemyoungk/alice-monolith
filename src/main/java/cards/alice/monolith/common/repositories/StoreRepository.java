@@ -25,7 +25,7 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
             select count(0) from (
             select 0 from store as s
             where s.owner_id = :ownerId
-            for update)""",
+            for update) as sq""",
             nativeQuery = true)
     long exclusiveCountByOwnerId(@Param("ownerId") @NonNull UUID ownerId);
 
@@ -34,7 +34,7 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
             select 0 from store as s
             where s.owner_id = :ownerId
             and s.is_deleted = :isDeleted
-            for update)""",
+            for update) as sq""",
             nativeQuery = true)
     long exclusiveCountByOwnerIdAndIsDeleted(@Param("ownerId") @NonNull UUID ownerId, @Param("isDeleted") @NonNull Boolean isDeleted);
 
@@ -44,7 +44,7 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
             where s.owner_id = :ownerId
             and s.is_deleted = :isDeleted
             and s.is_inactive = :isInactive
-            for update)""",
+            for update) as sq""",
             nativeQuery = true)
     long exclusiveCountByOwnerIdAndIsDeletedAndIsInactive(@Param("ownerId") @NonNull UUID ownerId, @Param("isDeleted") @NonNull Boolean isDeleted, @Param("isInactive") @NonNull Boolean isInactive);
 }

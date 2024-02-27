@@ -30,7 +30,7 @@ public interface BlueprintRepository extends JpaRepository<Blueprint, Long> {
             where s.id = :id
             and s.owner_id = :ownerId
             and b.is_deleted = :isDeleted
-            for update)""",
+            for update) as sq""",
             nativeQuery = true)
     long exclusiveCountByStore_IdAndStore_OwnerIdAndIsDeleted(@Param("id") @NonNull Long id, @Param("ownerId") @NonNull UUID ownerId, @Param("isDeleted") @NonNull Boolean isDeleted);
 
@@ -48,7 +48,7 @@ public interface BlueprintRepository extends JpaRepository<Blueprint, Long> {
             and s.owner_id = :ownerId
             and b.is_deleted = :isDeleted
             and b.is_publishing = :isPublishing
-            for update)""",
+            for update) as sq""",
             nativeQuery = true)
     long exclusiveCountByStore_IdAndStore_OwnerIdAndIsDeletedAndIsPublishing(@Param("id") @NonNull Long id, @Param("ownerId") @NonNull UUID ownerId, @Param("isDeleted") @NonNull Boolean isDeleted, @Param("isPublishing") @NonNull Boolean isPublishing);
 }

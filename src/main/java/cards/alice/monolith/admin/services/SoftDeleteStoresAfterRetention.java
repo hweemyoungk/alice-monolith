@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 @Service
 @RequiredArgsConstructor
 public class SoftDeleteStoresAfterRetention implements JobService {
-    @Value("${cards.alice.admin.store.job.soft-delete-resources-after-retention.retention-in-days}")
+    @Value("${cards.alice.admin.store.job.soft-delete-inactive-resources-after-retention.retention-in-days}")
     private long retentionInDays;
 
     private final AdminStoreRepository storeRepository;
