@@ -68,6 +68,14 @@ public class OwnerStampGrantDtoProcessor extends StampGrantDtoProcessor {
                             + " but granting " + dto.getNumStamps());
         }
 
+        // @PositiveOrZero numStampsBefore;
+        // Overwrite
+        dto.setNumStampsBefore(card.getNumCollectedStamps());
+
+        // @Positive numStampsAfter;
+        // Overwrite
+        dto.setNumStampsAfter(card.getNumCollectedStamps() + dto.getNumStamps());
+
         // cardDto;
         // Ignored in input
 

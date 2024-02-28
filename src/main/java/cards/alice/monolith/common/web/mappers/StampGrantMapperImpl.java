@@ -27,6 +27,8 @@ public class StampGrantMapperImpl implements StampGrantMapper {
         stampGrant.lastModifiedDate(stampGrantDto.getLastModifiedDate());
         stampGrant.isDeleted(stampGrantDto.getIsDeleted());
         stampGrant.numStamps(stampGrantDto.getNumStamps());
+        stampGrant.numStampsBefore(stampGrantDto.getNumStampsBefore());
+        stampGrant.numStampsAfter(stampGrantDto.getNumStampsAfter());
         stampGrant.card(cardRepository.getReferenceById(stampGrantDto.getCardId()));
 
         return stampGrant.build();
@@ -47,6 +49,8 @@ public class StampGrantMapperImpl implements StampGrantMapper {
         stampGrantDto.lastModifiedDate(stampGrant.getLastModifiedDate());
         stampGrantDto.isDeleted(stampGrant.getIsDeleted());
         stampGrantDto.numStamps(stampGrant.getNumStamps());
+        stampGrantDto.numStampsBefore(stampGrant.getNumStampsBefore());
+        stampGrantDto.numStampsAfter(stampGrant.getNumStampsAfter());
         stampGrantDto.cardDto(!PERSISTENCE_UTIL.isLoaded(stampGrant, "card") ?
                 null :
                 cardMapper.toDto(stampGrant.getCard()));
@@ -81,6 +85,12 @@ public class StampGrantMapperImpl implements StampGrantMapper {
         }
         if (stampGrantDto.getNumStamps() != null) {
             stampGrant.setNumStamps(stampGrantDto.getNumStamps());
+        }
+        if (stampGrantDto.getNumStampsBefore() != null) {
+            stampGrant.setNumStamps(stampGrantDto.getNumStampsBefore());
+        }
+        if (stampGrantDto.getNumStampsAfter() != null) {
+            stampGrant.setNumStamps(stampGrantDto.getNumStampsAfter());
         }
         if (stampGrantDto.getCardId() != null) {
             stampGrant.setCard(cardRepository
