@@ -13,6 +13,11 @@ import java.util.UUID;
 public interface AdminRedeemRuleRepository extends RedeemRuleRepository {
     @Transactional
     @Modifying
+    @Query("delete from RedeemRule r where r.blueprint is null")
+    int deleteByBlueprintIsNull();
+
+    @Transactional
+    @Modifying
     @Query("delete from RedeemRule r where r.isDeleted = :isDeleted and r.lastModifiedDate < :lastModifiedDate")
     int deleteByIsDeletedAndLastModifiedDateBefore(@NonNull Boolean isDeleted, @NonNull OffsetDateTime lastModifiedDate);
 

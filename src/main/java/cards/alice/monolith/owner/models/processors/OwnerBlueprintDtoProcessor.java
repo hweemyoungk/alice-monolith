@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @Validated
 @RequiredArgsConstructor
 public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
-    @Value("${cards.alice.owner.blueprint.modify-blueprint-exp-date-min-remaining-from-now-in-days}")
-    private long modifyBlueprintExpDateMinRemainingFromNowInDays;
+    @Value("${cards.alice.owner.blueprint.modify-blueprint-exp-date-min-remaining-from-now-in-seconds}")
+    private long modifyBlueprintExpDateMinRemainingFromNowInSeconds;
     private final OwnerBlueprintRepository blueprintRepository;
     private final OwnerStoreRepository storeRepository;
     private final Map<String, OwnerMembershipDto> ownerMembershipMap;
@@ -260,8 +260,8 @@ public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
         // Validated by @Valid
         // Should be AFTER now
         OffsetDateTime curExpirationDate = originalBlueprint.getExpirationDate();
-        OffsetDateTime sevenDaysAfterNow = OffsetDateTime.now().plusDays(modifyBlueprintExpDateMinRemainingFromNowInDays);
-        OffsetDateTime firstDateTime = curExpirationDate.isBefore(sevenDaysAfterNow) ? curExpirationDate : sevenDaysAfterNow;
+        OffsetDateTime minExpirationDate = OffsetDateTime.now().plusSeconds(modifyBlueprintExpDateMinRemainingFromNowInSeconds);
+        OffsetDateTime firstDateTime = curExpirationDate.isBefore(minExpirationDate) ? curExpirationDate : minExpirationDate;
         if (dto.getExpirationDate().isBefore(firstDateTime)) {
             violationMessages.add("expirationDate must be after " + firstDateTime);
         }

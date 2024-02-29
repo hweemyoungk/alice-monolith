@@ -117,7 +117,7 @@ create table redeem_rule
 (
     consumes           integer not null,
     is_deleted         bit     not null,
-    blueprint_id       bigint  not null,
+    blueprint_id       bigint,
     created_date       datetime(6),
     id                 bigint  not null,
     last_modified_date datetime(6),
@@ -212,29 +212,29 @@ alter table staged_user
 alter table blueprint
     add constraint fk_blueprint_store_store_id
         foreign key (store_id)
-            references store (id);
+            references store (id) on delete set null;
 
 alter table card
     add constraint fk_card_blueprint_blueprint_id
         foreign key (blueprint_id)
-            references blueprint (id);
+            references blueprint (id) on delete set null;
 
 alter table redeem
     add constraint fk_redeem_card_card_id
         foreign key (card_id)
-            references card (id);
+            references card (id) on delete set null;
 
 alter table redeem
     add constraint fk_redeem_redeem_rule_redeem_rule_id
         foreign key (redeem_rule_id)
-            references redeem_rule (id);
+            references redeem_rule (id) on delete set null;
 
 alter table redeem_rule
     add constraint fk_redeem_rule_blueprint_blueprint_id
         foreign key (blueprint_id)
-            references blueprint (id);
+            references blueprint (id) on delete set null;
 
 alter table stamp_grant
     add constraint fk_stamp_grant_card_card_id
         foreign key (card_id)
-            references card (id);
+            references card (id) on delete set null;

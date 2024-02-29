@@ -54,7 +54,7 @@ public class StampGrantMapperImpl implements StampGrantMapper {
         stampGrantDto.cardDto(!PERSISTENCE_UTIL.isLoaded(stampGrant, "card") ?
                 null :
                 cardMapper.toDto(stampGrant.getCard()));
-        stampGrantDto.cardId(stampGrant.getCard().getId());
+        stampGrantDto.cardId(stampGrant.getCard() == null ? null : stampGrant.getCard().getId());
 
         return stampGrantDto.build();
     }

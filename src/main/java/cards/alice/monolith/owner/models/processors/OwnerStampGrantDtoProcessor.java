@@ -1,16 +1,19 @@
 package cards.alice.monolith.owner.models.processors;
 
+import cards.alice.monolith.common.domain.Blueprint;
 import cards.alice.monolith.common.domain.Card;
 import cards.alice.monolith.common.models.StampGrantDto;
 import cards.alice.monolith.common.models.processors.StampGrantDtoProcessor;
 import cards.alice.monolith.common.web.exceptions.DtoProcessingException;
 import cards.alice.monolith.common.web.exceptions.ResourceNotFoundException;
+import cards.alice.monolith.owner.repositories.OwnerBlueprintRepository;
 import cards.alice.monolith.owner.repositories.OwnerCardRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,6 +23,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class OwnerStampGrantDtoProcessor extends StampGrantDtoProcessor {
     private final OwnerCardRepository cardRepository;
+    private final OwnerBlueprintRepository blueprintRepository;
 
     @Override
     protected void checkMembershipForPost(Collection<StampGrantDto> dtos) {
@@ -57,16 +61,27 @@ public class OwnerStampGrantDtoProcessor extends StampGrantDtoProcessor {
         if (card.getIsInactive()) {
             violationMessages.add("Card must be active");
         }
+        // Blueprint must exist
+        Blueprint blueprint = card.getBlueprint();
+        if (blueprint == null) {
+            violationMessages.add("Blueprint doesn't exist");
+        } else {
+            // Blueprint must be active
+            if (blueprint.getExpirationDate().isBefore(OffsetDateTime.now())) {
+                violationMessages.add("Blueprint already expired");
+            }
 
-        // @NotNull @Positive numStamps;
-        // Validated by @Valid
-        // card.numCollectedStamps should not exceed blueprint.numMaxStamp after grant
-        final int maxNumGrant = card.getBlueprint().getNumMaxStamps() - card.getNumCollectedStamps();
-        if (maxNumGrant < dto.getNumStamps()) {
-            violationMessages.add(
-                    "Granting too many stamps: max allowed is " + maxNumGrant
-                            + " but granting " + dto.getNumStamps());
+            // @NotNull @Positive numStamps;
+            // Validated by @Valid
+            // card.numCollectedStamps should not exceed blueprint.numMaxStamp after grant
+            final int maxNumGrant = blueprint.getNumMaxStamps() - card.getNumCollectedStamps();
+            if (maxNumGrant < dto.getNumStamps()) {
+                violationMessages.add(
+                        "Granting too many stamps: max allowed is " + maxNumGrant
+                                + " but granting " + dto.getNumStamps());
+            }
         }
+
 
         // @PositiveOrZero numStampsBefore;
         // Overwrite

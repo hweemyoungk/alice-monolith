@@ -34,7 +34,6 @@ public class RedeemRule extends LongEntity {
     @PositiveOrZero
     private Integer consumes;
     private String imageId;
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blueprint_id")
     private Blueprint blueprint;

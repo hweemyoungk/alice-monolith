@@ -68,7 +68,7 @@ public class RedeemRuleMapperImpl implements RedeemRuleMapper {
                 .blueprintDto(!PERSISTENCE_UTIL.isLoaded(redeemRule, "blueprint") ?
                         null :
                         blueprintMapper.toDto(redeemRule.getBlueprint()))
-                .blueprintId(redeemRule.getBlueprint().getId())
+                .blueprintId(redeemRule.getBlueprint() == null ? null : redeemRule.getBlueprint().getId())
                 .redeemDtos(!PERSISTENCE_UTIL.isLoaded(redeemRule, "redeems") || redeemRule.getRedeems() == null ?
                         null :
                         redeemRule.getRedeems().stream()

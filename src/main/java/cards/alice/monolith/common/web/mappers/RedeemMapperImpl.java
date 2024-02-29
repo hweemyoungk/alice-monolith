@@ -59,11 +59,11 @@ public class RedeemMapperImpl implements RedeemMapper {
         redeemDto.redeemRuleDto(!PERSISTENCE_UTIL.isLoaded(redeem, "redeemRule") ?
                 null :
                 redeemRuleMapper.toDto(redeem.getRedeemRule()));
-        redeemDto.redeemRuleId(redeem.getRedeemRule().getId());
+        redeemDto.redeemRuleId(redeem.getRedeemRule() == null ? null : redeem.getRedeemRule().getId());
         redeemDto.cardDto(!PERSISTENCE_UTIL.isLoaded(redeem, "card") ?
                 null :
                 cardMapper.toDto(redeem.getCard()));
-        redeemDto.cardId(redeem.getCard().getId());
+        redeemDto.cardId(redeem.getCard() == null ? null : redeem.getCard().getId());
 
         return redeemDto.build();
     }

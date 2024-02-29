@@ -68,7 +68,7 @@ public class CardMapperImpl implements CardMapper {
         cardDto.blueprintDto(!PERSISTENCE_UTIL.isLoaded(card, "blueprint") ?
                 null :
                 blueprintMapper.toDto(card.getBlueprint()));
-        cardDto.blueprintId(card.getBlueprint().getId());
+        cardDto.blueprintId(card.getBlueprint() == null ? null : card.getBlueprint().getId());
 
         return cardDto.build();
     }

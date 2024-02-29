@@ -78,7 +78,7 @@ public class BlueprintMapperImpl implements BlueprintMapper {
                 .storeDto(!PERSISTENCE_UTIL.isLoaded(blueprint, "store") ?
                         null :
                         storeMapper.toDto(blueprint.getStore()))
-                .storeId(blueprint.getStore().getId())
+                .storeId(blueprint.getStore() == null ? null : blueprint.getStore().getId())
                 .redeemRuleDtos(!PERSISTENCE_UTIL.isLoaded(blueprint, "redeemRules") || blueprint.getRedeemRules() == null ?
                         null :
                         blueprint.getRedeemRules().stream()

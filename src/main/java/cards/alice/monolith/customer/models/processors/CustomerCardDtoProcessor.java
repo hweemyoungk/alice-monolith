@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -106,6 +107,10 @@ public class CustomerCardDtoProcessor extends CardDtoProcessor {
                 .orElseThrow(() -> new ResourceNotFoundException(Blueprint.class, dto.getBlueprintId()));
         // CustomerBlueprintRepository verifies
         // : Blueprint must be publishing
+        // Blueprint must be active
+        if (blueprint.getExpirationDate().isBefore(OffsetDateTime.now())) {
+            violationMessages.add("Blueprint already expired");
+        }
 
         // id
         // Overwrite to default

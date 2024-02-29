@@ -13,6 +13,11 @@ import java.util.UUID;
 public interface AdminCardRepository extends CardRepository {
     @Transactional
     @Modifying
+    @Query("delete from Card c where c.blueprint is null")
+    int deleteByBlueprintIsNull();
+
+    @Transactional
+    @Modifying
     @Query("delete from Card c where c.isDeleted = :isDeleted and c.lastModifiedDate < :lastModifiedDate")
     int deleteByIsDeletedAndLastModifiedDateBefore(@NonNull Boolean isDeleted, @NonNull OffsetDateTime lastModifiedDate);
 
