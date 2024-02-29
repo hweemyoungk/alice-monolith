@@ -13,8 +13,8 @@ import java.time.OffsetDateTime;
 @Service
 @RequiredArgsConstructor
 public class DeleteResourcesAfterRetention implements JobService {
-    @Value("${cards.alice.admin.resource.job.delete-resources-after-retention.retention-in-days}")
-    private long retentionInDays;
+    @Value("${cards.alice.admin.resource.job.delete-resources-after-retention.retention-in-seconds}")
+    private long retentionInSeconds;
 
     private final AdminStoreRepository storeRepository;
     private final AdminBlueprintRepository blueprintRepository;
@@ -30,7 +30,7 @@ public class DeleteResourcesAfterRetention implements JobService {
             zone = "${cards.alice.admin.resource.job.delete-resources-after-retention.zone}",
             cron = "${cards.alice.admin.resource.job.delete-resources-after-retention.cron}")
     public void run() {
-        final OffsetDateTime retentionExpirationDate = OffsetDateTime.now().minusDays(retentionInDays);
+        final OffsetDateTime retentionExpirationDate = OffsetDateTime.now().minusSeconds(retentionInSeconds);
 
         // 1. Delete StagedUser (and make relevant resource's userId null).
         stagedUserRepository.deleteByIsDeletedAndLastModifiedDateBefore(

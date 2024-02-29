@@ -13,8 +13,8 @@ import java.time.OffsetDateTime;
 @Service
 @RequiredArgsConstructor
 public class SoftDeleteStoresAfterRetention implements JobService {
-    @Value("${cards.alice.admin.store.job.soft-delete-inactive-resources-after-retention.retention-in-days}")
-    private long retentionInDays;
+    @Value("${cards.alice.admin.store.job.soft-delete-resources-after-retention.retention-in-seconds}")
+    private long retentionInSeconds;
 
     private final AdminStoreRepository storeRepository;
 
@@ -24,8 +24,7 @@ public class SoftDeleteStoresAfterRetention implements JobService {
             zone = "${cards.alice.admin.store.job.soft-delete-resources-after-retention.zone}",
             cron = "${cards.alice.admin.store.job.soft-delete-resources-after-retention.cron}")
     public void run() {
-        //TODO: restore
-        final OffsetDateTime retentionExpirationDate = OffsetDateTime.now().minusDays(retentionInDays);
+        final OffsetDateTime retentionExpirationDate = OffsetDateTime.now().minusSeconds(retentionInSeconds);
 
         storeRepository.updateIsDeletedByIsInactiveAndLastModifiedDateBefore(
                 Boolean.TRUE, Boolean.TRUE, retentionExpirationDate);

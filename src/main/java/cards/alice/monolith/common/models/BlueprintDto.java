@@ -1,10 +1,7 @@
 package cards.alice.monolith.common.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,13 +28,16 @@ public class BlueprintDto extends LongDto implements Serializable {
     @Length(max = 100)
     private String stampGrantCondDescription;
     @NotNull
-    @PositiveOrZero
+    @Positive
+    @Max(100)
     private Integer numMaxStamps;
     @NotNull
     @Positive
+    @Max(100)
     private Integer numMaxRedeems;
     @NotNull
     @Positive
+    @Max(100)
     private Integer numMaxIssuesPerCustomer;
     @NotNull
     @PositiveOrZero

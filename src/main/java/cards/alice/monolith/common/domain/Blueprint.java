@@ -1,10 +1,7 @@
 package cards.alice.monolith.common.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,12 +36,15 @@ public class Blueprint extends LongEntity {
     private String stampGrantCondDescription;
     @NotNull
     @Positive
+    @Max(100)
     private Integer numMaxStamps;
     @NotNull
-    @PositiveOrZero
+    @Positive
+    @Max(100)
     private Integer numMaxRedeems;
     @NotNull
     @Positive
+    @Max(100)
     private Integer numMaxIssuesPerCustomer;
     @NotNull
     @PositiveOrZero

@@ -133,13 +133,13 @@ public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
         // @NotBlank @Length(max = 100) stampGrantCondDescription
         // Validated by @Valid
 
-        // @NotNull @PositiveOrZero numMaxStamps
+        // @NotNull @Positive @Max(100) numMaxStamps
         // Validated by @Valid
 
-        // @NotNull @Positive numMaxRedeems
+        // @NotNull @Positive @Max(100) numMaxRedeems
         // Validated by @Valid
 
-        // @NotNull @Positive numMaxIssuesPerCustomer
+        // @NotNull @Positive @Max(100) numMaxIssuesPerCustomer
         // Validated by @Valid
 
         // @NotNull @PositiveOrZero numMaxIssues
@@ -228,7 +228,7 @@ public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
         dto.setStampGrantCondDescription(
                 originalBlueprint.getStampGrantCondDescription());
 
-        // @NotNull @PositiveOrZero numMaxStamps
+        // @NotNull @Positive @Max(100) numMaxStamps
         // Validated by @Valid
         // Can ONLY be increased
         if (dto.getNumMaxStamps() < originalBlueprint.getNumMaxStamps()) {
@@ -238,7 +238,7 @@ public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
                             " current blueprint.numMaxStamp(" + originalBlueprint.getNumMaxStamps() + ")");
         }
 
-        // @NotNull @Positive numMaxRedeems
+        // @NotNull @Positive @Max(100) numMaxRedeems
         // Validated by @Valid
         // Can ONLY be increased
         if (dto.getNumMaxRedeems() < originalBlueprint.getNumMaxRedeems()) {
@@ -248,7 +248,7 @@ public class OwnerBlueprintDtoProcessor extends BlueprintDtoProcessor {
                             " current blueprint.numMaxRedeems(" + originalBlueprint.getNumMaxRedeems() + ")");
         }
 
-        // @NotNull @Positive numMaxIssuesPerCustomer
+        // @NotNull @Positive @Max(100) numMaxIssuesPerCustomer
         // Validated by @Valid
         // Can be modified
 
