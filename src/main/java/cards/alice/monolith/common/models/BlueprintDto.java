@@ -25,7 +25,7 @@ public class BlueprintDto extends LongDto implements Serializable {
     @Length(max = 1000)
     private String description;
     @NotBlank
-    @Length(max = 100)
+    @Length(max = 1000)
     private String stampGrantCondDescription;
     @NotNull
     @Positive
