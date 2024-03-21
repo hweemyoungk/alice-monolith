@@ -22,6 +22,8 @@ RUN keytool -importcert -trustcacerts -noprompt -keystore $JAVA_HOME/jre/lib/sec
 # For amazoncorretto:17, replace with following:
 # RUN keytool -importcert -trustcacerts -noprompt -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit -alias carolcardscert -file BOOT-INF/classes/keystore/carol.cards.crt
 
+RUN mv BOOT-INF/classes/eck/elastic-apm-agent-1.48.1.jar BOOT-INF/classes/eck/elastic-apm-agent.jar
+
 # ENV JAVA_OPTS "-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=default,localk8s"
 # ENTRYPOINT exec java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

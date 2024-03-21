@@ -10,7 +10,7 @@
     </parent>
     <groupId>cards.alice</groupId>
     <artifactId>alice-monolith</artifactId>
-    <version>0.3.5</version>
+    <version>0.3.7</version>
     <name>alice-monolith</name>
     <description>alice-monolith</description>
     <properties>
